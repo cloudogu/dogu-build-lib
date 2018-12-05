@@ -91,10 +91,10 @@ class EcoSystem {
     String formatDependencies(List<String> deps) {
         String formatted = ""
 
-        for (int i = 0; i < deps.size; i++) {
+        for (int i = 0; i < deps.size(); i++) {
             formatted += "\"${deps[i]}\""
 
-            if ((i+1) < deps.size) {
+            if ((i+1) < deps.size()) {
                 formatted += ', '
             }
         }
