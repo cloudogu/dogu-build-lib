@@ -16,6 +16,12 @@ class Vagrant implements Serializable {
         script.sh("vagrant plugin install ${plugin}")
     }
 
+    void scp(String source, String target) {
+        withVagrantCredentials {
+            script.sh "vagrant scp ${source} ${target}"
+        }
+    }
+
     void sync() {
         withVagrantCredentials {
             script.sh("vagrant rsync")

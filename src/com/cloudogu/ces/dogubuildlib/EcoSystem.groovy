@@ -25,6 +25,7 @@ class EcoSystem {
             this.mountPath = mountPath
 
             vagrant.installPlugin("vagrant-google")
+            vagrant.installPlugin("vagrant-scp")
             vagrant.up()
             externalIP = vagrant.externalIP
         }
@@ -81,7 +82,20 @@ class EcoSystem {
     }
 
     void destroy() {
-        vagrant.destroy()
+        if (vagrant != null) {
+            try {
+                collectLogs()
+            } catch (Exception ex) { // we catch exception, because we do not want to fail the build
+                script.echo "failed to collect logs: ${ex.message}"
+            }
+            vagrant.destroy()
+        }
+    }
+
+    void collectLogs() {
+        vagrant.ssh "sudo tar cvfz /tmp/logs.tar.gz /var/log/docker"
+        vagrant.scp(":/tmp/logs.tar.gz", "logs.tar.gz")
+        script.archiveArtifacts "logs.tar.gz"
     }
 
     List<String> joinDependencies(config) {
