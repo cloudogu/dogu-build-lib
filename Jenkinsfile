@@ -1,5 +1,9 @@
 #!groovy
 
+// Keep the version in sync with the one used in pom.xml in order to get correct syntax completion.
+@Library('github.com/cloudogu/ces-build-lib@9fa7ac4')
+import com.cloudogu.ces.cesbuildlib.*
+
 node('docker') {
 
     properties([
@@ -9,24 +13,10 @@ node('docker') {
             disableConcurrentBuilds()
     ])
 
-    def cesBuildLib = libraryFromLocalRepo().com.cloudogu.ces.cesbuildlib
-
-    def mvn = cesBuildLib.MavenInDocker.new(this, "3.5.0-jdk-8")
-    mvn.useLocalRepoFromJenkins = true
-    def git = cesBuildLib.Git.new(this)
-
-    // TODO refactor this in an object-oriented way and move to build-lib
-    if ("master".equals(env.BRANCH_NAME)) {
-        mvn.additionalArgs = "-DperformRelease"
-        currentBuild.description = mvn.getVersion()
-    } else if (!"develop".equals(env.BRANCH_NAME)) {
-        // run SQ analysis in specific project for feature, hotfix, etc.
-        mvn.additionalArgs = "-Dsonar.branch=" + env.BRANCH_NAME
-    }
-
-    String emailRecipients = env.EMAIL_RECIPIENTS
+    Git git = new Git(this)
 
     catchError {
+
         stage('Checkout') {
             checkout scm
             /* Don't remove folders starting in "." like
@@ -36,6 +26,8 @@ node('docker') {
              */
             git.clean('".*/"')
         }
+
+        Maven mvn = setupMavenBuild()
 
         stage('Build') {
             // Run the maven build
@@ -49,7 +41,7 @@ node('docker') {
 
         stage('SonarQube') {
 
-            def sonarQube = cesBuildLib.SonarQube.new(this, 'ces-sonar')
+            def sonarQube = new SonarQube(this, 'ces-sonar')
             sonarQube.updateAnalysisResultOfPullRequestsToGitHub('sonarqube-gh-token')
 
             sonarQube.analyzeWith(mvn)
@@ -63,12 +55,17 @@ node('docker') {
     // Archive Unit and integration test results, if any
     junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml,**/target/surefire-reports/TEST-*.xml'
 
-    mailIfStatusChanged(findEmailRecipients(emailRecipients))
+    mailIfStatusChanged(git.commitAuthorEmail)
 }
 
-def libraryFromLocalRepo() {
-    // Workaround for loading the current repo as shared build lib.
-    // Checks out to workspace local folder named like the identifier.
-    // We have to pass an identifier with version (which is ignored). Otherwise the build fails.
-    library(identifier: 'ces-build-lib@snapshot', retriever: legacySCM(scm))
+Maven setupMavenBuild() {
+    Maven mvn = new MavenInDocker(this, "3.6.0-jdk-8")
+
+
+    // run SQ analysis in specific project for each branch
+    mvn.additionalArgs = "-Dsonar.branch=${env.BRANCH_NAME}" +
+                         // Workaround SUREFIRE-1588 on Debian/Ubuntu. Should be fixed in Surefire 3.0.0
+                         ' -DargLine="-Djdk.net.URLClassPath.disableClassPathURLCheck=true"'
+
+    return mvn
 }
