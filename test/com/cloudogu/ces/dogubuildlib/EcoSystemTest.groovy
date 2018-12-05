@@ -1,10 +1,43 @@
 package com.cloudogu.ces.dogubuildlib
 
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
 
+@RunWith(MockitoJUnitRunner.class)
 class EcoSystemTest {
 
-    private EcoSystem ecoSystem = new EcoSystem([], "", "")
+    def mockedScript = [
+            writeFile: { args ->
+                mockedScript.writenFile = args.text
+            }
+    ]
+
+    @Mock
+    Vagrant vagrant
+
+    private EcoSystem ecoSystem = new EcoSystem(mockedScript, "", "")
+
+    @Before
+    void setup() {
+        ecoSystem.vagrant = vagrant
+    }
+
+    @Test
+    void shouldSetupWithDefaults() {
+        ecoSystem.setup()
+        assert mockedScript.writenFile.contains(
+                '"official/registrator", "official/ldap", "official/cas", "official/nginx", "official/postfix", "official/usermgt"')
+    }
+
+    @Test
+    void shouldSetupWithCustomParams() {
+        ecoSystem.setup(additionalDependencies: 'official/postgresql')
+        assert mockedScript.writenFile.contains(
+                '"official/registrator", "official/ldap", "official/cas", "official/nginx", "official/postfix", "official/usermgt", "official/postgresql"')
+    }
 
     @Test
     void shouldFormatDependencies() {

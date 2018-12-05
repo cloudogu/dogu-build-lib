@@ -6,6 +6,19 @@ class EcoSystem {
     String gcloudCredentials
     String sshCredentials
 
+    def defaultSetupConfig = [
+            adminUsername: "ces-admin",
+            adminPassword: "ecosystem2016",
+            adminGroup: "CesAdministrators",
+            dependencies : ["official/registrator",
+                    "official/ldap",
+                    "official/cas",
+                    "official/nginx",
+                    "official/postfix",
+                    "official/usermgt"],
+            additionalDependencies: []
+    ]
+
     Vagrant vagrant
     String externalIP
     String mountPath
@@ -35,17 +48,10 @@ class EcoSystem {
         }
     }
 
-    void setup(config = [adminUsername: "ces-admin",
-                         adminPassword: "ecosystem2016",
-                         adminGroup: "CesAdministrators",
-                         dependencies : ["official/registrator",
-                                         "official/ldap",
-                                         "official/cas",
-                                         "official/nginx",
-                                         "official/postfix",
-                                         "official/usermgt"],
-                        additionalDependencies: []]) {
+    void setup(config = [:]) {
 
+        // Merge default config with the one passed as parameter
+        config = defaultSetupConfig << config
 
         writeSetupStagingJSON(config)
 
