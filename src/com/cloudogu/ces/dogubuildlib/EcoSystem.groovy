@@ -24,8 +24,6 @@ class EcoSystem {
             vagrant = createVagrant(mountPath)
             this.mountPath = mountPath
 
-            vagrant.installPlugin("vagrant-google")
-            vagrant.installPlugin("vagrant-scp")
             vagrant.up()
             externalIP = vagrant.externalIP
         }
