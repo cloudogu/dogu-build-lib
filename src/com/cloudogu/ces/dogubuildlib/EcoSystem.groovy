@@ -16,7 +16,8 @@ class EcoSystem {
                     "official/nginx",
                     "official/postfix",
                     "official/usermgt"],
-            additionalDependencies: []
+            additionalDependencies: [],
+            registryConfig: ""
     ]
 
     Vagrant vagrant
@@ -178,8 +179,7 @@ class EcoSystem {
     "Name":"",
     "Password":""
   },
-  "registryConfig": {
-  }
+  "registryConfig": {${config.registryConfig}}
 }"""
     }
 
