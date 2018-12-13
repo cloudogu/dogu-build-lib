@@ -30,6 +30,7 @@ class EcoSystemTest {
         ecoSystem.setup()
         assert mockedScript.writenFile.contains(
                 '"official/registrator", "official/ldap", "official/cas", "official/nginx", "official/postfix", "official/usermgt"')
+        assert mockedScript.writenFile.contains('"registryConfig": {}')
     }
 
     @Test
@@ -62,6 +63,16 @@ class EcoSystemTest {
         def config = [ dependencies: ["registrator", "ldap"], additionalDependencies: ["cas"] ]
         def deps = ecoSystem.joinDependencies(config)
         assert deps == [ "registrator", "ldap", "cas" ]
+    }
+
+    @Test
+    void shouldSetupWithCustomRegistryConfig() {
+        String expectedRegistryConfig = '''"jenkins":{
+            "updateSiteUrl":{
+                "default":"http://defaultUpdateSite.de",
+            }'''
+        ecoSystem.setup(registryConfig: expectedRegistryConfig)
+        assert mockedScript.writenFile.contains("\"registryConfig\": {${expectedRegistryConfig}}")
     }
 
 }
