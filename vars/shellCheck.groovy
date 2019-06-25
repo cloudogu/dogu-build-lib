@@ -19,13 +19,9 @@ def call(fileList) {
  *
  */
 def call() {
-    try{
         def fileList = sh (script: 'find . -path ./ecosystem -prune -o -type f -regex .*\\.sh -print', returnStdout: true)
         fileList='"'+fileList.trim().replaceAll('\n','" "')+'"'
         executeWithDocker(fileList)
-    }catch(error){
-        throw error
-    }
 }
 
 /*
