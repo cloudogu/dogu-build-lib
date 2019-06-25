@@ -1,4 +1,5 @@
 ![logo](resources/images/icon.png)
+[![GitHub license](https://img.shields.io/github/license/cloudogu/dogu-build-lib.svg)](https://github.com/cloudogu/dogu-build-lib/blob/master/LICENSE)
 
 
 # Dogu-build-lib
