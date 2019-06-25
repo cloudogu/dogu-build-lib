@@ -10,7 +10,7 @@ dogu-build-lib is a shared library for [jenkins pipelines](https://jenkins.io/do
 
 ## Get started
 
-- Install Pipeline: [GitHub Groovy Libraries](https://wiki.jenkins.io/display/JENKINS/Pipeline+GitHub+Library+Plugin)
+- Install Plugin: [GitHub Groovy Libraries](https://wiki.jenkins.io/display/JENKINS/Pipeline+GitHub+Library+Plugin)
 - Use in any Jenkinsfile as followed:
 ```groovy
 @Library('github.com/cloudogu/dogu-build-lib@<COMMIT-ID>')
