@@ -1,4 +1,4 @@
-<img src="./resources/images/icon.png" alt="dogu build lib" height="100px">
+![logo](resources/images/icon.png)
 
 
 # Dogu-build-lib
