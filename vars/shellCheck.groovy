@@ -29,7 +29,7 @@ def call() {
 * note: we encountered some problems while using the minified docker image
 */
 private def executeWithDocker(fileList){
-    docker.image('koalaman/shellcheck-alpine:stable').inside({
+    docker.image('koalaman/shellcheck-alpine:stable').inside(){
         sh "/bin/shellcheck ${fileList}"
-    })
+    }
 }
