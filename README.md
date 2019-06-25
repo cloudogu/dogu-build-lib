@@ -51,12 +51,12 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 
 
 #### Functions
-- installPlugins(String plguin) | install additional vagrant plugins
+- installPlugins(String plugin) | install additional vagrant plugins
 - scp(String source, String target) | copy files to remote machine
-- sync() | sync with host and remote
+- sync() | sync host and remote
 - up() | start vm 
 - ssh() | connect to vm
-- getExternalIP() | get accessable ip
+- getExternalIP() | get ip for connection
 - sshOut(String command) | execute command on vm
 - destroy() | remove vm with all data
 
