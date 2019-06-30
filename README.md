@@ -143,4 +143,5 @@ See [ces-build-lib](https://github.com/cloudogu/ces-build-lib) for further funct
 
 
 Icon based on: https://www.kissclipart.com/construction-helmet-icon-clipart-hard-hats-helmet-nv6hoi/ 
+
 (Creative Commons license)
