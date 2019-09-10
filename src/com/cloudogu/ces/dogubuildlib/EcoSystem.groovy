@@ -211,7 +211,7 @@ Vagrant.configure(2) do |config|
     
     google.image_family = 'ces-development'
     google.zone = "europe-west3-a"
-    google.machine_type = "n1-standard-2"
+    google.machine_type = "n1-standard-4"
 
     # preemptible
     google.preemptible = true
