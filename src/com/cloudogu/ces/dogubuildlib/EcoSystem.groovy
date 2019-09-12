@@ -65,7 +65,7 @@ class EcoSystem {
     }
 
     void waitForDogu(String dogu) {
-        vagrant.ssh "sudo cesapp healthy --wait --timeout 600 --fail-fast ${dogu}"
+        vagrant.ssh "sudo cesapp healthy --wait --timeout 1200 --fail-fast ${dogu}"
     }
 
     void build(String doguPath) {
