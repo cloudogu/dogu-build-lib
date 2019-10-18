@@ -32,12 +32,15 @@ Ecosystem ecosystem = new EcoSystem(script, String gcloudCredentials, String ssh
 EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer", "jenkins-gcloud-ces-operations-internal")
 ```
 #### Functions
+- changeNamespace(String namespace) | change dogu namespace
+- setVersion(String version) | define dogu version 
 - provision(String mountPath) | provision to a specific path 
 - loginBackend(String credentialsId)  | login with credentials
 - setup(config = [:]) | setup a ces instance based on a setup.json
 - waitForDogu(String dogu) | wait until a dogu is ready for interaction
 - build(String doguPath) | build a dogu 
 - verify(String doguPath) | execute the goss tests
+- push(String doguPath) | push dogu into registry
 - destroy() | remove the generated ces instance
 - collectLogs() | add logs as artifact to jenkins build
 
