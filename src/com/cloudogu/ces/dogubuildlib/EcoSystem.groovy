@@ -103,6 +103,10 @@ class EcoSystem {
         }
     }
 
+    void push(String doguPath) {
+        vagrant.ssh "sudo cesapp push ${doguPath}"
+    }
+
     void destroy() {
         if (vagrant != null) {
             try {
