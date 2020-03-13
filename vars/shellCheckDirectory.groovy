@@ -13,3 +13,4 @@ def call(directoryName) {
     docker.image('koalaman/shellcheck-alpine:stable').inside(){
         sh "/bin/shellcheck ./${directoryName}/*.sh"
     }
+}
