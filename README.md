@@ -70,7 +70,7 @@ lintDockerfile() // uses Dockerfile as default; optional parameter
 ```groovy
 shellCheck() // search for all .sh files in folder and runs shellcheck
 shellCheck(fileList) // fileList="a.sh b.sh" execute shellcheck on a custom list
-shellCheckDirectory(DIRECTORY) // run shellcheck on all files in DIRECTORY; subdirectories are not checked
+shellCheckDirectory(DIRECTORY) // run shellcheck on all files in DIRECTORY; files are searched recursively
 ```
 
 
