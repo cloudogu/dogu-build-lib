@@ -40,14 +40,15 @@ node('docker') {
         }
 
         stage('SonarQube') {
-
-            def sonarQube = new SonarQube(this, 'ces-sonar')
-            sonarQube.updateAnalysisResultOfPullRequestsToGitHub('sonarqube-gh-token')
-
-            sonarQube.analyzeWith(mvn)
-
-            if (!sonarQube.waitForQualityGateWebhookToBeCalled()) {
-                currentBuild.result = 'UNSTABLE'
+            def scannerHome = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+            withSonarQubeEnv {
+                sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=dogu-build-lib:${env.BRANCH_NAME} -Dsonar.projectName=dogu-build-lib:${env.BRANCH_NAME}"
+            }
+            timeout(time: 2, unit: 'MINUTES') { // Needed when there is no webhook for example
+                def qGate = waitForQualityGate()
+                if (qGate.status != 'OK') {
+                    unstable("Pipeline unstable due to SonarQube quality gate failure")
+                }
             }
         }
     }
