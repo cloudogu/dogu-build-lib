@@ -30,6 +30,23 @@ class EcoSystem {
         this.sshCredentials = sshCredentials
     }
 
+    void changeNamespace(String namespace) {
+        def doguJson = script.readJSON file: 'dogu.json'
+        def doguName = doguJson.Name.split('/')[1]
+        def newDoguName = namespace + '/' + doguName
+
+        doguJson.Image = doguJson.Image.replace(doguJson.Name, newDoguName)
+        doguJson.Name = newDoguName
+
+        script.writeJSON file: 'dogu.json', json: doguJson
+    }
+
+    void setVersion(String version) {
+        def doguJson = script.readJSON file: 'dogu.json'
+        doguJson.Version = version
+        script.writeJSON file: 'dogu.json', json: doguJson
+    }
+
     void provision(String mountPath) {
         script.dir ('ecosystem') {
             script.git branch: 'develop', url: 'https://github.com/cloudogu/ecosystem', changelog: false, poll: false
@@ -84,6 +101,10 @@ class EcoSystem {
         } finally {
             script.junit allowEmptyResults: true, testResults: 'verify.xml'
         }
+    }
+
+    void push(String doguPath) {
+        vagrant.ssh "sudo cesapp push ${doguPath}"
     }
 
     void destroy() {
