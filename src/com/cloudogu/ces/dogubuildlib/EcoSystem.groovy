@@ -219,7 +219,6 @@ file = File.read(gcloud_key)
 data_hash = JSON.parse(file)
 
 project_id = data_hash["project_id"]
-gcloud_client_email = data_hash["client_email"]
 
 Vagrant.configure(2) do |config|
 
@@ -227,7 +226,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.provider :google do |google, override|
     google.google_project_id = project_id
-    google.google_client_email = gcloud_client_email
     google.google_json_key_location = gcloud_key
     
     google.image_family = 'ces-development'
