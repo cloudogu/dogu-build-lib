@@ -89,6 +89,18 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
+    void purge(String doguName) {
+        vagrant.ssh "sudo cesapp purge ${doguName}"
+    }
+
+    void install(String doguFullName) {
+        if (doguFullName.contains("/")){
+            vagrant.ssh "sudo cesapp install ${doguFullName}"
+        } else {
+            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+        }
+    }
+
     void verify(String doguPath) {
         if (script.fileExists('verify.xml')) {
             script.sh 'rm -f verify.xml'
