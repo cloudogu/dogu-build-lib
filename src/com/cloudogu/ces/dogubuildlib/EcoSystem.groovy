@@ -101,6 +101,10 @@ class EcoSystem {
         }
     }
 
+    void start(String doguName) {
+        vagrant.ssh "sudo cesapp start ${doguName}"
+    }
+
     void verify(String doguPath) {
         if (script.fileExists('verify.xml')) {
             script.sh 'rm -f verify.xml'
