@@ -89,11 +89,11 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
-    void purge(String doguName) {
+    void purgeDogu(String doguName) {
         vagrant.ssh "sudo cesapp purge ${doguName}"
     }
 
-    void install(String doguFullName) {
+    void installDogu(String doguFullName) {
         if (doguFullName.contains("/")){
             vagrant.ssh "sudo cesapp install ${doguFullName}"
         } else {
@@ -101,7 +101,7 @@ class EcoSystem {
         }
     }
 
-    void upgrade(EcoSystem ecoSystem) {
+    void upgradeDogu(EcoSystem ecoSystem) {
         // Upgrade dogu by building again with new version
         // currentDoguVersionString, e.g. "Version": "2.222.4-1",
         String currentDoguVersionString = script.sh(returnStdout: true, script: 'grep .Version dogu.json').trim()
@@ -113,7 +113,7 @@ class EcoSystem {
         ecoSystem.build("/dogu")
     }
 
-    void start(String doguName) {
+    void startDogu(String doguName) {
         vagrant.ssh "sudo cesapp start ${doguName}"
     }
 
