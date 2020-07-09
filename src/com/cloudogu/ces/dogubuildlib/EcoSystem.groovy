@@ -101,6 +101,18 @@ class EcoSystem {
         }
     }
 
+    void upgrade(EcoSystem ecoSystem) {
+        // Upgrade dogu by building again with new version
+        // currentDoguVersionString, e.g. "Version": "2.222.4-1",
+        String currentDoguVersionString = script.sh(returnStdout: true, script: 'grep .Version dogu.json').trim()
+        // newDoguVersion, e.g. 2.222.4-2
+        String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersionString)
+        ecoSystem.setVersion(newDoguVersion)
+        ecoSystem.vagrant.sync()
+        // Build/Upgrade dogu
+        ecoSystem.build("/dogu")
+    }
+
     void start(String doguName) {
         vagrant.ssh "sudo cesapp start ${doguName}"
     }
@@ -273,4 +285,14 @@ end
 """
     }
 
+    static String increaseDoguReleaseVersionByOne(String currentDoguVersionString) {
+        // releaseNumber, e.g. 1
+        int releaseNumber = (currentDoguVersionString.split('-')[1] - "\",").toInteger()
+        // newReleaseNumber, e.g. 2
+        int newReleaseNumber = releaseNumber + 1
+        // currentDoguVersion, e.g. 2.222.4-1
+        String currentDoguVersion = currentDoguVersionString.split("\"")[3]
+        // newDoguVersion, e.g. 2.222.4-2
+        return currentDoguVersion.split("-")[0] + "-" + newReleaseNumber
+    }
 }
