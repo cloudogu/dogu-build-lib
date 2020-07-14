@@ -7,17 +7,17 @@ class EcoSystem {
     String sshCredentials
 
     def defaultSetupConfig = [
-            adminUsername: "ces-admin",
-            adminPassword: "ecosystem2016",
-            adminGroup: "CesAdministrators",
-            dependencies : ["official/registrator",
-                    "official/ldap",
-                    "official/cas",
-                    "official/nginx",
-                    "official/postfix",
-                    "official/usermgt"],
+            adminUsername         : "ces-admin",
+            adminPassword         : "ecosystem2016",
+            adminGroup            : "CesAdministrators",
+            dependencies          : ["official/registrator",
+                                     "official/ldap",
+                                     "official/cas",
+                                     "official/nginx",
+                                     "official/postfix",
+                                     "official/usermgt"],
             additionalDependencies: [],
-            registryConfig: ""
+            registryConfig        : ""
     ]
 
     Vagrant vagrant
@@ -48,7 +48,7 @@ class EcoSystem {
     }
 
     void provision(String mountPath) {
-        script.dir ('ecosystem') {
+        script.dir('ecosystem') {
             script.git branch: 'develop', url: 'https://github.com/cloudogu/ecosystem', changelog: false, poll: false
         }
         script.timeout(5) {
@@ -94,7 +94,7 @@ class EcoSystem {
     }
 
     void installDogu(String doguFullName) {
-        if (doguFullName.contains("/")){
+        if (doguFullName.contains("/")) {
             vagrant.ssh "sudo cesapp install ${doguFullName}"
         } else {
             script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
@@ -146,6 +146,68 @@ class EcoSystem {
         }
     }
 
+
+    void runYarnIntegrationTests() {
+        this.runYarnIntegrationTests(15)
+    }
+
+    void runYarnIntegrationTests(int timeoutInMinutes) {
+        if (fileExists('integrationTests/it-results.xml')) {
+            sh 'rm -f integrationTests/it-results.xml'
+        }
+
+        timeout(time: timeoutInMinutes, unit: 'MINUTES') {
+            try {
+                withZalenium { zaleniumIp ->
+                    dir('integrationTests') {
+
+                        docker.image('node:8.14.0-stretch').inside("-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                            sh 'yarn install'
+                            sh 'yarn run ci-test'
+                        }
+                    }
+                }
+            } finally {
+                // archive test results
+                junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
+            }
+        }
+    }
+    
+
+    void runMavenIntegrationTests() {
+        this.runMavenIntegrationTests(15)
+    }
+
+    void runMavenIntegrationTests(int timeoutInMinutes) {
+        sh 'rm -f integrationTests/target/*.xml'
+
+        timeout(time: 15, unit: 'MINUTES') {
+            try {
+                def defaultConfig = [seleniumVersion    : '3.141.59-p42',
+                                     seleniumImage      : 'elgalu/selenium',
+                                     zaleniumVersion    : '3.141.59z',
+                                     zaleniumImage      : 'dosel/zalenium',
+                                     zaleniumVideoDir   : 'zalenium',
+                                     debugZalenium      : false,
+                                     sendGoogleAnalytics: false]
+                withDockerNetwork { zaleniumNetwork ->
+                    withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        dir('integrationTests') {
+                            docker.image('maven:3-jdk-11-slim')
+                                    .inside("--net ${zaleniumNetwork} -v ${PWD}:/usr/src/app -w /usr/src/app -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                                        sh('mvn clean test')
+                                    }
+                        }
+                    }
+                }
+            } finally {
+                // archive test results
+                junit allowEmptyResults: true, testResults: 'integrationTests/target/*.xml'
+            }
+        }
+    }
+
     void collectLogs() {
         vagrant.ssh "sudo tar cvfz /tmp/logs.tar.gz /var/log/docker"
         vagrant.scp(":/tmp/logs.tar.gz", "logs.tar.gz")
@@ -162,7 +224,7 @@ class EcoSystem {
         for (int i = 0; i < deps.size(); i++) {
             formatted += "\"${deps[i]}\""
 
-            if ((i+1) < deps.size()) {
+            if ((i + 1) < deps.size()) {
                 formatted += ', '
             }
         }
