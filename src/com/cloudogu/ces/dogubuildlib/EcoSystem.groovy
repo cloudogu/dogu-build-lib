@@ -146,43 +146,31 @@ class EcoSystem {
         }
     }
 
+    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage) {
+        script.sh 'rm -f integrationTests/it-results.xml'
 
-    void runYarnIntegrationTests() {
-        this.runYarnIntegrationTests(15)
-    }
-
-    void runYarnIntegrationTests(int timeoutInMinutes) {
-        if (fileExists('integrationTests/it-results.xml')) {
-            sh 'rm -f integrationTests/it-results.xml'
-        }
-
-        timeout(time: timeoutInMinutes, unit: 'MINUTES') {
+        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
-                withZalenium { zaleniumIp ->
-                    dir('integrationTests') {
+                script.withZalenium { zaleniumIp ->
+                    script.dir('integrationTests') {
 
-                        docker.image('node:8.14.0-stretch').inside("-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                            sh 'yarn install'
-                            sh 'yarn run ci-test'
+                        script.docker.image(nodeImage).inside("-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                            script.sh 'yarn install'
+                            script.sh 'yarn run ci-test'
                         }
                     }
                 }
             } finally {
                 // archive test results
-                junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
+                script.junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
             }
         }
     }
-    
-
-    void runMavenIntegrationTests() {
-        this.runMavenIntegrationTests(15)
-    }
 
     void runMavenIntegrationTests(int timeoutInMinutes) {
-        sh 'rm -f integrationTests/target/*.xml'
+        script.sh 'rm -f integrationTests/target/*.xml'
 
-        timeout(time: 15, unit: 'MINUTES') {
+        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
                 def defaultConfig = [seleniumVersion    : '3.141.59-p42',
                                      seleniumImage      : 'elgalu/selenium',
@@ -191,20 +179,24 @@ class EcoSystem {
                                      zaleniumVideoDir   : 'zalenium',
                                      debugZalenium      : false,
                                      sendGoogleAnalytics: false]
-                withDockerNetwork { zaleniumNetwork ->
-                    withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
-                        dir('integrationTests') {
-                            docker.image('maven:3-jdk-11-slim')
-                                    .inside("--net ${zaleniumNetwork} -v ${PWD}:/usr/src/app -w /usr/src/app -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                                        sh('mvn clean test')
-                                    }
-                        }
+                script.withDockerNetwork { zaleniumNetwork ->
+                    script.withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        this.startMavenIntegrationTests()
                     }
                 }
             } finally {
                 // archive test results
-                junit allowEmptyResults: true, testResults: 'integrationTests/target/*.xml'
+                script.junit allowEmptyResults: true, testResults: 'integrationTests/target/*.xml'
             }
+        }
+    }
+
+    private void startMavenIntegrationTests(){
+        script.dir('integrationTests') {
+            script.docker.image('maven:3-jdk-11-slim')
+                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                        script.sh('mvn clean test')
+                    }
         }
     }
 

@@ -75,4 +75,17 @@ class EcoSystemTest {
         assert mockedScript.writenFile.contains("\"registryConfig\": {${expectedRegistryConfig}}")
     }
 
+    @Test
+    void testIncreaseVersion(){
+        String start = "2.222.4-1"
+        String expected = "2.222.4-2"
+        String result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        assert expected == result
+
+        start = "2.222.4-9"
+        expected = "2.222.4-10"
+        result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        assert expected == result
+    }
+
 }
