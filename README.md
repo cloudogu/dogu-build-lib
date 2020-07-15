@@ -43,6 +43,11 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - push(String doguPath) | push dogu into registry
 - destroy() | remove the generated ces instance
 - collectLogs() | add logs as artifact to jenkins build
+- purgeDogu(String doguName) | executes cesapp purge command
+- installDogu(String doguFullName) | executes cesapp install command
+- upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
+- runYarnIntegrationTests() | runs yarn integration tests for the dogu
+- runMavenIntegrationTests() | runs maven integration tests for the dogu
 
 
 ### Vagrant
