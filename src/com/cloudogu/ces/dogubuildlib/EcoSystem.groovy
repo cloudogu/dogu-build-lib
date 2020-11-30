@@ -315,7 +315,7 @@ Vagrant.configure(2) do |config|
     google.machine_type = "n1-standard-4"
 
     # preemptible
-    google.preemptible = true
+    google.preemptible = false
     google.auto_restart = false
     google.on_host_maintenance = "TERMINATE"
 
