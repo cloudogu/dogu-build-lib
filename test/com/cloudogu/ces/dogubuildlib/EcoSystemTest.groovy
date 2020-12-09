@@ -88,4 +88,17 @@ class EcoSystemTest {
         assert expected == result
     }
 
+    @Test
+    void testparseAdditionalIntegrationTestArgs(){
+        def input = ['ARG1=value1', 'ARG2=value2']
+        String expected = "-e ARG1=value1 -e ARG2=value2"
+        String result = EcoSystem.parseAdditionalIntegrationTestArgs(input)
+        assert expected == result
+
+        input = []
+        expected = ""
+        result = EcoSystem.parseAdditionalIntegrationTestArgs(input)
+        assert expected == result
+    }
+
 }
