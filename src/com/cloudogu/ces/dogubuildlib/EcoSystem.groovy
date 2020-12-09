@@ -160,11 +160,13 @@ class EcoSystem {
                                      debugZalenium        : false,
                                      videoRecordingEnabled: enableVideoRecording,
                                      sendGoogleAnalytics  : false]
-                script.withZalenium(defaultConfig) { zaleniumIp ->
-                    script.dir('integrationTests') {
-                        script.docker.image(nodeImage).inside("${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                            script.sh 'yarn install'
-                            script.sh 'yarn run ci-test'
+                script.withDockerNetwork { zaleniumNetwork ->
+                    script.withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        script.dir('integrationTests') {
+                            script.docker.image(nodeImage).inside("${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                                script.sh 'yarn install'
+                                script.sh 'yarn run ci-test'
+                            }
                         }
                     }
                 }
@@ -212,7 +214,7 @@ class EcoSystem {
     private void startMavenIntegrationTests(String additionalContainerRunArgs){
         script.dir('integrationTests') {
             script.docker.image('maven:3-jdk-11-slim')
-                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs}-e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
                         script.sh('mvn clean test')
                     }
         }
