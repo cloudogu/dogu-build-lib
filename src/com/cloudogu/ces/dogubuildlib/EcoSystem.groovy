@@ -152,16 +152,9 @@ class EcoSystem {
 
         script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
-                def defaultConfig = [seleniumVersion      : '3.141.59-p42',
-                                     seleniumImage        : 'elgalu/selenium',
-                                     zaleniumVersion      : '3.141.59z',
-                                     zaleniumImage        : 'dosel/zalenium',
-                                     zaleniumVideoDir     : 'zalenium',
-                                     debugZalenium        : false,
-                                     videoRecordingEnabled: enableVideoRecording,
-                                     sendGoogleAnalytics  : false]
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
-                    script.withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
                         script.dir('integrationTests') {
                             script.docker.image(nodeImage).inside("${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
                                 script.sh 'yarn install'
@@ -191,16 +184,9 @@ class EcoSystem {
 
         script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
-                def defaultConfig = [seleniumVersion      : '3.141.59-p42',
-                                     seleniumImage        : 'elgalu/selenium',
-                                     zaleniumVersion      : '3.141.59z',
-                                     zaleniumImage        : 'dosel/zalenium',
-                                     zaleniumVideoDir     : 'zalenium',
-                                     debugZalenium        : false,
-                                     videoRecordingEnabled: enableVideoRecording,
-                                     sendGoogleAnalytics  : false]
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
-                    script.withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
                         this.startMavenIntegrationTests(additionalContainerRunArgs)
                     }
                 }
