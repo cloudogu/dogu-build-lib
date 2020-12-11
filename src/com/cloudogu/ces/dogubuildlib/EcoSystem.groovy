@@ -156,7 +156,7 @@ class EcoSystem {
                 script.withDockerNetwork { zaleniumNetwork ->
                     script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
                         script.dir('integrationTests') {
-                            script.docker.image(nodeImage).inside("${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                            script.docker.image(nodeImage).inside("--net ${zaleniumNetwork} ${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
                                 script.sh 'yarn install'
                                 script.sh 'yarn run ci-test'
                             }
