@@ -146,17 +146,20 @@ class EcoSystem {
         }
     }
 
-    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage) {
+    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
         script.sh 'rm -f integrationTests/it-results.xml'
+        def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
 
         script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
-                script.withZalenium { zaleniumIp ->
-                    script.dir('integrationTests') {
-
-                        script.docker.image(nodeImage).inside("-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                            script.sh 'yarn install'
-                            script.sh 'yarn run ci-test'
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
+                script.withDockerNetwork { zaleniumNetwork ->
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        script.dir('integrationTests') {
+                            script.docker.image(nodeImage).inside("--net ${zaleniumNetwork} ${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                                script.sh 'yarn install'
+                                script.sh 'yarn run ci-test'
+                            }
                         }
                     }
                 }
@@ -167,21 +170,24 @@ class EcoSystem {
         }
     }
 
-    void runMavenIntegrationTests(int timeoutInMinutes) {
+    static parseAdditionalIntegrationTestArgs(ArrayList<String> args = []) {
+        def parsedArgs = []
+        args.each {
+            parsedArgs << "-e $it"
+        }
+        return parsedArgs.join(' ')
+    }
+
+    void runMavenIntegrationTests(int timeoutInMinutes, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
         script.sh 'rm -f integrationTests/target/*.xml'
+        def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
 
         script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             try {
-                def defaultConfig = [seleniumVersion    : '3.141.59-p42',
-                                     seleniumImage      : 'elgalu/selenium',
-                                     zaleniumVersion    : '3.141.59z',
-                                     zaleniumImage      : 'dosel/zalenium',
-                                     zaleniumVideoDir   : 'zalenium',
-                                     debugZalenium      : false,
-                                     sendGoogleAnalytics: false]
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
-                    script.withZalenium(defaultConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
-                        this.startMavenIntegrationTests()
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        this.startMavenIntegrationTests(additionalContainerRunArgs)
                     }
                 }
             } finally {
@@ -191,10 +197,10 @@ class EcoSystem {
         }
     }
 
-    private void startMavenIntegrationTests(){
+    private void startMavenIntegrationTests(String additionalContainerRunArgs){
         script.dir('integrationTests') {
             script.docker.image('maven:3-jdk-11-slim')
-                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
                         script.sh('mvn clean test')
                     }
         }
