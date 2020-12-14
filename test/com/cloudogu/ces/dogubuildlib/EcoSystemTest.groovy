@@ -75,4 +75,30 @@ class EcoSystemTest {
         assert mockedScript.writenFile.contains("\"registryConfig\": {${expectedRegistryConfig}}")
     }
 
+    @Test
+    void testIncreaseVersion(){
+        String start = "2.222.4-1"
+        String expected = "2.222.4-2"
+        String result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        assert expected == result
+
+        start = "2.222.4-9"
+        expected = "2.222.4-10"
+        result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        assert expected == result
+    }
+
+    @Test
+    void testparseAdditionalIntegrationTestArgs(){
+        def input = ['ARG1=value1', 'ARG2=value2']
+        String expected = "-e ARG1=value1 -e ARG2=value2"
+        String result = EcoSystem.parseAdditionalIntegrationTestArgs(input)
+        assert expected == result
+
+        input = []
+        expected = ""
+        result = EcoSystem.parseAdditionalIntegrationTestArgs(input)
+        assert expected == result
+    }
+
 }

@@ -7,17 +7,17 @@ class EcoSystem {
     String sshCredentials
 
     def defaultSetupConfig = [
-            adminUsername: "ces-admin",
-            adminPassword: "ecosystem2016",
-            adminGroup: "CesAdministrators",
-            dependencies : ["official/registrator",
-                    "official/ldap",
-                    "official/cas",
-                    "official/nginx",
-                    "official/postfix",
-                    "official/usermgt"],
+            adminUsername         : "ces-admin",
+            adminPassword         : "ecosystem2016",
+            adminGroup            : "CesAdministrators",
+            dependencies          : ["official/registrator",
+                                     "official/ldap",
+                                     "official/cas",
+                                     "official/nginx",
+                                     "official/postfix",
+                                     "official/usermgt"],
             additionalDependencies: [],
-            registryConfig: ""
+            registryConfig        : ""
     ]
 
     Vagrant vagrant
@@ -48,7 +48,7 @@ class EcoSystem {
     }
 
     void provision(String mountPath) {
-        script.dir ('ecosystem') {
+        script.dir('ecosystem') {
             script.git branch: 'develop', url: 'https://github.com/cloudogu/ecosystem', changelog: false, poll: false
         }
         script.timeout(5) {
@@ -89,6 +89,34 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
+    void purgeDogu(String doguName) {
+        vagrant.ssh "sudo cesapp purge ${doguName}"
+    }
+
+    void installDogu(String doguFullName) {
+        if (doguFullName.contains("/")) {
+            vagrant.ssh "sudo cesapp install ${doguFullName}"
+        } else {
+            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+        }
+    }
+
+    void upgradeDogu(EcoSystem ecoSystem) {
+        // Upgrade dogu by building again with new version
+        // currentDoguVersionString, e.g. "Version": "2.222.4-1",
+        String currentDoguVersionString = script.sh(returnStdout: true, script: 'grep .Version dogu.json').trim()
+        // newDoguVersion, e.g. 2.222.4-2
+        String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersionString)
+        ecoSystem.setVersion(newDoguVersion)
+        ecoSystem.vagrant.sync()
+        // Build/Upgrade dogu
+        ecoSystem.build("/dogu")
+    }
+
+    void startDogu(String doguName) {
+        vagrant.ssh "sudo cesapp start ${doguName}"
+    }
+
     void verify(String doguPath) {
         if (script.fileExists('verify.xml')) {
             script.sh 'rm -f verify.xml'
@@ -118,6 +146,66 @@ class EcoSystem {
         }
     }
 
+    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
+        script.sh 'rm -f integrationTests/it-results.xml'
+        def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
+
+        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
+            try {
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
+                script.withDockerNetwork { zaleniumNetwork ->
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        script.dir('integrationTests') {
+                            script.docker.image(nodeImage).inside("--net ${zaleniumNetwork} ${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                                script.sh 'yarn install'
+                                script.sh 'yarn run ci-test'
+                            }
+                        }
+                    }
+                }
+            } finally {
+                // archive test results
+                script.junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
+            }
+        }
+    }
+
+    static parseAdditionalIntegrationTestArgs(ArrayList<String> args = []) {
+        def parsedArgs = []
+        args.each {
+            parsedArgs << "-e $it"
+        }
+        return parsedArgs.join(' ')
+    }
+
+    void runMavenIntegrationTests(int timeoutInMinutes, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
+        script.sh 'rm -f integrationTests/target/*.xml'
+        def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
+
+        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
+            try {
+                def customConfig = [videoRecordingEnabled: enableVideoRecording]
+                script.withDockerNetwork { zaleniumNetwork ->
+                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+                        this.startMavenIntegrationTests(additionalContainerRunArgs)
+                    }
+                }
+            } finally {
+                // archive test results
+                script.junit allowEmptyResults: true, testResults: 'integrationTests/target/*.xml'
+            }
+        }
+    }
+
+    private void startMavenIntegrationTests(String additionalContainerRunArgs){
+        script.dir('integrationTests') {
+            script.docker.image('maven:3-jdk-11-slim')
+                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                        script.sh('mvn clean test')
+                    }
+        }
+    }
+
     void collectLogs() {
         vagrant.ssh "sudo tar cvfz /tmp/logs.tar.gz /var/log/docker"
         vagrant.scp(":/tmp/logs.tar.gz", "logs.tar.gz")
@@ -134,7 +222,7 @@ class EcoSystem {
         for (int i = 0; i < deps.size(); i++) {
             formatted += "\"${deps[i]}\""
 
-            if ((i+1) < deps.size()) {
+            if ((i + 1) < deps.size()) {
                 formatted += ', '
             }
         }
@@ -257,4 +345,14 @@ end
 """
     }
 
+    static String increaseDoguReleaseVersionByOne(String currentDoguVersionString) {
+        // releaseNumber, e.g. 1
+        int releaseNumber = (currentDoguVersionString.split('-')[1] - "\",").toInteger()
+        // newReleaseNumber, e.g. 2
+        int newReleaseNumber = releaseNumber + 1
+        // currentDoguVersion, e.g. 2.222.4-1
+        String currentDoguVersion = currentDoguVersionString.split("\"")[3]
+        // newDoguVersion, e.g. 2.222.4-2
+        return currentDoguVersion.split("-")[0] + "-" + newReleaseNumber
+    }
 }
