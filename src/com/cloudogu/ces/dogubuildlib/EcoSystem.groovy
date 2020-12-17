@@ -187,7 +187,7 @@ class EcoSystem {
                 def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
                     script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
-                        this.startMavenIntegrationTests(additionalContainerRunArgs)
+                        this.startMavenIntegrationTests(zaleniumNetwork, additionalContainerRunArgs)
                     }
                 }
             } finally {
@@ -197,10 +197,10 @@ class EcoSystem {
         }
     }
 
-    private void startMavenIntegrationTests(String additionalContainerRunArgs){
+    private void startMavenIntegrationTests(String network, String additionalContainerRunArgs){
         script.dir('integrationTests') {
             script.docker.image('maven:3-jdk-11-slim')
-                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                    .inside("--net ${network} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
                         script.sh('mvn clean test')
                     }
         }
