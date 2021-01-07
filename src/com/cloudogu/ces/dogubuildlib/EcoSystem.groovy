@@ -30,7 +30,7 @@ class EcoSystem {
         this.sshCredentials = sshCredentials
     }
 
-    void changeNamespace(String namespace) {
+    void changeNamespace(String namespace, doguPath = null) {
         def doguJson = script.readJSON file: 'dogu.json'
         def doguName = doguJson.Name.split('/')[1]
         def newDoguName = namespace + '/' + doguName
@@ -39,12 +39,21 @@ class EcoSystem {
         doguJson.Name = newDoguName
 
         script.writeJSON file: 'dogu.json', json: doguJson
+
+        if (vagrant != null && doguPath != null) {
+            vagrant.scp("dogu.json", "${doguPath}/dogu.json")
+        }
     }
 
-    void setVersion(String version) {
+    void setVersion(String version, doguPath = null) {
         def doguJson = script.readJSON file: 'dogu.json'
         doguJson.Version = version
+
         script.writeJSON file: 'dogu.json', json: doguJson
+
+        if (vagrant != null && doguPath != null) {
+            vagrant.scp("dogu.json", "${doguPath}/dogu.json")
+        }
     }
 
     void provision(String mountPath) {
@@ -133,6 +142,10 @@ class EcoSystem {
 
     void push(String doguPath) {
         vagrant.ssh "sudo cesapp push ${doguPath}"
+    }
+
+    void purge(String dogu) {
+        vagrant.ssh "sudo cesapp purge --keep-container --keep-image ${dogu}"
     }
 
     void destroy() {
