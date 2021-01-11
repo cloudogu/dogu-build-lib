@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v1.2.0] - 2021-01-11
 ### Added
 - Add method to purge dogu without removing container or image
   
@@ -12,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix integration test steps for yarn and maven
 
 ## [v1.1.1] - 2020-12-14
-
 ### Added
 - Add methods to install, purge, upgrade and start dogus
 - Add methods to run maven and yarn integration tests
