@@ -30,7 +30,7 @@ class EcoSystem {
         this.sshCredentials = sshCredentials
     }
 
-    void changeNamespace(String namespace) {
+    void changeNamespace(String namespace, doguPath = null) {
         def doguJson = script.readJSON file: 'dogu.json'
         def doguName = doguJson.Name.split('/')[1]
         def newDoguName = namespace + '/' + doguName
@@ -39,12 +39,21 @@ class EcoSystem {
         doguJson.Name = newDoguName
 
         script.writeJSON file: 'dogu.json', json: doguJson
+
+        if (vagrant != null && doguPath != null) {
+            vagrant.scp("dogu.json", "${doguPath}/dogu.json")
+        }
     }
 
-    void setVersion(String version) {
+    void setVersion(String version, doguPath = null) {
         def doguJson = script.readJSON file: 'dogu.json'
         doguJson.Version = version
+
         script.writeJSON file: 'dogu.json', json: doguJson
+
+        if (vagrant != null && doguPath != null) {
+            vagrant.scp("dogu.json", "${doguPath}/dogu.json")
+        }
     }
 
     void provision(String mountPath) {
@@ -135,6 +144,10 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp push ${doguPath}"
     }
 
+    void purge(String dogu) {
+        vagrant.ssh "sudo cesapp purge --keep-container --keep-image ${dogu}"
+    }
+
     void destroy() {
         if (vagrant != null) {
             try {
@@ -146,7 +159,7 @@ class EcoSystem {
         }
     }
 
-    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
+    void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs = [], boolean enableVideoRecording = false) {
         script.sh 'rm -f integrationTests/it-results.xml'
         def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
 
@@ -154,18 +167,22 @@ class EcoSystem {
             try {
                 def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
-                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
-                        script.dir('integrationTests') {
-                            script.docker.image(nodeImage).inside("--net ${zaleniumNetwork} ${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                                script.sh 'yarn install'
-                                script.sh 'yarn run ci-test'
-                            }
-                        }
-                    }
+                    this.startYarnIntegrationTests(zaleniumNetwork, nodeImage, customConfig, additionalContainerRunArgs)
                 }
             } finally {
                 // archive test results
                 script.junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
+            }
+        }
+    }
+
+    private void startYarnIntegrationTests(def zaleniumNetwork, String nodeImage, def customConfig, def additionalContainerRunArgs) {
+        script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+            script.dir('integrationTests') {
+                script.docker.image(nodeImage).inside("--net ${zaleniumNetwork} ${additionalContainerRunArgs}-e WEBDRIVER=remote -e CES_FQDN=${externalIP} -e SELENIUM_BROWSER=chrome -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                    script.sh 'yarn install'
+                    script.sh 'yarn run ci-test'
+                }
             }
         }
     }
@@ -178,7 +195,7 @@ class EcoSystem {
         return parsedArgs.join(' ')
     }
 
-    void runMavenIntegrationTests(int timeoutInMinutes, ArrayList<String> additionalArgs=[], boolean enableVideoRecording=false) {
+    void runMavenIntegrationTests(int timeoutInMinutes, ArrayList<String> additionalArgs = [], boolean enableVideoRecording = false) {
         script.sh 'rm -f integrationTests/target/*.xml'
         def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
 
@@ -186,9 +203,7 @@ class EcoSystem {
             try {
                 def customConfig = [videoRecordingEnabled: enableVideoRecording]
                 script.withDockerNetwork { zaleniumNetwork ->
-                    script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
-                        this.startMavenIntegrationTests(additionalContainerRunArgs)
-                    }
+                    this.startMavenIntegrationTests(zaleniumNetwork, customConfig, additionalContainerRunArgs)
                 }
             } finally {
                 // archive test results
@@ -197,12 +212,14 @@ class EcoSystem {
         }
     }
 
-    private void startMavenIntegrationTests(String additionalContainerRunArgs){
-        script.dir('integrationTests') {
-            script.docker.image('maven:3-jdk-11-slim')
-                    .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
-                        script.sh('mvn clean test')
-                    }
+    private void startMavenIntegrationTests(def zaleniumNetwork, def customConfig, String additionalContainerRunArgs) {
+        script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
+            script.dir('integrationTests') {
+                script.docker.image('maven:3-jdk-11-slim')
+                        .inside("--net ${zaleniumNetwork} -v ${script.PWD}:/usr/src/app -w /usr/src/app ${additionalContainerRunArgs} -e CES_FQDN=${externalIP} -e SELENIUM_REMOTE_URL=http://${zaleniumIp}:4444/wd/hub") {
+                            script.sh('mvn clean test')
+                        }
+            }
         }
     }
 
