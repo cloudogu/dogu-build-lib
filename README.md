@@ -48,6 +48,22 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
+  
+
+##### runCypressIntegrationTests():
+```groovy
+/**
+ * Runs integration tests based on cypress. Is it necessary that the cypress integration test are inside a
+ * relative path named `integrationTests` from the root.
+ * @param version - The cypress image to use for running the integration tests. Default: "cypress/included:7.1.0".
+ * @param enableVideoRecording - Determines whether cypress should record videos. Default: true.
+ * @param enableScreenshotRecording - Determines whether cypress should record screenshots. Default: true.
+ * @param timeoutInMinutes - Determines the complete timeout in minutes for the tests. Default: 15.
+ * @param additionalDockerArgs - A list containing arguments that are given to docker.
+ * @param additionalCypressArgs - A list containing argument that are given to cypress.
+ */
+void runCypressIntegrationTests(String cypressImage = "cypress/included:7.1.0", boolean enableVideoRecording = true, boolean enableScreenshotRecording = true, int timeoutInMinutes = 15, ArrayList<String> additionalDockerArgs = [], ArrayList<String> additionalCypressArgs = []){}
+```
 
 
 ### Vagrant
@@ -67,6 +83,21 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 - getExternalIP() | get ip for connection
 - sshOut(String command) | execute command on vm
 - destroy() | remove vm with all data
+
+### Cypress
+#### Get Started
+
+```groovy
+Cypress cy = new Cypress(script, ecoSystem)
+```
+
+#### Functions
+- setCypressImage(String version) | Sets the cypress docker image
+- setRecordVideos(boolean record) | Determines whether cypress should record videos. Default true
+- setRecordScreenshotsOnFailure(boolean record) | Determines whether cypress should record videos. Default true
+- runIntegrationtests(int timeoutInMinutes = 15, ArrayList<String> additionalDockerArgs = [], ArrayList<String> additionalCypressArgs = []) | Runs the integration tests
+- archiveVideosAndScreenshots() | Archives the artifacts after the run has finished.
+- preTestWork() | Should be executed before running the tests. Cleans the video, report, and screenshot folders.
 
 ### DockerLint
 
@@ -122,7 +153,7 @@ node('vagrant') {
         try {
 
             stage('Provision') {
-                ecoSystem.provision("/dogu");
+                ecoSystem.provision("/dogu")
             }
 
             stage('Setup') {
