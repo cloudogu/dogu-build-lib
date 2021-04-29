@@ -192,9 +192,12 @@ class EcoSystem {
         cypress.setRecordVideos(enableVideoRecording)
         cypress.setRecordScreenshotsOnFailure(enableScreenshotRecording)
 
-        cypress.preTestWork()
-        cypress.runIntegrationTests(timeoutInMinutes, additionalDockerArgs, additionalCypressArgs)
-        cypress.archiveVideosAndScreenshots()
+        try {
+            cypress.preTestWork()
+            cypress.runIntegrationTests(timeoutInMinutes, additionalDockerArgs, additionalCypressArgs)
+        } finally {
+            cypress.archiveVideosAndScreenshots()
+        }
     }
 
     private void startYarnIntegrationTests(def zaleniumNetwork, String nodeImage, def customConfig, def additionalContainerRunArgs) {
