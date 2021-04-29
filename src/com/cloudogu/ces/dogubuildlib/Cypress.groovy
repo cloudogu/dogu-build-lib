@@ -52,9 +52,6 @@ class Cypress {
 
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
-            dockerArgs <<= " -e XDG_CONFIG_HOME=integrationTests/"
-            dockerArgs <<= " -e YARN_CACHE_FOLDER=integrationTests/"
-            dockerArgs <<= " -e CYPRESS_CACHE_FOLDER=integrationTests/"
             dockerArgs <<= " -e CYPRESS_BASE_URL=https://${externalIP}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
