@@ -3,74 +3,50 @@ package com.cloudogu.ces.dogubuildlib
 class Cypress {
 
     def script
-    EcoSystem ecoSystem
-    String version
-    boolean recordVideos
-    boolean recordScreenshots
+    public static def defaultIntegrationTestsConfig = [
+            cypressImage         : "cypress/included:7.1.0",
+            enableVideo          : true,
+            enableScreenshots    : true,
+            timeoutInMinutes     : 15,
+            additionalDockerArgs : "",
+            additionalCypressArgs: ""
+    ]
+    def config
 
-    Cypress(script, EcoSystem ecoSystem) {
+    Cypress(script, config = [:]) {
         this.script = script
-        this.version = "cypress/included:7.1.0"
-        this.recordVideos = true
-        this.recordScreenshots = true
-        this.ecoSystem = ecoSystem
-    }
-
-    /**
-     * Sets the version of the used cypress image as docker image format, e.g., default is `cypress/included:7.1.0`
-     * @param version Version to use
-     */
-    void setCypressImage(String version) {
-        this.version = version
-    }
-
-    /**
-     * Determine whether cypress should record videos or not.
-     * @param record true, when videos should be recorded.
-     */
-    void setRecordVideos(boolean record) {
-        this.recordVideos = record
-    }
-
-    /**
-     * Determine whether cypress should records screenshots when a test failed.
-     * @param record true, when screenshots should be recorded.
-     */
-    void setRecordScreenshotsOnFailure(boolean record) {
-        this.recordScreenshots = record
+        // Merge default config with the one passed as parameter
+        this.config = [:]
+        this.config << defaultIntegrationTestsConfig
+        this.config << config
     }
 
     /**
      * Runs all the integration tests with cypress.
      */
-    void runIntegrationTests(int timeoutInMinutes = 15, ArrayList<String> additionalDockerArgs = [], ArrayList<String> additionalCypressArgs = []) {
-
-        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
+    void runIntegrationTests(EcoSystem ecoSystem) {
+        script.timeout(time: this.config.timeoutInMinutes, unit: "MINUTES") {
             // Yarn requires a user to download their dependencies and cacheable content.
             String passwdPath = writePasswd()
-            String externalIP = this.ecoSystem.externalIP
+            String externalIP = ecoSystem.getExternalIP()
 
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
             dockerArgs <<= " -e CYPRESS_BASE_URL=https://${externalIP}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
-            additionalDockerArgs.each { value ->
-                dockerArgs <<= value
-            }
-            script.docker.image(this.version)
+            dockerArgs <<= " " + this.config.additionalDockerArgs
+            script.docker.image(this.config.cypressImage)
                     .inside(dockerArgs) {
                         // Create args for the cypress run
                         def runID = UUID.randomUUID().toString()
                         String cypressRunArgs = "-q"
                         cypressRunArgs <<= " --headless"
-                        cypressRunArgs <<= " --config screenshotOnRunFailure=" + this.recordScreenshots
-                        cypressRunArgs <<= " --config video=" + this.recordVideos
+                        cypressRunArgs <<= " --config screenshotOnRunFailure=" + this.config.enableScreenshots
+                        cypressRunArgs <<= " --config video=" + this.config.enableVideo
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
-                        additionalCypressArgs.each { value ->
-                            cypressRunArgs <<= value
-                        }
+                        cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
@@ -81,12 +57,12 @@ class Cypress {
      */
     void archiveVideosAndScreenshots() {
         script.echo "archiving videos and screenshots from test execution..."
-        script.junit allowEmptyResults: true, testResults: 'integrationTests/cypress-reports/TEST-*.xml'
-        if (this.recordVideos) {
-            script.archiveArtifacts artifacts:"integrationTests/cypress/videos/**/*.mp4", allowEmptyArchive: true
+        script.junit allowEmptyResults: true, testResults: "integrationTests/cypress-reports/TEST-*.xml"
+        if (this.config.enableVideo) {
+            script.archiveArtifacts artifacts: "integrationTests/cypress/videos/**/*.mp4", allowEmptyArchive: true
         }
-        if (this.recordScreenshots) {
-            script.archiveArtifacts artifacts:"integrationTests/cypress/screenshots/**/*.png", allowEmptyArchive: true
+        if (this.config.enableScreenshots) {
+            script.archiveArtifacts artifacts: "integrationTests/cypress/screenshots/**/*.png", allowEmptyArchive: true
         }
     }
 
@@ -101,11 +77,12 @@ class Cypress {
         script.sh "rm -rf integrationTests/cypress-reports"
     }
 
-    private String writePasswd() {
-        def passwdPath = '.jenkins/etc/passwd'
+    String writePasswd() {
+        def passwdPath = ".jenkins/etc/passwd"
 
         // e.g. "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
-        String passwd = readJenkinsUserFromEtcPasswdCutOffAfterGroupId() + ":${script.pwd()}:/bin/sh"
+        def etcPasswd = readJenkinsUserFromEtcPasswd()
+        String passwd = readJenkinsUserFromEtcPasswdCutOffAfterGroupId(etcPasswd) + ":${script.pwd()}:/bin/sh"
 
         script.writeFile file: passwdPath, text: passwd
         return passwdPath
@@ -115,26 +92,25 @@ class Cypress {
      * Return from /etc/passwd (for user that executes build) only username, pw, UID and GID.
      * e.g. "jenkins:x:1000:1000:"
      */
-    private String readJenkinsUserFromEtcPasswdCutOffAfterGroupId() {
-        def regexMatchesUntilFourthColon = '(.*?:){4}'
-
-        def etcPasswd = readJenkinsUserFromEtcPasswd()
+    String readJenkinsUserFromEtcPasswdCutOffAfterGroupId(def etcPasswd) {
+        def regexMatchesUntilFourthColon = "(.*?:){4}"
 
         // Storing matcher in a variable might lead to java.io.NotSerializableException: java.util.regex.Matcher
         if (!(etcPasswd =~ regexMatchesUntilFourthColon)) {
-            script.error '/etc/passwd entry for current user does not match user:x:uid:gid:'
+            script.error "/etc/passwd entry for current user does not match user:x:uid:gid:"
+            return ""
         }
         return (etcPasswd =~ regexMatchesUntilFourthColon)[0][0]
     }
 
-    private String readJenkinsUserFromEtcPasswd() {
+    String readJenkinsUserFromEtcPasswd() {
         // Query current jenkins user string, e.g. "jenkins:x:1000:1000:Jenkins,,,:/home/jenkins:/bin/bash"
         // An alternative (dirtier) approach: https://github.com/cloudogu/docker-golang/blob/master/Dockerfile
         def userName = script.sh(returnStdout: true, script: "whoami").trim()
         String jenkinsUserFromEtcPasswd = script.sh(returnStdout: true, script: "cat /etc/passwd | grep $userName").trim()
 
         if (jenkinsUserFromEtcPasswd.isEmpty()) {
-            script.error 'Unable to parse user jenkins from /etc/passwd.'
+            script.error "Unable to parse user jenkins from /etc/passwd."
         }
         return jenkinsUserFromEtcPasswd
     }

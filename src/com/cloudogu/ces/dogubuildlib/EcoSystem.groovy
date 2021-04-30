@@ -179,22 +179,21 @@ class EcoSystem {
     /**
      * Runs integration tests based on cypress. Is it necessary that the cypress integration test are inside a
      * relative path named `integrationTests` from the root.
-     * @param version - The cypress image to use for running the integration tests. Default: "cypress/included:7.1.0".
-     * @param enableVideoRecording - Determines whether cypress should record videos. Default: true.
-     * @param enableScreenshotRecording - Determines whether cypress should record screenshots. Default: true.
-     * @param timeoutInMinutes - Determines the complete timeout in minutes for the tests. Default: 15.
-     * @param additionalDockerArgs - A list containing arguments that are given to docker.
-     * @param additionalCypressArgs - A list containing argument that are given to cypress.
+     * The configuration can contain the following values:
+     *
+     * <li>cypressImage - The cypress image to use for running the integration tests. Default: "cypress/included:7.1.0".</li>
+     * <li>enableVideo - Determines whether cypress should record videos. Default: true.</li>
+     * <li>enableScreenshots - Determines whether cypress should record screenshots. Default: true.</li>
+     * <li>timeoutInMinutes - Determines the complete timeout in minutes for the tests. Default: 15.</li>
+     * <li>additionalDockerArgs - A list containing arguments that are given to docker.</li>
+     * <li>additionalCypressArgs - A list containing argument that are given to cypress.</li>
      */
-    void runCypressIntegrationTests(String cypressImage = "cypress/included:7.1.0", boolean enableVideoRecording = true, boolean enableScreenshotRecording = true, int timeoutInMinutes = 15, ArrayList<String> additionalDockerArgs = [], ArrayList<String> additionalCypressArgs = []) {
-        Cypress cypress = new Cypress(this.script, this)
-        cypress.setVersion(cypressImage)
-        cypress.setRecordVideos(enableVideoRecording)
-        cypress.setRecordScreenshotsOnFailure(enableScreenshotRecording)
+    void runCypressIntegrationTests(config = [:]) {
+        Cypress cypress = new Cypress(this.script)
 
         try {
             cypress.preTestWork()
-            cypress.runIntegrationTests(timeoutInMinutes, additionalDockerArgs, additionalCypressArgs)
+            cypress.runIntegrationTests(this, config)
         } finally {
             cypress.archiveVideosAndScreenshots()
         }
