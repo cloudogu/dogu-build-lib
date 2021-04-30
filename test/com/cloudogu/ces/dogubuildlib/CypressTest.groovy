@@ -249,10 +249,12 @@ class CypressTest {
         assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
-        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro"
+        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
         assert mockedScript.shList[2].contains("cd integrationTests/ && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
     }
 
+    //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
+    //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
     @Test
     void testRunCypressIntegrationTestsWithCustomConfig() {
         // given
