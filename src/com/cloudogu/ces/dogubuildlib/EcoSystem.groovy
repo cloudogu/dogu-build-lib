@@ -189,11 +189,11 @@ class EcoSystem {
      * <li>additionalCypressArgs - A list containing argument that are given to cypress.</li>
      */
     void runCypressIntegrationTests(config = [:]) {
-        Cypress cypress = new Cypress(this.script)
+        Cypress cypress = new Cypress(this.script, config)
 
         try {
             cypress.preTestWork()
-            cypress.runIntegrationTests(this, config)
+            cypress.runIntegrationTests(this)
         } finally {
             cypress.archiveVideosAndScreenshots()
         }
