@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.3.0] - 2021-05-05
+### Added
+- method to run integration tests based on cypress. See [README](README.md) - Section Cypress for more information (#18)
+
 ## [v1.2.0] - 2021-01-11
 ### Added
 - Add method to purge dogu without removing container or image
