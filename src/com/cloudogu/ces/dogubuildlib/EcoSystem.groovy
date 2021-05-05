@@ -176,6 +176,29 @@ class EcoSystem {
         }
     }
 
+    /**
+     * Runs integration tests based on cypress. Is it necessary that the cypress integration test are inside a
+     * relative path named `integrationTests` from the root.
+     * The configuration can contain the following values:
+     *
+     * <li>cypressImage - The cypress image to use for running the integration tests. Default: "cypress/included:7.1.0".</li>
+     * <li>enableVideo - Determines whether cypress should record videos. Default: true.</li>
+     * <li>enableScreenshots - Determines whether cypress should record screenshots. Default: true.</li>
+     * <li>timeoutInMinutes - Determines the complete timeout in minutes for the tests. Default: 15.</li>
+     * <li>additionalDockerArgs - A list containing arguments that are given to docker.</li>
+     * <li>additionalCypressArgs - A list containing argument that are given to cypress.</li>
+     */
+    void runCypressIntegrationTests(config = [:]) {
+        Cypress cypress = new Cypress(this.script, config)
+
+        try {
+            cypress.preTestWork()
+            cypress.runIntegrationTests(this)
+        } finally {
+            cypress.archiveVideosAndScreenshots()
+        }
+    }
+
     private void startYarnIntegrationTests(def zaleniumNetwork, String nodeImage, def customConfig, def additionalContainerRunArgs) {
         script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
             script.dir('integrationTests') {
