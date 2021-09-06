@@ -7,17 +7,18 @@ class EcoSystem {
     String sshCredentials
 
     def defaultSetupConfig = [
-            adminUsername         : "ces-admin",
-            adminPassword         : "ecosystem2016",
-            adminGroup            : "CesAdministrators",
-            dependencies          : ["official/registrator",
-                                     "official/ldap",
-                                     "official/cas",
-                                     "official/nginx",
-                                     "official/postfix",
-                                     "official/usermgt"],
-            additionalDependencies: [],
-            registryConfig        : ""
+            adminUsername          : "ces-admin",
+            adminPassword          : "ecosystem2016",
+            adminGroup             : "CesAdministrators",
+            dependencies           : ["official/registrator",
+                                      "official/ldap",
+                                      "official/cas",
+                                      "official/nginx",
+                                      "official/postfix",
+                                      "official/usermgt"],
+            additionalDependencies : [],
+            registryConfig         : "",
+            registryConfigEncrypted: ""
     ]
 
     Vagrant vagrant
@@ -328,7 +329,8 @@ class EcoSystem {
     "Name":"",
     "Password":""
   },
-  "registryConfig": {${config.registryConfig}}
+  "registryConfig": {${config.registryConfig}},
+  "registryConfigEncrypted": {${config.registryConfigEncrypted}}
 }"""
     }
 
