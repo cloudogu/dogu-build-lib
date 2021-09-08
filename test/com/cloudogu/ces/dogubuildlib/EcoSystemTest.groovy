@@ -76,6 +76,16 @@ class EcoSystemTest {
     }
 
     @Test
+    void shouldSetupWithCustomRegistryConfigEncrypted() {
+        String expectedRegistryConfig = '''"cas":{
+            "registryConfigEncrypted":{
+                "oidc":"hahaha",
+            }'''
+        ecoSystem.setup(registryConfigEncrypted: expectedRegistryConfig)
+        assert mockedScript.writenFile.contains("\"registryConfigEncrypted\": {${expectedRegistryConfig}}")
+    }
+
+    @Test
     void testIncreaseVersion(){
         String start = "2.222.4-1"
         String expected = "2.222.4-2"
