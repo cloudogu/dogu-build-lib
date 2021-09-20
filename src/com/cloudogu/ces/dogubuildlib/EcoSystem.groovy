@@ -371,7 +371,7 @@ Vagrant.configure(2) do |config|
 
     google.tags = ["http-server", "https-server", "setup"]
     
-    google.disk_size = 64
+    google.disk_size = 100
 
     override.ssh.username = ENV["SSH_USERNAME"]
     override.ssh.private_key_path = ENV["SSH_KEY"]
