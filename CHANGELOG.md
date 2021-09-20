@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.4.1] - 2021-09-20
+### Fixed 
+- A new EcoSystem image has been released which is not compatible with the previous version.
+  The disk size has increased from 64 GB to 100 GB.
+
 ## [v1.4.0] - 2021-09-09
 ### Added
 - allows the passing of `registryConfigEncrypted` entries for the setup configuration; #20
