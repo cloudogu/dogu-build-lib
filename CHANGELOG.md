@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add function to wait until dogu is available
+- Function `waitUntilAvailable(doguName, timeout)` to wait until the dogu is ready for interaction
 
 ## [v1.4.1] - 2021-09-20
 ### Fixed 
