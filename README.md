@@ -46,7 +46,8 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - provision(String mountPath) | provision to a specific path
 - loginBackend(String credentialsId)  | login with credentials
 - setup(config = [:]) | setup a ces instance based on a setup.json
-- waitForDogu(String dogu) | wait until a dogu is ready for interaction
+- waitForDogu(String dogu) | wait until the dogu state is healthy
+- waitUntilAvailable(String doguName, int timeout) | wait until a dogu is ready for interaction
 - build(String doguPath) | build a dogu
 - verify(String doguPath) | execute the goss tests
 - push(String doguPath) | push dogu into registry

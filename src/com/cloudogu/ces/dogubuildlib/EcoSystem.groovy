@@ -95,6 +95,16 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp healthy --wait --timeout 1200 --fail-fast ${dogu}"
     }
 
+    void waitUntilAvailable(String doguName, int timeout = 30) {
+        for (int i=0; i < timeout; i++) {
+            def response = script.sh(script: "curl --insecure --silent --head https://${externalIP}/${doguName} | head -n 1", returnStdout: true)
+            if (response.contains("302")){
+                break
+            }
+            sleep 1
+        }
+    }
+
     void build(String doguPath) {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
