@@ -101,7 +101,7 @@ class EcoSystem {
             if (response.contains("302")){
                 break
             }
-            sleep 1
+            script.sleep 1
         }
     }
 
