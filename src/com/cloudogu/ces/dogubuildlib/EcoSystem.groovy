@@ -109,8 +109,8 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
-    void purgeDogu(String doguName) {
-        vagrant.ssh "sudo cesapp purge ${doguName}"
+    void purgeDogu(String doguName, parameters = "") {
+        vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
     }
 
     void installDogu(String doguFullName) {

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.6.0] - 2021-12-14
+### Added
+- Option for additional purge parameters; #26
+
 ## [v1.5.1] - 2021-11-17
 ### Fixed
 - Calling the sleep function without the script executor, making `waitUntilAvailable` unusable in production
@@ -15,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `waitUntilAvailable(doguName, timeout)` to wait until the dogu is ready for interaction
 
 ## [v1.4.1] - 2021-09-20
-### Fixed 
+### Fixed
 - A new EcoSystem image has been released which is not compatible with the previous version.
   The disk size has increased from 64 GB to 100 GB.
 
