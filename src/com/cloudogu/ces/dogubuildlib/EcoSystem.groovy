@@ -121,6 +121,29 @@ class EcoSystem {
         }
     }
 
+    // Run this function and the cypress integration tests afterwards to
+    // test if the dogu handles a global CES admin group change correctly
+    void prepareGlobalAdminGroupChangeTest(EcoSystem ecoSystem, String doguName){
+        String ip = ecoSystem.externalIP
+        def cypressConfig = readJSON file: 'integrationTests/cypress.json'
+        String adminUsername = cypressConfig.env.AdminUsername
+        String adminPassword = cypressConfig.env.AdminPassword
+        String adminGroup = cypressConfig.env.AdminGroup
+        String newAdminGroup = "newTestingAdminGroup"
+        echo "Creating the new admin group ($newAdminGroup) in usermgt and adding the user $adminUsername to it"
+        sh 'curl -u ' + adminUsername + ':' + adminPassword + ' --insecure -X POST https://' + ip + '/usermgt/api/groups -H \'accept: */*\' -H \'Content-Type: application/json\' -d \'{"description": "New admin group for testing", "members": ["' + adminUsername + '"], "name": "' + newAdminGroup + '"}\''
+        echo "Changing /config/_global/admin_group to $newAdminGroup"
+        ecoSystem.vagrant.ssh "etcdctl set /config/_global/admin_group $newAdminGroup"
+        echo "Restarting $doguName ..."
+        ecoSystem.vagrant.ssh "sudo docker restart $doguName"
+        ecoSystem.waitForDogu(doguName)
+        ecoSystem.waitUntilAvailable(doguName)
+        echo "Changing admin group name in integration test configuration (cypress.json)"
+        String cypressConfigString = readFile(file: 'integrationTests/cypress.json')
+        cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
+        writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+    }
+
     void upgradeDogu(EcoSystem ecoSystem) {
         // Upgrade dogu by building again with new version
         // currentDoguVersionString, e.g. "Version": "2.222.4-1",
