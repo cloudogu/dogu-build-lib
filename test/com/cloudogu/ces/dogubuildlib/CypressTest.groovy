@@ -5,6 +5,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import static org.mockito.Mockito.*
+import static org.assertj.core.api.Assertions.*
 
 @RunWith(MockitoJUnitRunner.class)
 class CypressTest {
@@ -234,7 +236,7 @@ class CypressTest {
     void testRunCypressIntegrationTests() {
         // given
         Cypress cypress = new Cypress(mockedScript)
-        Mockito.when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
 
         // when
         cypress.runIntegrationTests(ecoSystem)
@@ -272,7 +274,7 @@ class CypressTest {
                 "additionalCypressArgs": expectedCypressArgs
         ]
         Cypress cypress = new Cypress(mockedScript, config)
-        Mockito.when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
 
         // when
         cypress.runIntegrationTests(ecoSystem)
@@ -292,5 +294,55 @@ class CypressTest {
         assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
         assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
         assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
+    }
+
+    @Test
+    void test_Cypress_updateCypressConfiguration_noCypressAvailable() {
+        // given
+        ScriptMock scriptMock = new ScriptMock()
+        Cypress cypress = new Cypress(scriptMock)
+        Vagrant vagrantMock= mock(Vagrant.class)
+
+        // when
+        cypress.updateCypressConfiguration(vagrantMock)
+
+        // then
+        assertThat(scriptMock.actualEcho).isEmpty()
+        assertThat(scriptMock.existingFiles).isEmpty()
+        assertThat(scriptMock.actualShMapArgs).isEmpty()
+        assertThat(scriptMock.actualShStringArgs).isEmpty()
+    }
+
+    @Test
+    void test_Cypress_updateCypressConfiguration() {
+        // given
+        def cypressJson = [
+                "baseUrl": "https://192.168.56.2",
+                "env"    : [
+                        "DoguName"       : "jenkins",
+                        "MaxLoginRetries": 3,
+                        "AdminUsername"  : "ces-admin",
+                        "AdminPassword"  : "ecosystem2016",
+                        "AdminGroup"     : "CesAdministrators"
+                ]
+        ]
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.existingFiles.add("integrationTests/cypress.json")
+        scriptMock.jsonFiles.put("integrationTests/cypress.json", cypressJson)
+        scriptMock.files.put("integrationTests/cypress.json", cypressJson.toString())
+
+        Cypress cypress = new Cypress(scriptMock)
+
+        def vagrantMock = mock(Vagrant.class)
+        doReturn("myNewAdminGroupYeah").when(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
+
+        // when
+        cypress.updateCypressConfiguration(vagrantMock)
+
+        // then
+        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo("[baseUrl:https://192.168.56.2, env:[DoguName:jenkins, MaxLoginRetries:3, AdminUsername:ces-admin, AdminPassword:ecosystem2016, AdminGroup:myNewAdminGroupYeah]]")
+
+        verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
+        verifyNoMoreInteractions(vagrantMock)
     }
 }
