@@ -67,6 +67,25 @@ class Cypress {
     }
 
     /**
+     * This method updates the file integrationTests/cypress.json with the currently set admin group.
+     *
+     * @param vagrant The vagrant instance used to communicate with the EcoSystem. Is required to read the current
+     * global admin group from the etcd.
+     */
+    void updateCypressConfiguration(Vagrant vagrant) {
+        if (script.fileExists('integrationTests/cypress.json')) {
+            def cypressConfig = script.readJSON(file: 'integrationTests/cypress.json')
+            def adminGroup = cypressConfig.env.AdminGroup
+            def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
+
+            script.echo "Changing admin group name in integration test configuration (cypress.json)"
+            def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
+            cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
+            script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+        }
+    }
+
+    /**
      * Performs work before the actual integration tests are performed.
      * Currently removes all previous videos, screenshots, and reports.
      */

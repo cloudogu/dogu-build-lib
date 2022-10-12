@@ -6,6 +6,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 
+import static org.assertj.core.api.Assertions.assertThat
+import static org.mockito.Mockito.*
+
 @RunWith(MockitoJUnitRunner.class)
 class EcoSystemTest {
 
@@ -60,9 +63,9 @@ class EcoSystemTest {
 
     @Test
     void shouldJoinDependencies() {
-        def config = [ dependencies: ["registrator", "ldap"], additionalDependencies: ["cas"] ]
+        def config = [dependencies: ["registrator", "ldap"], additionalDependencies: ["cas"]]
         def deps = ecoSystem.joinDependencies(config)
-        assert deps == [ "registrator", "ldap", "cas" ]
+        assert deps == ["registrator", "ldap", "cas"]
     }
 
     @Test
@@ -86,7 +89,7 @@ class EcoSystemTest {
     }
 
     @Test
-    void testIncreaseVersion(){
+    void testIncreaseVersion() {
         String start = "2.222.4-1"
         String expected = "2.222.4-2"
         String result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
@@ -99,7 +102,7 @@ class EcoSystemTest {
     }
 
     @Test
-    void testparseAdditionalIntegrationTestArgs(){
+    void testparseAdditionalIntegrationTestArgs() {
         def input = ['ARG1=value1', 'ARG2=value2']
         String expected = "-e ARG1=value1 -e ARG2=value2"
         String result = EcoSystem.parseAdditionalIntegrationTestArgs(input)
@@ -111,4 +114,46 @@ class EcoSystemTest {
         assert expected == result
     }
 
+    @Test
+    void test_EcoSystem_restartDogu_waitForDogu() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.expectedShRetValueForScript.put("curl --insecure --silent --head https://192.168.56.2/jenkins | head -n 1", "302")
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.restartDogu("jenkins")
+
+        // then
+        verify(vagrantMock).ssh("sudo docker restart jenkins")
+        verify(vagrantMock).ssh("sudo cesapp healthy --wait --timeout 1200 --fail-fast jenkins")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_restartDogu_noWaitForDogu() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.expectedShRetValueForScript.put("curl --insecure --silent --head https://192.168.56.2/jenkins | head -n 1", "302")
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.restartDogu("jenkins", false)
+
+        // then
+        verify(vagrantMock).ssh("sudo docker restart jenkins")
+        verifyNoMoreInteractions(vagrantMock)
+    }
 }

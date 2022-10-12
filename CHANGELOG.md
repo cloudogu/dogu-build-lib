@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add runDoguUpgradeTest function to test dogu upgrade; #29
 
+## [v1.7.0] - 2022-10-12
+### Added
+- [#28] Add `changeAdminGroup` to `EcoSystem`-class to change the admin group of the EcoSystem.
+- [#28] Add `restartDogu` to `EcoSystem`-class to restart a dogu.
+- [#28] Add `updateCypressConfiguration` to `Cypress`-class to update the current configuration with the newest admin 
+   group.
+
 ## [v1.6.0] - 2021-12-14
 ### Added
 - Option for additional purge parameters; #26
