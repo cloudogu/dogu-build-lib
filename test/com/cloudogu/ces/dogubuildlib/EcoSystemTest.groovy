@@ -115,41 +115,45 @@ class EcoSystemTest {
     }
 
     @Test
-    void test_EcoSystem_prepareGlobalAdminGroupChangeTest() {
+    void test_EcoSystem_restartDogu_waitForDogu() {
         // given
         def scriptMock = new ScriptMock()
-        def cypressJson = [
-                "baseUrl": "https://192.168.56.2",
-                "env"    : [
-                        "DoguName"       : "jenkins",
-                        "MaxLoginRetries": 3,
-                        "AdminUsername"  : "ces-admin",
-                        "AdminPassword"  : "ecosystem2016",
-                        "AdminGroup"     : "CesAdministrators"
-                ]
-        ]
-        scriptMock.jsonFiles.put("integrationTests/cypress.json", cypressJson)
-        scriptMock.files.put("integrationTests/cypress.json", cypressJson.toString())
         scriptMock.expectedShRetValueForScript.put("curl --insecure --silent --head https://192.168.56.2/jenkins | head -n 1", "302")
-
-        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
-        sut.externalIP = "192.168.56.2"
 
         def vagrantMock = mock(Vagrant.class)
         doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
         sut.vagrant = vagrantMock
 
         // when
-        sut.prepareGlobalAdminGroupChangeTest("jenkins")
+        sut.restartDogu("jenkins")
 
         // then
-        assertThat(scriptMock.allActualArgs.get(0)).isEqualTo("curl -u ces-admin:ecosystem2016 --insecure -X POST https://192.168.56.2/usermgt/api/groups -H 'accept: */*' -H 'Content-Type: application/json' -d '{\"description\": \"New admin group for testing\", \"members\": [\"ces-admin\"], \"name\": \"newTestingAdminGroup\"}'")
-        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo("[baseUrl:https://192.168.56.2, env:[DoguName:jenkins, MaxLoginRetries:3, AdminUsername:ces-admin, AdminPassword:ecosystem2016, AdminGroup:newTestingAdminGroup]]")
-
-        verify(vagrantMock).ssh("etcdctl set /config/_global/admin_group newTestingAdminGroup")
         verify(vagrantMock).ssh("sudo docker restart jenkins")
         verify(vagrantMock).ssh("sudo cesapp healthy --wait --timeout 1200 --fail-fast jenkins")
         verifyNoMoreInteractions(vagrantMock)
     }
 
+    @Test
+    void test_EcoSystem_restartDogu_noWaitForDogu() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.expectedShRetValueForScript.put("curl --insecure --silent --head https://192.168.56.2/jenkins | head -n 1", "302")
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.restartDogu("jenkins", false)
+
+        // then
+        verify(vagrantMock).ssh("sudo docker restart jenkins")
+        verifyNoMoreInteractions(vagrantMock)
+    }
 }
