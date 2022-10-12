@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add runDoguUpgradeTest function to test dogu upgrade; #29
+- Add upgradeFromPreviousRelease function to support dogu upgrade tests; #29
 
 ## [v1.7.0] - 2022-10-12
 ### Added
