@@ -58,6 +58,8 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
+- restartDogu(String doguName, boolean waitUntilAvailable=true) | Restarts a dogu and by default waits until it is available again.
+- changeGlobalAdminGroup(String newAdminGroup) | Changes the global admin group to the given value.
 
 ##### runCypressIntegrationTests():
 
@@ -130,6 +132,7 @@ additionalCypressArgs: ""
 - runIntegrationtests(EcoSystem ecoSystem) | Runs the integration tests
 - archiveVideosAndScreenshots() | Archives the artifacts after the run has finished.
 - preTestWork() | Should be executed before running the tests. Cleans the video, report, and screenshot folders.
+- upgradeCypressConfiguration() | Updates the cypress.json with the currently set admin group.
 
 ### DockerLint
 
