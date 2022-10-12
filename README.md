@@ -58,6 +58,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
+- prepareGlobalAdminGroupChangeTest(String doguName) | call before runCypressIntegrationTests to test global admin group change
 
 ##### runCypressIntegrationTests():
 
