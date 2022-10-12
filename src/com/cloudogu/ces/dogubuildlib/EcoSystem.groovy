@@ -20,6 +20,7 @@ class EcoSystem {
             registryConfig         : "",
             registryConfigEncrypted: ""
     ]
+    def currentConfig = defaultSetupConfig
 
     Vagrant vagrant
     String externalIP
@@ -77,11 +78,10 @@ class EcoSystem {
     }
 
     void setup(config = [:]) {
-
         // Merge default config with the one passed as parameter
-        config = defaultSetupConfig << config
+        currentConfig = defaultSetupConfig << config
 
-        writeSetupStagingJSON(config)
+        writeSetupStagingJSON(currentConfig)
 
         vagrant.sync()
 
@@ -96,9 +96,9 @@ class EcoSystem {
     }
 
     void waitUntilAvailable(String doguName, int timeout = 30) {
-        for (int i=0; i < timeout; i++) {
+        for (int i = 0; i < timeout; i++) {
             def response = script.sh(script: "curl --insecure --silent --head https://${externalIP}/${doguName} | head -n 1", returnStdout: true)
-            if (response.contains("302")){
+            if (response.contains("302")) {
                 break
             }
             script.sleep 1
@@ -121,26 +121,45 @@ class EcoSystem {
         }
     }
 
-    // Run this function and the cypress integration tests afterwards to
-    // test if the dogu handles a global CES admin group change correctly
-    void prepareGlobalAdminGroupChangeTest(String doguName){
-        def cypressConfig = script.readJSON file: 'integrationTests/cypress.json'
-        def adminUsername = cypressConfig.env.AdminUsername
-        def adminPassword = cypressConfig.env.AdminPassword
-        def adminGroup = cypressConfig.env.AdminGroup
-        def newAdminGroup = "newTestingAdminGroup"
-        script.echo "Creating the new admin group ($newAdminGroup) in usermgt and adding the user $adminUsername to it"
-        script.sh 'curl -u ' + adminUsername + ':' + adminPassword + ' --insecure -X POST https://' + this.externalIP + '/usermgt/api/groups -H \'accept: */*\' -H \'Content-Type: application/json\' -d \'{"description": "New admin group for testing", "members": ["' + adminUsername + '"], "name": "' + newAdminGroup + '"}\''
-        script.echo "Changing /config/_global/admin_group to $newAdminGroup"
-        this.vagrant.ssh "etcdctl set /config/_global/admin_group $newAdminGroup"
-        script.echo "Restarting $doguName ..."
-        this.vagrant.ssh "sudo docker restart $doguName"
-        this.waitForDogu(doguName)
-        this.waitUntilAvailable(doguName)
-        script.echo "Changing admin group name in integration test configuration (cypress.json)"
-        def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
-        cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
-        script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+    /**
+     * This method restarts a dogu and by default waits for it to be available again. This waiting behaviour can be
+     * disabled.
+     *
+     * @param doguName Name of the dogu to restart.
+     * @param waitUntilAvailable Determines whether this method blocks until the dogu is available again. Default: true
+     *
+     * @see EcoSystem#waitForDogu(java.lang.String)
+     * @see EcoSystem#waitUntilAvailable(java.lang.String)
+     */
+    void restartDogu(String doguName, boolean waitUntilAvailable = true) {
+        script.echo "Restarting ${doguName}..."
+        this.vagrant.ssh "sudo docker restart ${doguName}"
+
+        if (waitUntilAvailable) {
+            script.echo "Waiting for dogu (${doguName}) to become available"
+            this.waitForDogu(doguName)
+            this.waitUntilAvailable(doguName)
+        }
+    }
+
+    /**
+     * Changes the global admin group of the ecosystem. This requires a restart of the dogu of interest.
+     * This can be done with the `restartDogu` method.
+     *
+     * @param newGlobalAdminGroup The name of the new global admin group.
+     *
+     * @see EcoSystem#restartDogu(java.lang.String, boolean)
+     */
+    void changeGlobalAdminGroup(String newGlobalAdminGroup) {
+        script.echo "Change global admin group to ($newGlobalAdminGroup)."
+        def adminUsername = currentConfig.adminUsername
+        def adminPassword = currentConfig.adminPassword
+
+        script.echo "Creating the new admin group ($newGlobalAdminGroup) in usermgt and adding the user $adminUsername to it"
+        script.sh 'curl -u ' + adminUsername + ':' + adminPassword + ' --insecure -X POST https://' + this.externalIP + '/usermgt/api/groups -H \'accept: */*\' -H \'Content-Type: application/json\' -d \'{"description": "New admin group for testing", "members": ["' + adminUsername + '"], "name": "' + newGlobalAdminGroup + '"}\''
+
+        script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
+        this.vagrant.ssh "etcdctl set /config/_global/admin_group $newGlobalAdminGroup"
     }
 
     void upgradeDogu(EcoSystem ecoSystem) {
@@ -225,6 +244,7 @@ class EcoSystem {
         Cypress cypress = new Cypress(this.script, config)
 
         try {
+            cypress.updateCypressConfiguration(vagrant)
             cypress.preTestWork()
             cypress.runIntegrationTests(this)
         } finally {
