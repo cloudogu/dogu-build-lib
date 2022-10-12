@@ -58,6 +58,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
+- runDoguUpgradeTest(Map params, String doguName, String cypressImage = "cypress/included:8.7.0") | runs dogu upgrade test
 
 ##### runCypressIntegrationTests():
 
