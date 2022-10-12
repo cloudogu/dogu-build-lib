@@ -211,35 +211,24 @@ class EcoSystem {
         }
     }
 
-    void runDoguUpgradeTest(Map params, String doguName, String cypressImage = "cypress/included:8.7.0") {
-        stage('Upgrade dogu') {
-            // Remove new dogu that has been built and tested above
-            this.purgeDogu(doguName)
+    void upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName) {
+        // Remove new dogu that has been built and tested above
+        this.purgeDogu(doguName)
 
-            if (params.OldDoguVersionForUpgradeTest != '' && !params.OldDoguVersionForUpgradeTest.contains('v')){
-                println "Installing user defined version of dogu: " + params.OldDoguVersionForUpgradeTest
-                this.installDogu("official/" + doguName + " " + params.OldDoguVersionForUpgradeTest)
-            } else {
-                println "Installing latest released version of dogu..."
-                this.installDogu("official/" + doguName)
-            }
-            this.startDogu(doguName)
-            this.waitForDogu(doguName)
-            this.upgradeDogu(this)
-
-            // Wait for upgraded dogu to get healthy
-            this.waitForDogu(doguName)
-            waitUntilAvailable(doguName)
+        if (oldDoguVersionForUpgradeTest != '' && !oldDoguVersionForUpgradeTest.contains('v')) {
+            script.echo "Installing user defined version of dogu: " + oldDoguVersionForUpgradeTest
+            this.installDogu("official/" + doguName + " " + oldDoguVersionForUpgradeTest)
+        } else {
+            script.echo "Installing latest released version of dogu..."
+            this.installDogu("official/" + doguName)
         }
+        this.startDogu(doguName)
+        this.waitForDogu(doguName)
+        this.upgradeDogu(this)
 
-        stage('Integration Tests - After Upgrade') {
-            // Run integration tests again to verify that the upgrade was successful
-            ecoSystem.runCypressIntegrationTests([
-                    cypressImage     : cypressImage,
-                    enableVideo      : params.EnableVideoRecording,
-                    enableScreenshots: params.EnableScreenshotRecording
-            ])
-        }
+        // Wait for upgraded dogu to get healthy
+        this.waitForDogu(doguName)
+        waitUntilAvailable(doguName)
     }
 
     void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs = [], boolean enableVideoRecording = false) {
