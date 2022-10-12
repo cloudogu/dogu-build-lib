@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
+### [v1.7.0] - 2022-10-12
+## Added
 - [#28] Add `changeAdminGroup` to `EcoSystem`-class to change the admin group of the EcoSystem.
 - [#28] Add `restartDogu` to `EcoSystem`-class to restart a dogu.
 - [#28] Add `updateCypressConfiguration` to `Cypress`-class to update the current configuration with the newest admin 
