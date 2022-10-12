@@ -41,7 +41,6 @@ class ScriptMock {
 
     String actualDir
     def actualGitArgs
-    private ignoreOutputFile
 
     ScriptMock() {
     }
@@ -97,7 +96,7 @@ class ScriptMock {
         return expectedQGate
     }
 
-    def unstable(String msg) {
+    def unstable() {
         unstable = true
     }
 
@@ -111,7 +110,7 @@ class ScriptMock {
         closure.call()
     }
 
-    static def withCredentials(List args, Closure closure) {
+    static def withCredentials(Closure closure) {
         closure.call()
     }
 

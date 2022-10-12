@@ -211,6 +211,26 @@ class EcoSystem {
         }
     }
 
+    void upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName) {
+        // Remove new dogu that has been built and tested above
+        this.purgeDogu(doguName)
+
+        if (oldDoguVersionForUpgradeTest != '' && !oldDoguVersionForUpgradeTest.contains('v')) {
+            script.echo "Installing user defined version of dogu: " + oldDoguVersionForUpgradeTest
+            this.installDogu("official/" + doguName + " " + oldDoguVersionForUpgradeTest)
+        } else {
+            script.echo "Installing latest released version of dogu..."
+            this.installDogu("official/" + doguName)
+        }
+        this.startDogu(doguName)
+        this.waitForDogu(doguName)
+        this.upgradeDogu(this)
+
+        // Wait for upgraded dogu to get healthy
+        this.waitForDogu(doguName)
+        waitUntilAvailable(doguName)
+    }
+
     void runYarnIntegrationTests(int timeoutInMinutes, String nodeImage, ArrayList<String> additionalArgs = [], boolean enableVideoRecording = false) {
         script.sh 'rm -f integrationTests/it-results.xml'
         def additionalContainerRunArgs = "${parseAdditionalIntegrationTestArgs(additionalArgs)} "
