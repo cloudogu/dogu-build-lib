@@ -34,6 +34,7 @@ class ScriptMock {
     Map actualFileArgs
     Map actualStringArgs
     Map files = new HashMap<String, String>()
+    List<String> existingFiles = new LinkedList<String>()
     List<List<String>> actualWithEnv = []
 
     Map<String, Object> jsonFiles = new HashMap<>()
@@ -147,6 +148,10 @@ class ScriptMock {
 
     String readFile(String file) {
         return files.get(file)
+    }
+
+    boolean fileExists(String file) {
+        return existingFiles.contains(file)
     }
 
     String readFile(Map<String, String> args) {
