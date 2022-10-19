@@ -58,12 +58,12 @@ class EcoSystem {
         }
     }
 
-    void provision(String mountPath) {
+    void provision(String mountPath, machineType = "n1-standard-4") {
         script.dir('ecosystem') {
             script.git branch: 'develop', url: 'https://github.com/cloudogu/ecosystem', changelog: false, poll: false
         }
         script.timeout(5) {
-            vagrant = createVagrant(mountPath)
+            vagrant = createVagrant(mountPath, machineType)
             this.mountPath = mountPath
 
             vagrant.up()
@@ -406,12 +406,12 @@ class EcoSystem {
 }"""
     }
 
-    private Vagrant createVagrant(String mountPath) {
-        writeVagrantConfiguration(mountPath)
+    private Vagrant createVagrant(String mountPath, machineType = "n1-standard-4") {
+        writeVagrantConfiguration(mountPath, machineType)
         return new Vagrant(script, gcloudCredentials, sshCredentials)
     }
 
-    private void writeVagrantConfiguration(String mountPath) {
+    private void writeVagrantConfiguration(String mountPath, machineType = "n1-standard-4") {
         script.writeFile file: 'Vagrantfile', text: """
 Vagrant.require_version ">= 1.9.0"
 
@@ -432,7 +432,7 @@ Vagrant.configure(2) do |config|
     
     google.image_family = 'ces-development'
     google.zone = "europe-west3-a"
-    google.machine_type = "n1-standard-4"
+    google.machine_type = "${machineType}"
 
     # preemptible
     google.preemptible = true
