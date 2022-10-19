@@ -211,16 +211,16 @@ class EcoSystem {
         }
     }
 
-    void upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName) {
+    void upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName, String namespace = "official") {
         // Remove new dogu that has been built and tested above
         this.purgeDogu(doguName)
 
         if (oldDoguVersionForUpgradeTest != '' && !oldDoguVersionForUpgradeTest.contains('v')) {
             script.echo "Installing user defined version of dogu: " + oldDoguVersionForUpgradeTest
-            this.installDogu("official/" + doguName + " " + oldDoguVersionForUpgradeTest)
+            this.installDogu(namespace + "/" + doguName + " " + oldDoguVersionForUpgradeTest)
         } else {
             script.echo "Installing latest released version of dogu..."
-            this.installDogu("official/" + doguName)
+            this.installDogu(namespace + "/" + doguName)
         }
         this.startDogu(doguName)
         this.waitForDogu(doguName)
