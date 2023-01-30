@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.11.0] - 2023-01-30
+### Removed
+- [#36] Remove functions `lintDockerfile()` and `shellCheck` to `ces-build-lib`
+  - see [ces-build-lib](https://github.com/cloudogu/ces-build-lib)
+
 ## [v1.10.0] - 2022-10-19
 ### Added
 - [#34] Option to configure the namespace used in upgrade test.
