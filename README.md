@@ -55,7 +55,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
-- upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName) | upgrade dogu from previous version
+- upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName, String namespace = "official") | upgrade dogu from previous version
 - restartDogu(String doguName, boolean waitUntilAvailable=true) | Restarts a dogu and by default waits until it is available again.
 - changeGlobalAdminGroup(String newAdminGroup) | Changes the global admin group to the given value.
 
