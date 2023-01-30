@@ -8,9 +8,7 @@
 
 dogu-build-lib is a shared library for [Jenkins pipelines](https://jenkins.io/doc/book/pipeline/). It adds functionality
 to interact with the [Cloudogu EcoSystem](https://github.com/cloudogu/ecosystem)
-and [Vagrant](https://www.vagrantup.com/) in general. Furthermore it supports easy integration
-of [dockerlint](https://github.com/projectatomic/dockerfile_lint)
-and [shellcheck](https://github.com/koalaman/shellcheck).
+and [Vagrant](https://www.vagrantup.com/) in general.
 
 ## Get started
 
@@ -26,8 +24,7 @@ import com.cloudogu.ces.dogubuildlib.*
 
 - [Ecosystem](#Ecosystem)
 - [Vagrant](#Vagrant)
-- [Dockerlint](#DockerLint)
-- [ShellCheck](#ShellCheck)
+- [Cypress](#Cypress)
 
 ### Ecosystem
 
@@ -134,19 +131,6 @@ additionalCypressArgs: ""
 - archiveVideosAndScreenshots() | Archives the artifacts after the run has finished.
 - preTestWork() | Should be executed before running the tests. Cleans the video, report, and screenshot folders.
 - upgradeCypressConfiguration() | Updates the cypress.json with the currently set admin group.
-
-### DockerLint
-
-```groovy
-lintDockerfile() // uses Dockerfile as default; optional parameter
-```
-
-### ShellCheck
-
-```groovy
-shellCheck() // search for all .sh files in folder and runs shellcheck
-shellCheck(fileList) // fileList="a.sh b.sh" execute shellcheck on a custom list
-```
 
 ### Samples
 
