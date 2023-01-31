@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v1.11.0] - 2023-01-30
+## [v2.0.0] - 2023-01-31
+### Removed
+- [#36] Remove functions `lintDockerfile()` and `shellCheck` to `ces-build-lib`
+  - see [ces-build-lib](https://github.com/cloudogu/ces-build-lib)
+
+## [v1.11.0] - 2023-01-30 (Deprecated)
+> This Release is deemed deprecated in favor of [v2.0.0] because of wrong semantic versioning.
 ### Removed
 - [#36] Remove functions `lintDockerfile()` and `shellCheck` to `ces-build-lib`
   - see [ces-build-lib](https://github.com/cloudogu/ces-build-lib)
