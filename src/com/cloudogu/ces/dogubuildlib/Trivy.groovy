@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class Trivy {
     Vagrant vagrant
 
-    Trivy(ecosystem) {
+    Trivy(EcoSystem ecosystem) {
         this.vagrant = ecosystem.vagrant
     }
 
@@ -30,7 +30,7 @@ class Trivy {
                 "--output /output/trivyscan " +
                 "--exit-code 1 " +
                 "--severity ${vulnerabilities} " +
-                "${image} > /dev/null && echo \$?"
+                "${image} &> /dev/null && echo \$?"
         )
         println exitCode
     }
