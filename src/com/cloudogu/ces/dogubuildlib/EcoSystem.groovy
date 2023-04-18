@@ -25,11 +25,13 @@ class EcoSystem {
     Vagrant vagrant
     String externalIP
     String mountPath
+    Trivy trivy
 
     EcoSystem(script, String gcloudCredentials, String sshCredentials) {
         this.script = script
         this.gcloudCredentials = gcloudCredentials
         this.sshCredentials = sshCredentials
+        this.trivy = new Trivy(script, this)
     }
 
     void changeNamespace(String namespace, doguPath = null) {
@@ -246,6 +248,36 @@ class EcoSystem {
                 script.junit allowEmptyResults: true, testResults: 'integrationTests/it-results.xml'
             }
         }
+    }
+
+    /**
+     * Executes a trivy scan for critical security issues in the image of the dogu in doguPath
+     * @param doguPath The path of the dogu sources
+     * @param failOnError
+     */
+    void scanCriticalVulnerabilities(String doguPath, boolean failOnError) {
+        this.trivy.scanCritical(this.getDoguImage(doguPath), failOnError)
+    }
+
+    /**
+     * Executes a trivy scan for high and critical security issues in the image of the dogu in doguPath
+     * @param doguPath The path of the dogu sources
+     * @param failOnError
+     */
+    void scanHighOrCriticalVulnerabilities(String doguPath, boolean failOnError) {
+        this.trivy.scanHighOrCritical(this.getDoguImage(doguPath), failOnError)
+    }
+
+    /**
+     * Extracts the image and the version from the dogu.json in a doguPath to get the exact image name.
+     * @param doguPath The path of the dogu sources
+     * @return
+     */
+    private String getDoguImage(String doguPath){
+        String image = vagrant.sshOut("jq .Image ${doguPath}/dogu.json")
+        String version = vagrant.sshOut("jq .Version ${doguPath}/dogu.json")
+
+        return "${image}:${version}";
     }
 
     /**
