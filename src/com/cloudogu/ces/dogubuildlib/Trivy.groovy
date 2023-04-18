@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class Trivy {
     Vagrant vagrant
 
-    Cypress(ecosystem) {
+    Trivy(ecosystem) {
         this.vagrant = ecosystem.vagrant
     }
 
