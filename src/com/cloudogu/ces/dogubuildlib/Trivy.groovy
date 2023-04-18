@@ -1,10 +1,14 @@
 package com.cloudogu.ces.dogubuildlib
 
 class Trivy {
-    Vagrant vagrant
+    EcoSystem ecoSystem
 
     Trivy(EcoSystem ecosystem) {
-        this.vagrant = ecosystem.vagrant
+        this.ecoSystem = ecosystem
+    }
+
+    private Vagrant vagrant() {
+        return this.ecoSystem.vagrant
     }
 
     void scanCritical(image) {
@@ -20,9 +24,9 @@ class Trivy {
     }
 
     private void scan(vulnerabilities, image) {
-        this.vagrant.ssh("sudo mkdir -p /vagrant/trivy/output")
-        this.vagrant.ssh("sudo mkdir -p /vagrant/trivy/cache")
-        exitCode = this.vagrant.sshOut("sudo docker run --rm " +
+        this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/output")
+        this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/cache")
+        exitCode = this.vagrant().sshOut("sudo docker run --rm " +
                 "-v /vagrant/trivy/output:/output " +
                 "-v /vagrant/trivy/cache:/root/.cache/ " +
                 "-v /var/run/docker.sock:/var/run/docker.sock " +
