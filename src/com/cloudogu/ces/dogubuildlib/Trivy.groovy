@@ -14,11 +14,11 @@ class Trivy {
         return this.ecoSystem.vagrant
     }
 
-    boolean scanDogu(String doguPath, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL) {
+    boolean scanDogu(String doguPath, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
         return this.scan(getDoguImage(doguPath), level, format, strategy)
     }
 
-    boolean scan(String image, String format = "html", String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL) {
+    boolean scan(String image, String format = "html", String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
         this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/output")
         this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/cache")
         String command = "sudo docker run --rm " +
@@ -26,20 +26,27 @@ class Trivy {
                 "-v /vagrant/trivy/cache:/root/.cache/ " +
                 "-v /var/run/docker.sock:/var/run/docker.sock " +
                 "aquasec/trivy image " +
-                formatFlags(format) + " " +
+                formatFlags(format, fileName) + " " +
                 "--exit-code 1 " +
                 "--severity ${level} " +
                 "${image} &> /dev/null; echo \\\$?"
         def exitCode = this.vagrant().sshOut(command)
+        boolean ok = exitCode == "0"
+
+        try {
+            this.script.sh "ls -hals trivy"
+            this.script.sh "ls -hals trivy/output"
+        } catch(e){
+
+        }
+
         this.vagrant().scp(":/vagrant/trivy/output", "trivy")
         this.script.archiveArtifacts "trivy/output/trivyscan.*"
 
-        boolean ok = exitCode == "0"
-        if (!ok && strategy == TrivyScanStrategy.FAIL) {
-            throw new TrivyScanException("The trivy scan found vulnerabilities")
-        }
         if (!ok && strategy == TrivyScanStrategy.UNSTABLE) {
             this.script.unstable("The trivy scan found vulnerabilities")
+        } else if (!ok && strategy == TrivyScanStrategy.FAIL) {
+            throw new TrivyScanException("The trivy scan found vulnerabilities")
         }
 
         return ok
@@ -58,14 +65,32 @@ class Trivy {
         return "${image}:${version}";
     }
 
-    private static String formatFlags(String format = "html") {
+    private static String formatFlags(String format = "html", String wantedFileName = null) {
+        String response = ""
+        String fileName = null
+        if (wantedFileName != null) {
+            fileName = "/output/" + wantedFileName
+        }
+
         switch (format.toLowerCase()) {
             case TrivyScanFormat.HTML.toLowerCase():
-                return "--format template --template \"@contrib/html.tpl\" --output /output/trivyscan.html"
+                response = "--format template --template \"@contrib/html.tpl\""
+                if (fileName == null) {
+                    fileName = "/output/trivyscan.html"
+                }
+                break
             case TrivyScanFormat.JSON.toLowerCase():
-                return "-f json --output /output/trivyscan.json"
+                response = "-f json"
+                if (fileName == null) {
+                    fileName = "/output/trivyscan.json"
+                }
+                break
             default:
-                return "--output /output/trivyscan.txt"
+                if (fileName == null) {
+                    fileName = "/output/trivyscan.txt"
+                }
         }
+
+        return response + "--output " + fileName
     }
 }
