@@ -36,6 +36,7 @@ class Trivy {
         try {
             this.script.sh "ls -hals trivy"
             this.script.sh "ls -hals trivy/output"
+            this.script.sh "echo ${format}"
         } catch(e){
 
         }
