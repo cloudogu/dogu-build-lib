@@ -15,7 +15,7 @@ class Trivy {
     }
 
     boolean scanDogu(String doguPath, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
-        return this.scan(getDoguImage(doguPath), level, format, strategy)
+        return this.scan(getDoguImage(doguPath), format, level, strategy)
     }
 
     boolean scan(String image, String format = "html", String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
@@ -67,13 +67,13 @@ class Trivy {
 
         switch (format.toLowerCase()) {
             case TrivyScanFormat.HTML.toLowerCase():
-                response = "--format template --template \"@contrib/html.tpl\""
+                response = "--format template --template \"@contrib/html.tpl\" "
                 if (fileName == null) {
                     fileName = "/output/trivyscan.html"
                 }
                 break
             case TrivyScanFormat.JSON.toLowerCase():
-                response = "-f json"
+                response = "-f json "
                 if (fileName == null) {
                     fileName = "/output/trivyscan.json"
                 }
