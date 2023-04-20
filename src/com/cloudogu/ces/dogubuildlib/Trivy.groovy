@@ -33,14 +33,6 @@ class Trivy {
         def exitCode = this.vagrant().sshOut(command)
         boolean ok = exitCode == "0"
 
-        try {
-            this.script.sh "ls -hals trivy"
-            this.script.sh "ls -hals trivy/output"
-            this.script.sh "echo ${format}"
-        } catch(e){
-
-        }
-
         this.vagrant().scp(":/vagrant/trivy/output", "trivy")
         this.script.archiveArtifacts "trivy/output/trivyscan.*"
 
