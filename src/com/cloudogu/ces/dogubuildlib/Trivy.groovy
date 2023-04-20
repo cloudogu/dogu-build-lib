@@ -1,6 +1,10 @@
 package com.cloudogu.ces.dogubuildlib
 
 
+/**
+ * The trivy scanner for an ecoSystem.
+ * In order to work, an EcoSystem object is needed. The provision in the ecoSystem must be done to execute a trivy scan.
+ */
 class Trivy {
     EcoSystem ecoSystem
     def script
@@ -10,15 +14,45 @@ class Trivy {
         this.script = script
     }
 
+    /**
+     * Gets the current vagrant object from the internal EcoSystem.
+     * @return
+     */
     private Vagrant vagrant() {
         return this.ecoSystem.vagrant
     }
 
+    /**
+     * Scans a dogu image for security issues.
+     * Note:
+     * - The dogu build must already be finished in order to execute this function.#
+     * - The dogu-sources must be available inside the vagrant machine
+     *
+     * @param doguPath The mount path of the dogu inside the vagrant machine (usually '/dogu').
+     * @param format The format of the output file (@see TrivyScanFormat)
+     * @param level The vulnerability level to scan. Can be a member of TrivyScanLevel or a custom String (e.g. 'CRITICAL,LOW')
+     * @param strategy The strategy to follow after scan. Should the build become unstable? Should the build fail? Or Should any vulnerability be ignored? (@see TrivyScanStrategy)
+     * @param fileName The output file name for trivy scan. Leave empty for 'trivyscan.<format>'
+     * @return Returns true if the scan was ok (no vulnerability found) or false if any vulnerability was found.
+     */
     boolean scanDogu(String doguPath, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
         return this.scan(getDoguImage(doguPath), format, level, strategy)
     }
 
-    boolean scan(String image, String format = "html", String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
+    /**
+     * Scans a dogu image for security issues.
+     * Note:
+     * - The dogu build must already be finished in order to execute this function.#
+     * - The dogu-sources must be available inside the vagrant machine
+     *
+     * @param image The image inside the vagrant machine which should be scanned.
+     * @param format The format of the output file (@see TrivyScanFormat)
+     * @param level The vulnerability level to scan. Can be a member of TrivyScanLevel or a custom String (e.g. 'CRITICAL,LOW')
+     * @param strategy The strategy to follow after scan. Should the build become unstable? Should the build fail? Or Should any vulnerability be ignored? (@see TrivyScanStrategy)
+     * @param fileName The output file name for trivy scan. Leave empty for 'trivyscan.<format>'
+     * @return Returns true if the scan was ok (no vulnerability found) or false if any vulnerability was found.
+     */
+    boolean scan(String image, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
         this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/output")
         this.vagrant().ssh("sudo mkdir -p /vagrant/trivy/cache")
         String command = "sudo docker run --rm " +
@@ -34,7 +68,11 @@ class Trivy {
         boolean ok = exitCode == "0"
 
         this.vagrant().scp(":/vagrant/trivy/output", "trivy")
-        this.script.archiveArtifacts "trivy/output/trivyscan.*"
+        try {
+            this.script.archiveArtifacts "trivy/output/trivyscan.*"
+        }
+        catch (ignored){
+        }
 
         if (!ok && strategy == TrivyScanStrategy.UNSTABLE) {
             this.script.unstable("The trivy scan found vulnerabilities")
@@ -58,32 +96,38 @@ class Trivy {
         return "${image}:${version}";
     }
 
-    private static String formatFlags(String format = "html", String wantedFileName = null) {
+    /**
+     * Generates the necessary flags for the trivy command to generate the wanted fileType
+     * @param format The format of the output file (@see TrivyScanFormat)
+     * @param fileName The output file name for trivy scan. Leave empty for 'trivyscan.<format>'
+     * @return
+     */
+    private static String formatFlags(String format = "html", String fileName = null) {
         String response = ""
-        String fileName = null
-        if (wantedFileName != null) {
-            fileName = "/output/" + wantedFileName
+        String actualFileName = null
+        if (fileName != null) {
+            actualFileName = "/output/" + fileName
         }
 
         switch (format.toLowerCase()) {
             case TrivyScanFormat.HTML.toLowerCase():
                 response = "--format template --template \"@contrib/html.tpl\" "
-                if (fileName == null) {
-                    fileName = "/output/trivyscan.html"
+                if (actualFileName == null) {
+                    actualFileName = "/output/trivyscan.html"
                 }
                 break
             case TrivyScanFormat.JSON.toLowerCase():
                 response = "-f json "
-                if (fileName == null) {
-                    fileName = "/output/trivyscan.json"
+                if (actualFileName == null) {
+                    actualFileName = "/output/trivyscan.json"
                 }
                 break
             default:
-                if (fileName == null) {
-                    fileName = "/output/trivyscan.txt"
+                if (actualFileName == null) {
+                    actualFileName = "/output/trivyscan.txt"
                 }
         }
 
-        return response + "--output " + fileName
+        return response + "--output " + actualFileName
     }
 }
