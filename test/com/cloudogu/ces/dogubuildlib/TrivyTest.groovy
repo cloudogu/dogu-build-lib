@@ -196,7 +196,7 @@ class TrivyTest {
                         "-v /var/run/docker.sock:/var/run/docker.sock " +
                         "aquasec/trivy image " +
                         "-f json " +
-                        "--output /output/trivyscan.json " +
+                        "--output /output/myfilename " +
                         "--exit-code 1 " +
                         "--severity critical " +
                         "null:null &> /dev/null; echo \\\$?")

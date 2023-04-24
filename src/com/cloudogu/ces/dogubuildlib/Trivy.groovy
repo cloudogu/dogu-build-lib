@@ -36,7 +36,7 @@ class Trivy {
      * @return Returns true if the scan was ok (no vulnerability found) or false if any vulnerability was found.
      */
     boolean scanDogu(String doguPath, String format = TrivyScanFormat.HTML, String level = TrivyScanLevel.CRITICAL, String strategy = TrivyScanStrategy.FAIL, String fileName = null) {
-        return this.scan(getDoguImage(doguPath), format, level, strategy)
+        return this.scan(getDoguImage(doguPath), format, level, strategy, fileName)
     }
 
     /**
