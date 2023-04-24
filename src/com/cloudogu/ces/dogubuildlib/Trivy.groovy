@@ -68,11 +68,7 @@ class Trivy {
         boolean ok = exitCode == "0"
 
         this.vagrant().scp(":/vagrant/trivy/output", "trivy")
-        try {
-            this.script.archiveArtifacts "trivy/output/trivyscan.*"
-        }
-        catch (ignored){
-        }
+        this.script.archiveArtifacts artifacts: 'trivy/output/trivyscan.*', allowEmptyArchive: true
 
         if (!ok && strategy == TrivyScanStrategy.UNSTABLE) {
             this.script.unstable("The trivy scan found vulnerabilities")
