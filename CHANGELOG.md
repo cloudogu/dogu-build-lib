@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.1.0] - 2023-04-24
+### Added
+- Trivy scan feature to scan Dogus for possible security issues (#38)
+
 ## [v2.0.0] - 2023-01-31
 ### Removed
 - [#36] Remove functions `lintDockerfile()` and `shellCheck` to `ces-build-lib`
