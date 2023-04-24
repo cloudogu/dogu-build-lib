@@ -116,7 +116,7 @@ class TrivyTest {
             mockedScript.unstableCalled = false
             mockedScript.unstableRes == ""
             trivy.scan("myimage", "plain", "critical", "fail")
-            throw new RuntimeException("The scan did not fail but should have failed")
+            throw new TrivyScanException("The scan did not fail but should have failed")
         }
         catch (TrivyScanException e) {
             assert e.message.equals("The trivy scan found vulnerabilities")
