@@ -42,7 +42,7 @@ class Trivy {
     /**
      * Scans a dogu image for security issues.
      * Note:
-     * - The dogu build must already be finished in order to execute this function.#
+     * - The dogu build must already be finished in order to execute this function.
      * - The dogu-sources must be available inside the vagrant machine
      *
      * @param image The image inside the vagrant machine which should be scanned.

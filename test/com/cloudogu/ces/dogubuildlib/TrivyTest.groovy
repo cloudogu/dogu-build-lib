@@ -22,8 +22,10 @@ class TrivyTest {
                 mockedScript.shRes = args
             },
             archiveArtifactsRes: "",
+            archiveArtifactsAllowEmpty: false,
             archiveArtifacts   : { args ->
-                mockedScript.archiveArtifactsRes = args
+                mockedScript.archiveArtifactsRes = args.artifacts
+                mockedScript.archiveArtifactsAllowEmpty = args.allowEmptyArchive
             },
             unstableCalled     : false,
             unstableRes        : "",
@@ -101,8 +103,8 @@ class TrivyTest {
 
     @Test
     void scanShouldUseCorrectFileNameWhenArgPassed() {
-        trivy.scan("myimage", "plain", "critical", "ignore", "myfilename.fileending")
-        verify(vagrant, times(1)).sshOut(matches(/.*[^ ] --output \/output\/myfilename.fileending [^ ].*/))
+        trivy.scan("myimage", "plain", "critical", "ignore", "myfilename.file-extension")
+        verify(vagrant, times(1)).sshOut(matches(/.*[^ ] --output \/output\/myfilename.file-extension [^ ].*/))
         // --output should only occur once
         verify(vagrant, times(1)).sshOut(matches(/^(?:(?!\ --output\ ).)*\ --output\ (?!.*\ --output\ ).*$/))
     }
@@ -145,6 +147,7 @@ class TrivyTest {
         doReturn("0").when(vagrant).sshOut(any())
         trivy.scan("myimage", "plain", "critical", "ignore")
         assert mockedScript.archiveArtifactsRes.equals("trivy/output/trivyscan.*")
+        assert mockedScript.archiveArtifactsAllowEmpty.equals(true)
         verify(vagrant, times(1)).scp(":/vagrant/trivy/output", "trivy")
     }
 
@@ -153,6 +156,7 @@ class TrivyTest {
         doReturn("1").when(vagrant).sshOut(any())
         trivy.scan("myimage", "plain", "critical", "ignore")
         assert mockedScript.archiveArtifactsRes.equals("trivy/output/trivyscan.*")
+        assert mockedScript.archiveArtifactsAllowEmpty.equals(true)
         verify(vagrant, times(1)).scp(":/vagrant/trivy/output", "trivy")
     }
 
