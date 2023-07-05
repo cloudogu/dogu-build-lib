@@ -1,5 +1,7 @@
 package com.cloudogu.ces.dogubuildlib
 
+import groovy.json.JsonSlurper
+
 class Cypress {
 
     def script
@@ -73,11 +75,9 @@ class Cypress {
      * global admin group from the etcd.
      */
     void updateCypressConfiguration(Vagrant vagrant) {
-        def isCypressBelow10 = script.fileExists('integrationTests/cypress.json')
-        def isCypressAbove10 = script.fileExists('integrationTests/cypress.config.js') || script.fileExists('integrationTests/cypress.config.ts')
-        def newCypressConfigFileName = "integrationTests/cypress.config." + ((script.fileExists('integrationTests/cypress.config.ts')) ? "ts" : "js")
+        def hasCypressJsonFile = script.fileExists('integrationTests/cypress.json')
         def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
-        if (isCypressBelow10) {
+        if (hasCypressJsonFile) {
             def cypressConfig = script.readJSON(file: 'integrationTests/cypress.json')
             def adminGroup = cypressConfig.env.AdminGroup
 
@@ -85,13 +85,9 @@ class Cypress {
             def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
             cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
             script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
-        } else if (isCypressAbove10){
-            def cypressConfigString = script.readFile(file: newCypressConfigFileName)
-            def substr = cypressConfigString.substring(cypressConfigString.indexOf("\"AdminGroup\":"))
-            substr = substr.substring(0, substr.indexOf("\n"))
-            def oldAdminGroup = (substr =~ /(^"AdminGroup":[ ]*")([^"]*)"$/)[0][2]
-            def newConfig = cypressConfigString.replaceAll("\"${oldAdminGroup}\"","\"${newAdminGroup}\"")
-            script.writeFile(file: newCypressConfigFileName, text: newConfig)
+        } else {
+            def adminGroupJson = "{\"AdminGroup\":  \"${newAdminGroup}\"}"
+            script.writeFile(file: 'integrationTests/cypress.env.json', text: adminGroupJson)
         }
     }
 

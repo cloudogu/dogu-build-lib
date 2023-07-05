@@ -9,10 +9,6 @@ import static org.assertj.core.api.Assertions.*
 
 @RunWith(MockitoJUnitRunner.class)
 class CypressTest {
-    def cypressConfigJs = new File('./testdata/exampleCypressjs.config.js').text
-    def cypressConfigJsExpected = new File('./testdata/exampleCypressjs.expected.config.js').text
-    def cypressConfigTs = new File('./testdata/exampleCypressts.config.ts').text
-    def cypressConfigTsExpected = new File('./testdata/exampleCypressts.expected.config.ts').text
 
     def mockedScript = [
             echoList              : [],
@@ -269,7 +265,7 @@ class CypressTest {
         String expectedCypressArgs = "-e NEW_ENVIRONMENT_VARIABLE='TestContent'"
         String expectedDockerArgs = "--testArg"
         def config = [
-                "cypressImage": expectedImage,
+                "cypressImage"         : expectedImage,
                 "enableVideo"          : expectedRecordVideo,
                 "enableScreenshots"    : expectedRecordScreenshot,
                 "timeoutInMinutes"     : expectedTimeoutInMinutes,
@@ -304,7 +300,7 @@ class CypressTest {
         // given
         ScriptMock scriptMock = new ScriptMock()
         Cypress cypress = new Cypress(scriptMock)
-        Vagrant vagrantMock= mock(Vagrant.class)
+        Vagrant vagrantMock = mock(Vagrant.class)
 
         // when
         cypress.updateCypressConfiguration(vagrantMock)
@@ -353,42 +349,17 @@ class CypressTest {
     void test_Cypress_updateCypressConfiguration_newCypress_JS() {
         // given
         ScriptMock scriptMock = new ScriptMock()
-        scriptMock.existingFiles.add("integrationTests/cypress.config.js")
-        scriptMock.files.put("integrationTests/cypress.config.js", cypressConfigJs)
-
         Cypress cypress = new Cypress(scriptMock)
-
         def vagrantMock = mock(Vagrant.class)
+
         doReturn("myNewAdminGroupYeah").when(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
 
         // when
         cypress.updateCypressConfiguration(vagrantMock)
 
         // then
-        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo(cypressConfigJsExpected)
-
-        verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
-        verifyNoMoreInteractions(vagrantMock)
-    }
-
-    @Test
-    void test_Cypress_updateCypressConfiguration_newCypress_TS() {
-        // given
-        ScriptMock scriptMock = new ScriptMock()
-        scriptMock.existingFiles.add("integrationTests/cypress.config.ts")
-        scriptMock.files.put("integrationTests/cypress.config.ts", cypressConfigTs)
-
-        Cypress cypress = new Cypress(scriptMock)
-
-        def vagrantMock = mock(Vagrant.class)
-        doReturn("myNewAdminGroupYeah").when(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
-
-        // when
-        cypress.updateCypressConfiguration(vagrantMock)
-
-        // then
-        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo(cypressConfigTsExpected)
-
+        def expectedEnvFileContent = "{\"AdminGroup\":  \"myNewAdminGroupYeah\"}"
+        assertThat(scriptMock.writeFileParams.get(0)["text"].toString()).isEqualTo(expectedEnvFileContent)
         verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
         verifyNoMoreInteractions(vagrantMock)
     }
