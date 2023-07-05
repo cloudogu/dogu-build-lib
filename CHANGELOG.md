@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.1.0] - 2023-07-05
+### Changed
+- Update the correct  Cypress configuration file when changing the admin group (#40)
+  - previously only the cypress.json file was changed which has been replaced in cypress version 10+ with the cypress.config.js
+  - now depending on which of the files exists, the correct file is changed
+- Allow the configuration of the timeout for the verify command
+
 ## [v2.1.0] - 2023-04-24
 ### Added
 - Trivy scan feature to scan Dogus for possible security issues (#38)

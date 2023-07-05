@@ -73,15 +73,19 @@ class Cypress {
      * global admin group from the etcd.
      */
     void updateCypressConfiguration(Vagrant vagrant) {
-        if (script.fileExists('integrationTests/cypress.json')) {
+        def hasCypressJsonFile = script.fileExists('integrationTests/cypress.json')
+        def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
+        if (hasCypressJsonFile) {
             def cypressConfig = script.readJSON(file: 'integrationTests/cypress.json')
             def adminGroup = cypressConfig.env.AdminGroup
-            def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
 
             script.echo "Changing admin group name in integration test configuration (cypress.json)"
             def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
             cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
             script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+        } else {
+            def adminGroupJson = "{\"AdminGroup\":  \"${newAdminGroup}\"}"
+            script.writeFile(file: 'integrationTests/cypress.env.json', text: adminGroupJson)
         }
     }
 

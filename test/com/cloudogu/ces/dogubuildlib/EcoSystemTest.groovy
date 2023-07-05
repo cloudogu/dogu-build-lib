@@ -114,6 +114,50 @@ class EcoSystemTest {
     }
 
     @Test
+    void test_EcoSystem_verify_with_default_timeout(){
+        // given
+        def scriptMock = new ScriptMock()
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.verify("/dogu")
+
+        // then
+        verify(vagrantMock).ssh("mkdir -p /tmp/reports")
+        verify(vagrantMock).sshOut("cat /tmp/reports/*.xml")
+        verify(vagrantMock).ssh("sudo cesapp verify --health-timeout 600 --keep-container --ci --report-directory=/tmp/reports /dogu")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_verify_with_custom_timeout(){
+        // given
+        def scriptMock = new ScriptMock()
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.externalIP = "192.168.56.2"
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.verify("/dogu", 1200)
+
+        // then
+        verify(vagrantMock).ssh("mkdir -p /tmp/reports")
+        verify(vagrantMock).sshOut("cat /tmp/reports/*.xml")
+        verify(vagrantMock).ssh("sudo cesapp verify --health-timeout 1200 --keep-container --ci --report-directory=/tmp/reports /dogu")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
     void test_EcoSystem_restartDogu_waitForDogu() {
         // given
         def scriptMock = new ScriptMock()
