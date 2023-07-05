@@ -1,7 +1,5 @@
 package com.cloudogu.ces.dogubuildlib
 
-import groovy.json.JsonSlurper
-
 class Cypress {
 
     def script
