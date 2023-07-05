@@ -73,15 +73,25 @@ class Cypress {
      * global admin group from the etcd.
      */
     void updateCypressConfiguration(Vagrant vagrant) {
-        if (script.fileExists('integrationTests/cypress.json')) {
+        def isCypressBelow10 = script.fileExists('integrationTests/cypress.json')
+        def isCypressAbove10 = script.fileExists('integrationTests/cypress.config.js') || script.fileExists('integrationTests/cypress.config.ts')
+        def newCypressConfigFileName = "integrationTests/cypress.config." + ((script.fileExists('integrationTests/cypress.config.ts')) ? "ts" : "js")
+        def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
+        if (isCypressBelow10) {
             def cypressConfig = script.readJSON(file: 'integrationTests/cypress.json')
             def adminGroup = cypressConfig.env.AdminGroup
-            def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
 
             script.echo "Changing admin group name in integration test configuration (cypress.json)"
             def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
             cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
             script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+        } else if (isCypressAbove10){
+            def cypressConfigString = script.readFile(file: newCypressConfigFileName)
+            def substr = cypressConfigString.substring(cypressConfigString.indexOf("\"AdminGroup\":"))
+            substr = substr.substring(0, substr.indexOf("\n"))
+            def oldAdminGroup = (substr =~ /(^"AdminGroup":[ ]*")([^"]*)"$/)[0][2]
+            def newConfig = cypressConfigString.replaceAll("\"${oldAdminGroup}\"","\"${newAdminGroup}\"")
+            script.writeFile(file: newCypressConfigFileName, text: newConfig)
         }
     }
 
