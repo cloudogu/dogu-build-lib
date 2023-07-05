@@ -313,7 +313,7 @@ class CypressTest {
     }
 
     @Test
-    void test_Cypress_updateCypressConfiguration() {
+    void test_Cypress_updateCypressConfiguration_with_cypress_json() {
         // given
         def cypressJson = [
                 "baseUrl": "https://192.168.56.2",
@@ -346,7 +346,7 @@ class CypressTest {
     }
 
     @Test
-    void test_Cypress_updateCypressConfiguration_newCypress_JS() {
+    void test_Cypress_updateCypressConfiguration_cypress_without_cypress_json() {
         // given
         ScriptMock scriptMock = new ScriptMock()
         Cypress cypress = new Cypress(scriptMock)
