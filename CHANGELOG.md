@@ -6,9 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Changed the behaviour of the Cypress function which changes the admin group in the configuration (#40)
-  - Before it was only compatible with cypress below 10 (with existing cypress.json), now it is also compatible with 10+
-  - It is still compatible with old cypress versions
+- Update the correct  Cypress configuration file when changing the admin group
+  - previously only the cypress.json file was changed which has been replaced in cypress version 10+ with the cypress.config.js
+  - now depending on which of the files exists, the correct file is changed
 
 ## [v2.1.0] - 2023-04-24
 ### Added
