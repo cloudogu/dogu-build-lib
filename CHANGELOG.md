@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v2.1.0] - 2023-07-05
+## [v2.2.0] - 2023-07-05
 ### Changed
 - Update the correct  Cypress configuration file when changing the admin group (#40)
   - previously only the cypress.json file was changed which has been replaced in cypress version 10+ with the cypress.config.js
