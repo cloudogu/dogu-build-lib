@@ -265,7 +265,7 @@ class CypressTest {
         String expectedCypressArgs = "-e NEW_ENVIRONMENT_VARIABLE='TestContent'"
         String expectedDockerArgs = "--testArg"
         def config = [
-                "cypressImage": expectedImage,
+                "cypressImage"         : expectedImage,
                 "enableVideo"          : expectedRecordVideo,
                 "enableScreenshots"    : expectedRecordScreenshot,
                 "timeoutInMinutes"     : expectedTimeoutInMinutes,
@@ -300,7 +300,7 @@ class CypressTest {
         // given
         ScriptMock scriptMock = new ScriptMock()
         Cypress cypress = new Cypress(scriptMock)
-        Vagrant vagrantMock= mock(Vagrant.class)
+        Vagrant vagrantMock = mock(Vagrant.class)
 
         // when
         cypress.updateCypressConfiguration(vagrantMock)
@@ -313,7 +313,7 @@ class CypressTest {
     }
 
     @Test
-    void test_Cypress_updateCypressConfiguration() {
+    void test_Cypress_updateCypressConfiguration_with_cypress_json() {
         // given
         def cypressJson = [
                 "baseUrl": "https://192.168.56.2",
@@ -341,6 +341,25 @@ class CypressTest {
         // then
         assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo("[baseUrl:https://192.168.56.2, env:[DoguName:jenkins, MaxLoginRetries:3, AdminUsername:ces-admin, AdminPassword:ecosystem2016, AdminGroup:myNewAdminGroupYeah]]")
 
+        verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_Cypress_updateCypressConfiguration_cypress_without_cypress_json() {
+        // given
+        ScriptMock scriptMock = new ScriptMock()
+        Cypress cypress = new Cypress(scriptMock)
+        def vagrantMock = mock(Vagrant.class)
+
+        doReturn("myNewAdminGroupYeah").when(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
+
+        // when
+        cypress.updateCypressConfiguration(vagrantMock)
+
+        // then
+        def expectedEnvFileContent = "{\"AdminGroup\":  \"myNewAdminGroupYeah\"}"
+        assertThat(scriptMock.writeFileParams.get(0)["text"].toString()).isEqualTo(expectedEnvFileContent)
         verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
         verifyNoMoreInteractions(vagrantMock)
     }
