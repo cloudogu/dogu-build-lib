@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Changed the behaviour of the Cypress function which changes the admin group in the configuration (#40)
+  - Before it was only compatible with cypress below 10 (with existing cypress.json), now it is also compatible with 10+
+  - It is still compatible with old cypress versions
 
 ## [v2.1.0] - 2023-04-24
 ### Added
