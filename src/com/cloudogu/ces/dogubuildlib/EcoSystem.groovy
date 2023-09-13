@@ -226,7 +226,7 @@ class EcoSystem {
 
     /**
      * Installs the given dogu and performs an upgrade on it.
-     * Before installation, the dogu is purged to ensure a green slate.
+     * Before installation, the dogu is purged to ensure a clean slate.
      *
      * @param oldDoguVersionForUpgradeTest the current version of the dogu to install before performing the upgrade.
      * @param doguName the name of the dogu the upgrade should be performed for.
