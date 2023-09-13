@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Removed
 - [#43] Argument of type `EcoSystem` from `update()`-method
+
 ### Added
 - [#43] New dogu version as overloaded argument to `update()`-method
 
