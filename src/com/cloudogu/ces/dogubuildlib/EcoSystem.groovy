@@ -164,16 +164,27 @@ class EcoSystem {
         this.vagrant.ssh "etcdctl set /config/_global/admin_group $newGlobalAdminGroup"
     }
 
-    void upgradeDogu(EcoSystem ecoSystem) {
-        // Upgrade dogu by building again with new version
+    /**
+     * Upgrades the dogu by building again with a new version.
+     * @param newDoguVersion the version to be set for the built dogu.
+     */
+    void upgradeDogu(String newDoguVersion) {
+        this.setVersion(newDoguVersion)
+        this.vagrant.sync()
+        // Build/Upgrade dogu
+        this.build("/dogu")
+    }
+
+    /**
+     * Upgrades the dogu by building again with a new version incremented by one.
+     * E.g. version 2.222.4-1 upgrades to 2.222.4-2.
+     */
+    void upgradeDogu() {
         // currentDoguVersionString, e.g. "Version": "2.222.4-1",
         String currentDoguVersionString = script.sh(returnStdout: true, script: 'grep .Version dogu.json').trim()
         // newDoguVersion, e.g. 2.222.4-2
         String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersionString)
-        ecoSystem.setVersion(newDoguVersion)
-        ecoSystem.vagrant.sync()
-        // Build/Upgrade dogu
-        ecoSystem.build("/dogu")
+        this.upgradeDogu(newDoguVersion)
     }
 
     void startDogu(String doguName) {
@@ -213,6 +224,14 @@ class EcoSystem {
         }
     }
 
+    /**
+     * Installs the given dogu and performs an upgrade on it.
+     * Before installation, the dogu is purged to ensure a green slate.
+     *
+     * @param oldDoguVersionForUpgradeTest the current version of the dogu to install before performing the upgrade.
+     * @param doguName the name of the dogu the upgrade should be performed for.
+     * @param namespace the dogu namespace in which the dogu resides. Defaults to official.
+     */
     void upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName, String namespace = "official") {
         // Remove new dogu that has been built and tested above
         this.purgeDogu(doguName)
@@ -226,7 +245,7 @@ class EcoSystem {
         }
         this.startDogu(doguName)
         this.waitForDogu(doguName)
-        this.upgradeDogu(this)
+        this.upgradeDogu()
 
         // Wait for upgraded dogu to get healthy
         this.waitForDogu(doguName)
