@@ -52,7 +52,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - collectLogs() | add logs as artifact to jenkins build
 - purgeDogu(String doguName, String parameters = "") | executes cesapp purge command
 - installDogu(String doguFullName) | executes cesapp install command
-- upgradeDogu(EcoSystem ecosystem) | tests the dogu upgrade
+- upgradeDogu(newDoguVersion = "") | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
 - upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName, String namespace = "official") | upgrade dogu from previous version
