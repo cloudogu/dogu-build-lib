@@ -1,5 +1,6 @@
 package com.cloudogu.ces.dogubuildlib
 
+import groovy.json.JsonSlurper
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -197,6 +198,32 @@ class EcoSystemTest {
 
         // then
         verify(vagrantMock).ssh("sudo docker restart jenkins")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_upgrade() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.expectedShRetValueForScript.put("grep .Version dogu.json", "\"Version\": \"1.2.3-4\",")
+        def jsonSlurper = new JsonSlurper()
+        def doguJson = jsonSlurper.parseText('{ "Name": "testing/dogu", "Version": "1.2.3-4" }')
+        scriptMock.jsonFiles.put("dogu.json", doguJson)
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).sync()
+        doNothing().when(vagrantMock).ssh(any())
+
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.upgradeDogu()
+
+        // then
+        verify(vagrantMock).sync()
+        verify(vagrantMock).ssh("sudo cesapp build /dogu")
         verifyNoMoreInteractions(vagrantMock)
     }
 }

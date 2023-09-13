@@ -181,6 +181,17 @@ class ScriptMock {
         throw new InputMismatchException()
     }
 
+    void writeJSON(Map<String, Object> args) {
+        String path = args.get("file")
+        String json = args.get('json')
+        if (json != null && path != null) {
+            jsonFiles.put(path, json)
+            return
+        }
+
+        throw new InputMismatchException()
+    }
+
     void dir(String dir, Closure closure) {
         actualDir = dir
         closure.call()
