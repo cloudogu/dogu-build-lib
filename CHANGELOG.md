@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - [#45] Changed the default password to comply with the default password-rules of the ecosystem
+  - Since CAS 7.0 the password-compliance is checked on every login and forces a password-change if a password is not compliant
+  - This prevents these "weak password"-warnings and allows the integration-tests to be executed without problems
 
 ## [v2.3.0] - 2023-09-13
 ### Removed
