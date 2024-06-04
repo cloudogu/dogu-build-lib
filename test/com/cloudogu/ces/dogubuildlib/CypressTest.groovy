@@ -321,7 +321,7 @@ class CypressTest {
                         "DoguName"       : "jenkins",
                         "MaxLoginRetries": 3,
                         "AdminUsername"  : "ces-admin",
-                        "AdminPassword"  : "ecosystem2016",
+                        "AdminPassword"  : "Ecosystem2016!",
                         "AdminGroup"     : "CesAdministrators"
                 ]
         ]
@@ -339,7 +339,7 @@ class CypressTest {
         cypress.updateCypressConfiguration(vagrantMock)
 
         // then
-        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo("[baseUrl:https://192.168.56.2, env:[DoguName:jenkins, MaxLoginRetries:3, AdminUsername:ces-admin, AdminPassword:ecosystem2016, AdminGroup:myNewAdminGroupYeah]]")
+        assertThat(scriptMock.writeFileParams.get(0)["text"]).isEqualTo("[baseUrl:https://192.168.56.2, env:[DoguName:jenkins, MaxLoginRetries:3, AdminUsername:ces-admin, AdminPassword:Ecosystem2016!, AdminGroup:myNewAdminGroupYeah]]")
 
         verify(vagrantMock).sshOut("etcdctl get /config/_global/admin_group")
         verifyNoMoreInteractions(vagrantMock)

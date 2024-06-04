@@ -8,7 +8,7 @@ class EcoSystem {
 
     def defaultSetupConfig = [
             adminUsername          : "ces-admin",
-            adminPassword          : "ecosystem2016",
+            adminPassword          : "Ecosystem2016!",
             adminGroup             : "CesAdministrators",
             dependencies           : ["official/registrator",
                                       "official/ldap",
