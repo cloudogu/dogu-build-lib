@@ -85,15 +85,6 @@ class Trivy {
         return ok
     }
 
-    String includeIgnoreFile() {
-        //File ignoreFile = new File(".trivyignore")
-        //if (ignoreFile.isFile()) {
-        return "-v .trivyignore:.trivyignore "
-        //}
-        //return ""
-    }
-
-
     /**
      * Extracts the image and the version from the dogu.json in a doguPath to get the exact image name.
      * @param doguPath The path of the dogu sources
