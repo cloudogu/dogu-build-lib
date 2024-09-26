@@ -202,7 +202,7 @@ class TrivyTest {
                         "--severity critical " +
                         "--debug " +
                         "--ignorefile /trivy/.trivyignore " +
-                        "null:null &> ./trivyscan.log; echo \\\$?")
+                        "null:null &>> ./trivyscan.log; echo \\\$?")
         trivy.scanDogu("/dogu", "json", "critical", "fail", "myfilename")
     }
 }
