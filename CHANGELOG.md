@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.5.0] - 2024-09-27
+### Added
+- [#49] Add feature to use a .trivyignore file to ignore cve that are false positives 
+
 ## [v2.4.0] - 2024-09-18
 ### Changed
 - Relicense to AGPL-3.0-only
