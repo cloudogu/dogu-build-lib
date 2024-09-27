@@ -169,7 +169,7 @@ class TrivyTest {
     @Test
     void scanUsesCorrectImage() {
         trivy.scan("myimage", "plain", "critical,asdf,asdf123", "ignore")
-        verify(vagrant, times(1)).sshOut(matches(/^.*myimage &> \/dev\/null; echo \\\$\?$/))
+        verify(vagrant, times(1)).sshOut(matches(/^.*myimage &>> .\/trivyscan.log; echo \\\$\?$/))
     }
 
     @Test
@@ -177,7 +177,7 @@ class TrivyTest {
         doReturn("registry.cloudogu.com/official/nginx").when(vagrant).sshOut("jq .Image /dogu/dogu.json")
         doReturn("1.0.0-1").when(vagrant).sshOut("jq .Version /dogu/dogu.json")
         trivy.scanDogu("/dogu", "plain", "critical,asdf,asdf123", "ignore")
-        verify(vagrant, times(1)).sshOut(matches(/^.*registry.cloudogu.com\/official\/nginx:1.0.0-1 &> \/dev\/null; echo \\\$\?$/))
+        verify(vagrant, times(1)).sshOut(matches(/^.*registry.cloudogu.com\/official\/nginx:1.0.0-1 &>> .\/trivyscan.log; echo \\\$\?$/))
     }
 
     @Test
@@ -194,12 +194,15 @@ class TrivyTest {
                         "-v /vagrant/trivy/output:/output " +
                         "-v /vagrant/trivy/cache:/root/.cache/ " +
                         "-v /var/run/docker.sock:/var/run/docker.sock " +
+                        "-v /dogu/.trivyignore:/trivy/.trivyignore " +
                         "aquasec/trivy image " +
                         "-f json " +
                         "--output /output/myfilename " +
                         "--exit-code 1 " +
                         "--severity critical " +
-                        "null:null &> /dev/null; echo \\\$?")
+                        "--debug " +
+                        "--ignorefile /trivy/.trivyignore " +
+                        "null:null &>> ./trivyscan.log; echo \\\$?")
         trivy.scanDogu("/dogu", "json", "critical", "fail", "myfilename")
     }
 }

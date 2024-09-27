@@ -59,15 +59,21 @@ class Trivy {
                 "-v /vagrant/trivy/output:/output " +
                 "-v /vagrant/trivy/cache:/root/.cache/ " +
                 "-v /var/run/docker.sock:/var/run/docker.sock " +
+                "-v /dogu/.trivyignore:/trivy/.trivyignore " +
                 "aquasec/trivy image " +
                 formatFlags(format, fileName) + " " +
                 "--exit-code 1 " +
                 "--severity ${level} " +
-                "${image} &> /dev/null; echo \\\$?"
+                "--debug " +
+                "--ignorefile /trivy/.trivyignore " +
+                "${image} &>> ./trivyscan.log; echo \\\$?"
+
         def exitCode = this.vagrant().sshOut(command)
+
         boolean ok = exitCode == "0"
 
         this.vagrant().scp(":/vagrant/trivy/output", "trivy")
+        this.vagrant().scp(":./trivyscan.log", "trivy/output")
         this.script.archiveArtifacts artifacts: 'trivy/output/trivyscan.*', allowEmptyArchive: true
 
         if (!ok && strategy == TrivyScanStrategy.UNSTABLE) {
@@ -78,7 +84,6 @@ class Trivy {
 
         return ok
     }
-
 
     /**
      * Extracts the image and the version from the dogu.json in a doguPath to get the exact image name.
