@@ -212,7 +212,7 @@ class EcoSystem {
     void saveImage(String doguPath) {
 	String savedImageFileName = "${doguPath}/savedImage.tar"
 	//TODO: Get image name and version from dogu.json
-	String imageName = "official/jenkins"
+	String imageName = "registry.cloudogu.com/official/jenkins"
 	String imageVersion = "2.462.3-1"
         vagrant.ssh "sudo docker save -o ${savedImageFileName} ${imageName}:${imageVersion}"
     }
