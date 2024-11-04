@@ -215,10 +215,11 @@ class EcoSystem {
 	String imageName = "registry.cloudogu.com/official/jenkins"
 	String imageVersion = "2.462.3-1"
         vagrant.ssh "sudo docker save -o ${savedImageFileName} ${imageName}:${imageVersion}"
+        vagrant.ssh "sudo chown jenkins:jenkins ${savedImageFileName}"
     }
 
     void copyImageToHost(String doguPath) {
-        vagrant.scp("${doguPath}/savedImage.tar", "savedImage.tar")
+        vagrant.scp(":${doguPath}/savedImage.tar", "savedImage.tar")
 	//TODO: Remove this
 	script.echo "DEBUG: SAVED IMAGE COPIED"
     }
