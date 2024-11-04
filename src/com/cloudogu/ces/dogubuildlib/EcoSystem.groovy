@@ -211,20 +211,16 @@ class EcoSystem {
 
     void saveImage(String doguPath) {
 	String savedImageFileName = "${doguPath}/savedImage.tar"
-	//TODO: remove this
-	print "DEBUG: imagename " + ${savedImageFileName}
 	//TODO: Get image name and version from dogu.json
 	String imageName = "official/jenkins"
 	String imageVersion = "2.462.3-1"
         vagrant.ssh "sudo docker save -o ${savedImageFileName} ${imageName}:${imageVersion}"
-	//TODO: Remove this
-	vagrant.ssh "sudo ls -la ${doguPath}"
     }
 
     void copyImageToHost(String doguPath) {
         vagrant.scp("${doguPath}/savedImage.tar", "savedImage.tar")
 	//TODO: Remove this
-	print "DEBUG: SAVED IMAGE COPIED"
+	script.echo "DEBUG: SAVED IMAGE COPIED"
     }
 
     void purge(String dogu) {
