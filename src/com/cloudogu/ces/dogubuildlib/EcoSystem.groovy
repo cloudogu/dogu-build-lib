@@ -209,6 +209,18 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp push ${doguPath}"
     }
 
+    void saveImage(String doguPath) {
+	def savedImageFileName = ${doguPath}/savedImage.tar
+	//TODO: remove this
+	print "DEBUG: imagename " + ${savedImageFileName}
+	//TODO: Get image name and version from dogu.json
+	def imageName = "official/jenkins"
+	def imageVersion = "2.462.3-1"
+        vagrant.ssh "sudo docker save -o ${savedImageFileName} ${imageName}:${imageVersion}"
+	//TODO: Remove this
+	vagrant.ssh "sudo ls -la ${doguPath}"
+    }
+
     void purge(String dogu) {
         vagrant.ssh "sudo cesapp purge --keep-container --keep-image ${dogu}"
     }
