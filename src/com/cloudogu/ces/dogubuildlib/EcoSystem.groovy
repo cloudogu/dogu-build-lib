@@ -221,6 +221,12 @@ class EcoSystem {
 	vagrant.ssh "sudo ls -la ${doguPath}"
     }
 
+    void copyImageToHost(String doguPath) {
+        vagrant.scp("${doguPath}/savedImage.tar", "savedImage.tar")
+	//TODO: Remove this
+	print "DEBUG: SAVED IMAGE COPIED"
+    }
+
     void purge(String dogu) {
         vagrant.ssh "sudo cesapp purge --keep-container --keep-image ${dogu}"
     }
