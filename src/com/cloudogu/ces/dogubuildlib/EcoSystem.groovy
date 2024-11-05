@@ -220,8 +220,6 @@ class EcoSystem {
 
     void copyImageToHost(String doguPath) {
         vagrant.scp(":${doguPath}/savedImage.tar", "savedImage.tar")
-	//TODO: Remove this
-	script.echo "DEBUG: SAVED IMAGE COPIED"
     }
 
     void purge(String dogu) {
