@@ -208,7 +208,7 @@ class ScriptMock {
         actualWithEnv[index].collectEntries { [it.split('=')[0], it.split('=')[1]] }
     }
 
-    def archiveArtifacts() {
+    def archiveArtifacts(Map<String, Object> args) {
         // just ignore this call in tests
     }
 }
