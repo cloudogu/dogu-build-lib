@@ -209,6 +209,6 @@ class ScriptMock {
     }
 
     def archiveArtifacts(Map<String, Object> args) {
-        // just ignore this call in tests
+        actualEcho.add("archive artifacts")
     }
 }
