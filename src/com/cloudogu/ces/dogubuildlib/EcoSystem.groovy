@@ -199,9 +199,11 @@ class EcoSystem {
             vagrant.ssh "mkdir -p /tmp/reports"
             vagrant.ssh "sudo cesapp verify --health-timeout ${timeout} --keep-container --ci --report-directory=/tmp/reports ${doguPath}"
             String verifyReport = vagrant.sshOut "cat /tmp/reports/*.xml"
+            script.echo "Report:\n ${verifyReport}"
             script.writeFile encoding: 'UTF-8', file: 'verify.xml', text: verifyReport
         } finally {
             script.junit allowEmptyResults: true, testResults: 'verify.xml'
+            script.archiveArtifacts artifacts: 'verify.xml', allowEmptyArchive: true
         }
     }
 
