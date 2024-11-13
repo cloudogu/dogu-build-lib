@@ -209,6 +209,6 @@ class ScriptMock {
     }
 
     def archiveArtifacts(Map<String, Object> args) {
-        actualEcho.add("archive artifacts")
+        actualEcho.add("archive artifacts: " + args.toString())
     }
 }
