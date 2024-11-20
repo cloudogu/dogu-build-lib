@@ -209,6 +209,19 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp push ${doguPath}"
     }
 
+    /**
+     * Push Dogu as prerelease to custom namespace
+     */
+    void pushPreRelease(String doguPath) {
+        script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "harborrobotprerelease", usernameVariable: 'TOKEN_ID', passwordVariable: 'TOKEN_SECRET']]) {
+            script.echo "Push Dogu as Prerelease"
+            // escaping $ in user variable
+            def escToken = script.env.TOKEN_ID.replaceAll("\\\$", '\\\\\\\$')
+            vagrant.ssh "sudo cesapp login '${escToken}' '${script.env.TOKEN_SECRET}'"
+            vagrant.ssh "sudo cesapp push ${doguPath}"
+        }
+    }
+
     void purge(String dogu) {
         vagrant.ssh "sudo cesapp purge --keep-container --keep-image ${dogu}"
     }
