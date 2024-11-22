@@ -207,4 +207,8 @@ class ScriptMock {
         }
         actualWithEnv[index].collectEntries { [it.split('=')[0], it.split('=')[1]] }
     }
+
+    def archiveArtifacts(Map<String, Object> args) {
+        actualEcho.add("archive artifacts: " + args.toString())
+    }
 }
