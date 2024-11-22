@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.5.1] - 2024-11-22
+### Fixed
+- [#54] print verify output to jenkins console and append the result as build artifact
+
 ## [v2.5.0] - 2024-09-27
 ### Added
 - [#49] Add feature to use a .trivyignore file to ignore cve that are false positives 
