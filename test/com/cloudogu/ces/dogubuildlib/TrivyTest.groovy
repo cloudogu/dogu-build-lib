@@ -195,6 +195,8 @@ class TrivyTest {
                         "-v /vagrant/trivy/cache:/root/.cache/ " +
                         "-v /var/run/docker.sock:/var/run/docker.sock " +
                         "-v /dogu/.trivyignore:/trivy/.trivyignore " +
+                        "-e TRIVY_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-db " +
+                        "-e TRIVY_JAVA_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-java-db " +
                         "aquasec/trivy image " +
                         "-f json " +
                         "--output /output/myfilename " +
