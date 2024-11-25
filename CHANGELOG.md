@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.6.0] - 2024-11-25
+### Added
+- [#56] function to push a pre release to registry
+
 ## [v2.5.1] - 2024-11-22
 ### Fixed
 - [#54] print verify output to jenkins console and append the result as build artifact
