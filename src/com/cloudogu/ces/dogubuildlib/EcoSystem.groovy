@@ -313,7 +313,8 @@ class EcoSystem {
         vagrant.ssh "sudo docker save -o ${savedImageFilePath} ${image}"
         vagrant.ssh "sudo chown jenkins:jenkins ${savedImageFilePath}"
         vagrant.scp(":${doguPath}/savedImage.tar", "savedImage.tar")
-        script.sh("sudo docker load -i ${savedImageFileName}")
+        script.sh("sudo docker image load -i ${savedImageFileName}")
+        script.sh("rm ${savedImageFileName}")
     }
 
     /**
