@@ -310,9 +310,9 @@ class EcoSystem {
         String savedImageFileName = "savedImage.tar"
         String savedImageFilePath = "${doguPath}/${savedImageFileName}"
         String image = getDoguImage(doguPath)
-        vagrant.ssh "sudo docker save -o ${savedImageFilePath} ${image}"
-        vagrant.ssh "sudo chown jenkins:jenkins ${savedImageFilePath}"
-        vagrant.scp(":${doguPath}/savedImage.tar", "savedImage.tar")
+        vagrant.ssh("sudo docker save -o ${savedImageFilePath} ${image}")
+        vagrant.ssh("sudo chown jenkins:jenkins ${savedImageFilePath}")
+        vagrant.scp(":${doguPath}/${savedImageFileName}", "${savedImageFileName}")
         script.sh("sudo docker image load -i ${savedImageFileName}")
         script.sh("rm ${savedImageFileName}")
     }
