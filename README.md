@@ -58,6 +58,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - upgradeFromPreviousRelease(String oldDoguVersionForUpgradeTest, String doguName, String namespace = "official") | upgrade dogu from previous version
 - restartDogu(String doguName, boolean waitUntilAvailable=true) | Restarts a dogu and by default waits until it is available again.
 - changeGlobalAdminGroup(String newAdminGroup) | Changes the global admin group to the given value.
+- copyDoguImageToJenkinsWorker(String doguPath) | Copies the built Dogu image from the CES machine to the Jenkins worker and imports it into Docker
 
 ##### runCypressIntegrationTests():
 
