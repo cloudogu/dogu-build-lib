@@ -25,13 +25,11 @@ class EcoSystem {
     Vagrant vagrant
     String externalIP
     String mountPath
-    Trivy trivy
 
     EcoSystem(script, String gcloudCredentials, String sshCredentials) {
         this.script = script
         this.gcloudCredentials = gcloudCredentials
         this.sshCredentials = sshCredentials
-        this.trivy = new Trivy(script, this)
     }
 
     void changeNamespace(String namespace, doguPath = null) {
@@ -285,21 +283,18 @@ class EcoSystem {
     }
 
     /**
-     * Executes a trivy scan for critical security issues in the image of the dogu in doguPath
+     * Copies the built Dogu image from the CES machine to the Jenkins worker and imports it into Docker
      * @param doguPath The path of the dogu sources
-     * @param failOnError
      */
-    void scanCriticalVulnerabilities(String doguPath, boolean failOnError) {
-        this.trivy.scanCritical(this.getDoguImage(doguPath), failOnError)
-    }
-
-    /**
-     * Executes a trivy scan for high and critical security issues in the image of the dogu in doguPath
-     * @param doguPath The path of the dogu sources
-     * @param failOnError
-     */
-    void scanHighOrCriticalVulnerabilities(String doguPath, boolean failOnError) {
-        this.trivy.scanHighOrCritical(this.getDoguImage(doguPath), failOnError)
+    void copyDoguImageToJenkinsWorker(String doguPath) {
+        String savedImageFileName = "savedImage.tar"
+        String savedImageFilePath = "${doguPath}/${savedImageFileName}"
+        String image = getDoguImage(doguPath)
+        vagrant.ssh("sudo docker save -o ${savedImageFilePath} ${image}")
+        vagrant.ssh("sudo chown jenkins:jenkins ${savedImageFilePath}")
+        vagrant.scp(":${savedImageFilePath}", "${savedImageFileName}")
+        script.sh("sudo docker image load -i ${savedImageFileName}")
+        script.sh("rm ${savedImageFileName}")
     }
 
     /**
