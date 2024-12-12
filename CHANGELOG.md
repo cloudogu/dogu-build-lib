@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v3.ß.0] - 2024-12-12
+## [v3.0.0] - 2024-12-12
 ### Added
 - [#58] Add function to copy Dogu images to the Jenkins worker
 
