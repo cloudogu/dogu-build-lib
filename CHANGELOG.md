@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [#58] Add function to copy Dogu images to the Jenkins worker
 
+This release contains a **breaking change**. All Trivy-specific functionality has been removed.
+See [Scan Dogu image with Trivy](https://github.com/cloudogu/ces-build-lib/tree/main?tab=readme-ov-file##scan-dogu-image-with-trivy) for migration.
+
+### Removed
+- Removed all Trivy-specific functionality. Please use the Trivy class of the [ces-build-lib](https://github.com/cloudogu/ces-build-lib)
+
 ## [v2.6.0] - 2024-11-25
 ### Added
 - [#56] function to push a pre release to registry
