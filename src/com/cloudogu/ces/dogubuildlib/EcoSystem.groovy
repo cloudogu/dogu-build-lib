@@ -283,6 +283,21 @@ class EcoSystem {
     }
 
     /**
+     * Copies the built Dogu image from the CES machine to the Jenkins worker and imports it into Docker
+     * @param doguPath The path of the dogu sources
+     */
+    void copyDoguImageToJenkinsWorker(String doguPath) {
+        String savedImageFileName = "savedImage.tar"
+        String savedImageFilePath = "${doguPath}/${savedImageFileName}"
+        String image = getDoguImage(doguPath)
+        vagrant.ssh("sudo docker save -o ${savedImageFilePath} ${image}")
+        vagrant.ssh("sudo chown jenkins:jenkins ${savedImageFilePath}")
+        vagrant.scp(":${savedImageFilePath}", "${savedImageFileName}")
+        script.sh("sudo docker image load -i ${savedImageFileName}")
+        script.sh("rm ${savedImageFileName}")
+    }
+
+    /**
      * Extracts the image and the version from the dogu.json in a doguPath to get the exact image name.
      * @param doguPath The path of the dogu sources
      * @return

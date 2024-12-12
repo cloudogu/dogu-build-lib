@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- [#58] Add function to copy Dogu images to the Jenkins worker
 
 This release contains a **breaking change**. All Trivy-specific functionality has been removed.
 See [Scan Dogu image with Trivy](https://github.com/cloudogu/ces-build-lib/tree/main?tab=readme-ov-file##scan-dogu-image-with-trivy) for migration.
