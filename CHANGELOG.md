@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-This release contains a breaking change. All Trivy-specific functionality has been removed.
+This release contains a **breaking change**. All Trivy-specific functionality has been removed.
 See [Scan Dogu image with Trivy](https://github.com/cloudogu/ces-build-lib/tree/main?tab=readme-ov-file##scan-dogu-image-with-trivy) for migration.
 
 ### Removed
