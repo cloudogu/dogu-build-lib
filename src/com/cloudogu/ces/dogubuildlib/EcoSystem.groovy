@@ -491,7 +491,7 @@ Vagrant.configure(2) do |config|
     google.google_project_id = project_id
     google.google_json_key_location = gcloud_key
     
-    google.image_family = 'ces-development'
+    google.image_family = 'ces-development2404'
     google.zone = "europe-west3-a"
     google.machine_type = "${machineType}"
 
