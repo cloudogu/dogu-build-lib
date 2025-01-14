@@ -218,7 +218,11 @@ class EcoSystem {
             // escaping $ in user variable
             def escToken = script.env.TOKEN_ID.replaceAll("\\\$", '\\\\\\\$')
             vagrant.ssh "sudo cesapp login '${escToken}' '${script.env.TOKEN_SECRET}'"
-            vagrant.ssh "sudo cesapp push ${doguPath}"
+            try {
+                vagrant.ssh "sudo cesapp push ${doguPath}"
+            } catch (Exception ex) {
+                script.unstable "Failed to push Dogu to Prerelease-Namespace: ${ex.message}"
+            }
         }
     }
 
