@@ -212,7 +212,6 @@ class EcoSystem {
     /**
      * Push Dogu as prerelease to custom namespace
      */
-    @SuppressWarnings("java:S1181")
     void pushPreRelease(String doguPath) {
         script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "harborrobotprerelease", usernameVariable: 'TOKEN_ID', passwordVariable: 'TOKEN_SECRET']]) {
             script.echo "Push Dogu as Prerelease"
