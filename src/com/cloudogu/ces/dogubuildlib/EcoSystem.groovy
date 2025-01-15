@@ -220,7 +220,7 @@ class EcoSystem {
             vagrant.ssh "sudo cesapp login '${escToken}' '${script.env.TOKEN_SECRET}'"
             try {
                 vagrant.ssh "sudo cesapp push ${doguPath}"
-            } catch (Exception ex) {  // NOSONAR this step should only make the build "unstable" instead of "failed"
+            } catch (RuntimeException ex) {  //this step should only make the build "unstable" instead of "failed"
                 script.unstable "Failed to push Dogu to Prerelease-Namespace: ${ex.message}"
             }
         }
