@@ -509,7 +509,7 @@ Vagrant.configure(2) do |config|
 
     google.name = "ces-dogu-" + Time.now.to_i.to_s
     
-    google.labels = ["vm_name=ces-dogu-vagrant", "user=${jenkinsUser}"]
+    google.labels = { "vm_name" => "ces-dogu-vagrant", "user" => "${jenkinsUser}" }
     google.tags = ["http-server", "https-server", "setup"]
     
     google.disk_size = 100
