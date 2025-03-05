@@ -114,6 +114,9 @@ class EcoSystem {
         return cause ? cause.getUserId() : "unknown"
     }
 
+    private String getPipelineName() {
+        return script.env.JOB_NAME ?: "unknown"
+    }
 
     void purgeDogu(String doguName, parameters = "") {
         vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
@@ -480,6 +483,8 @@ class EcoSystem {
 
     private void writeVagrantConfiguration(String mountPath, machineType = "n1-standard-4") {
         def jenkinsUser = getJenkinsUser()
+        def pipelineName = getPipelineName()
+
         script.writeFile file: 'Vagrantfile', text: """
 Vagrant.require_version ">= 1.9.0"
 
@@ -509,7 +514,12 @@ Vagrant.configure(2) do |config|
 
     google.name = "ces-dogu-" + Time.now.to_i.to_s
     
-    google.labels = { "vm_name" => "ces-dogu-vagrant", "user" => "${jenkinsUser}" }
+    google.labels = { 
+        "vm_name" => "ces-dogu-vagrant", 
+        "user" => "${jenkinsUser}",
+        "pipeline_name" => "${pipelineName}"
+    }
+    
     google.tags = ["http-server", "https-server", "setup"]
     
     google.disk_size = 100
