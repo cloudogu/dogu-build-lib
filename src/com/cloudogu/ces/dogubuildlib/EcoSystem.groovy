@@ -109,13 +109,29 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
+    private String sanitizeForLabel(String input) {
+        if (!input) {
+            return "unknown"
+        }
+        
+        // Convert to lowercase
+        input = input.toLowerCase()
+        
+        // Replace invalid characters with "-"
+        input = input.replaceAll("[^a-z0-9_-]", "-")
+        
+        // Trim to max 63 characters
+        return input.length() > 40 ? input.substring(0, 40) : input
+    }
+
+
     private String getJenkinsUser() {
         def cause = script.currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause)
         return cause ? cause.getUserId() : "unknown"
     }
 
     private String getPipelineName() {
-        return script.env.JOB_NAME ?: "unknown"
+        return sanitizeForLabel(script.env.JOB_NAME ?: "unknown")
     }
 
     void purgeDogu(String doguName, parameters = "") {
@@ -519,7 +535,7 @@ Vagrant.configure(2) do |config|
         "user" => "${jenkinsUser}",
         "pipeline_name" => "${pipelineName}"
     }
-    
+
     google.tags = ["http-server", "https-server", "setup"]
     
     google.disk_size = 100
