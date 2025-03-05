@@ -113,17 +113,22 @@ class EcoSystem {
         if (!input) {
             return "unknown"
         }
-        
+
+        // Decode common URL-encoded characters
+        input = input.replaceAll("%2[fF]", "/")  // Convert "%2F" back to "/"
+                    .replaceAll("%20", "-")      // Convert "%20" (spaces) to "-"
+                    .replaceAll("%3[aA]", ":")   // Convert "%3A" to ":"
+                    .replaceAll("%", "")         // Remove any remaining '%'
+
         // Convert to lowercase
         input = input.toLowerCase()
-        
+
         // Replace invalid characters with "-"
         input = input.replaceAll("[^a-z0-9_-]", "-")
-        
-        // Trim to max 63 characters
-        return input.length() > 40 ? input.substring(0, 40) : input
-    }
 
+        // Trim to max 63 characters
+        return input.length() > 63 ? input.substring(0, 63) : input
+    }
 
     private String getJenkinsUser() {
         def cause = script.currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause)
