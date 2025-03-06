@@ -58,11 +58,11 @@ class EcoSystem {
         }
     }
 
-    void provision(String mountPath, machineType = "n1-standard-4") {
+    void provision(String mountPath, machineType = "n1-standard-4", int timeoutInMinutes = 5) {
         script.dir('ecosystem') {
             script.git branch: 'develop', url: 'https://github.com/cloudogu/ecosystem', changelog: false, poll: false
         }
-        script.timeout(5) {
+        script.timeout(time: timeoutInMinutes, unit: 'MINUTES') {
             vagrant = createVagrant(mountPath, machineType)
             this.mountPath = mountPath
 
@@ -490,7 +490,7 @@ Vagrant.configure(2) do |config|
   config.vm.provider :google do |google, override|
     google.google_project_id = project_id
     google.google_json_key_location = gcloud_key
-    
+
     google.image_family = 'ces-development2404'
     google.zone = "europe-west3-a"
     google.machine_type = "${machineType}"
@@ -503,7 +503,7 @@ Vagrant.configure(2) do |config|
     google.name = "ces-dogu-" + Time.now.to_i.to_s
 
     google.tags = ["http-server", "https-server", "setup"]
-    
+
     google.disk_size = 100
 
     override.ssh.username = ENV["SSH_USERNAME"]
