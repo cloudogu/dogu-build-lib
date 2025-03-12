@@ -1,8 +1,7 @@
 package com.cloudogu.ces.dogubuildlib
 
-class Playwright {
+class Playwright extends TestFramework {
 
-    def script
     public static def defaultIntegrationTestsConfig = [
             playwrightImage      : "mcr.microsoft.com/playwright:v1.49.1-noble",
             enableVideo          : true,
@@ -11,12 +10,10 @@ class Playwright {
             additionalDockerArgs : "",
             additionalCypressArgs: ""
     ]
-    def config
 
     Playwright(script, config = [:]) {
-        this.script = script
+        super(script)
         // Merge default config with the one passed as parameter
-        this.config = [:]
         this.config << defaultIntegrationTestsConfig
         this.config << config
     }
@@ -26,16 +23,17 @@ class Playwright {
      */
     void runIntegrationTests(EcoSystem ecoSystem) {
         script.timeout(time: this.config.timeoutInMinutes, unit: "MINUTES") {
+            String passwdPath = writePasswd()
             String externalIP = ecoSystem.getExternalIP()
 
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
             dockerArgs <<= " -e BASE_URL=https://${externalIP}"
             dockerArgs <<= " --entrypoint=''"
+            dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
             dockerArgs <<= " " + this.config.additionalDockerArgs
 
             script.docker.image(this.config.playwrightImage)
-                    .mountJenkinsUser()
                     .inside(dockerArgs) {
                         dir('playwright') {
                             sh 'npm ci'
