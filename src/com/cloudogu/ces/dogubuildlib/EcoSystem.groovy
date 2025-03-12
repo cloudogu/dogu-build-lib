@@ -333,6 +333,16 @@ class EcoSystem {
         }
     }
 
+    void runPlaywrightIntegrationTests(config = [:]) {
+        Playwright playwright = new Playwright(this.script, config)
+
+        try {
+            playwright.runIntegrationTests(this)
+        } finally {
+            //cypress.archiveVideosAndScreenshots()
+        }
+    }
+
     private void startYarnIntegrationTests(def zaleniumNetwork, String nodeImage, def customConfig, def additionalContainerRunArgs) {
         script.withZalenium(customConfig, zaleniumNetwork) { zaleniumContainer, zaleniumIp, uid, gid ->
             script.dir('integrationTests') {
