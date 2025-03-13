@@ -36,8 +36,8 @@ class Playwright extends TestFramework {
 
             script.docker.image(this.config.playwrightImage)
                     .inside(dockerArgs) {
+                        script.sh 'npm ci'
                         script.dir(this.config.testDirectory) {
-                            script.sh 'npm ci'
                             script.sh 'npx bddgen'
                             script.sh "npx playwright test --reporter=junit"
                             script.junit allowEmptyResults: true, testResults: "./test-results/results.xml"
