@@ -56,10 +56,10 @@ class Playwright extends TestFramework {
                     find . -type f -exec sh -c 'mv "$1" "$(dirname "$1")/$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
                 '''
             if (this.config.enableVideo) {
-                script.archiveArtifacts artifacts: "./**/*.webm", allowEmptyArchive: true
+                script.archiveArtifacts artifacts: "**/*.webm", allowEmptyArchive: true
             }
             if (this.config.enableScreenshots) {
-                script.archiveArtifacts artifacts: "./**/*.png", allowEmptyArchive: true
+                script.archiveArtifacts artifacts: "**/*.png", allowEmptyArchive: true
             }
         }
     }
