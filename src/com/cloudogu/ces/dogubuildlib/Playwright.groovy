@@ -4,7 +4,7 @@ class Playwright extends TestFramework {
 
     public static def defaultIntegrationTestsConfig = [
             playwrightImage      : "mcr.microsoft.com/playwright:v1.49.1-noble",
-            testResultsDirectory: "./test-results",
+            testDirectory        : "./integrationTests/playwright",
             enableVideo          : true,
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
@@ -36,11 +36,11 @@ class Playwright extends TestFramework {
 
             script.docker.image(this.config.playwrightImage)
                     .inside(dockerArgs) {
-                        script.dir('playwright') {
+                        script.dir(this.config.testDirectory) {
                             script.sh 'npm ci'
                             script.sh 'npx bddgen'
                             script.sh "npx playwright test --reporter=junit"
-                            script.junit allowEmptyResults: true, testResults: "${this.config.testResultsDirectory}/results.xml"
+                            script.junit allowEmptyResults: true, testResults: "./test-results/results.xml"
                         }
                     }
         }
@@ -51,14 +51,16 @@ class Playwright extends TestFramework {
      */
     void archiveVideosAndScreenshots() {
         script.echo "archiving videos and screenshots from test execution..."
-        script.sh '''
-                find . -type f -exec sh -c 'mv "$1" "$(dirname "$1")/$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
-            '''
-        if (this.config.enableVideo) {
-            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/**/*.webm", allowEmptyArchive: true
-        }
-        if (this.config.enableScreenshots) {
-            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/**/*.png", allowEmptyArchive: true
+        script.dir("${this.config.testDirectory}/test-results") {
+            script.sh '''
+                    find . -type f -exec sh -c 'mv "$1" "$(dirname "$1")/$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
+                '''
+            if (this.config.enableVideo) {
+                script.archiveArtifacts artifacts: "./**/*.webm", allowEmptyArchive: true
+            }
+            if (this.config.enableScreenshots) {
+                script.archiveArtifacts artifacts: "./**/*.png", allowEmptyArchive: true
+            }
         }
     }
 
