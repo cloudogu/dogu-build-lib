@@ -335,12 +335,11 @@ class EcoSystem {
 
     void runPlaywrightIntegrationTests(config = [:]) {
         Playwright playwright = new Playwright(this.script, config)
-
         try {
-            playwright.updateConfiguration(vagrant)
+            playwright.preTestWork()
             playwright.runIntegrationTests(this)
         } finally {
-            //cypress.archiveVideosAndScreenshots()
+            playwright.archiveVideosAndScreenshots()
         }
     }
 

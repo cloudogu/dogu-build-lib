@@ -4,6 +4,7 @@ class Playwright extends TestFramework {
 
     public static def defaultIntegrationTestsConfig = [
             playwrightImage      : "mcr.microsoft.com/playwright:v1.49.1-noble",
+            testResultsDirectory: "./test-results",
             enableVideo          : true,
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
@@ -35,15 +36,39 @@ class Playwright extends TestFramework {
 
             script.docker.image(this.config.playwrightImage)
                     .inside(dockerArgs) {
-                        dir('playwright') {
-                            sh 'npm ci'
-                            sh 'npx bddgen'
-                            sh "npx playwright test --reporter=junit"
-                            junit allowEmptyResults: true, testResults: "test-results/results.xml"
-                            archiveArtifacts artifacts: "../test-results/**/video.webm", allowEmptyArchive: true
+                        script.dir('playwright') {
+                            script.sh 'npm ci'
+                            script.sh 'npx bddgen'
+                            script.sh "npx playwright test --reporter=junit"
+                            script.junit allowEmptyResults: true, testResults: "${this.config.testResultsDirectory}/results.xml"
                         }
                     }
         }
+    }
+
+    /**
+     * Achieves the artifacts from the integration test run. Includes the junit report, videos, and screenshots.
+     */
+    void archiveVideosAndScreenshots() {
+        script.echo "archiving videos and screenshots from test execution..."
+        script.sh '''
+                find . -type f -exec sh -c 'mv "$1" "$(dirname "$1")/$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
+            '''
+        if (this.config.enableVideo) {
+            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/**/*.webm", allowEmptyArchive: true
+        }
+        if (this.config.enableScreenshots) {
+            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/**/*.png", allowEmptyArchive: true
+        }
+    }
+
+    /**
+     * Performs work before the actual integration tests are performed.
+     * Currently removes all previous videos, screenshots, and reports.
+     */
+    void preTestWork() {
+        script.echo "cleaning up previous test results..."
+        script.sh "rm -rf ${this.config.testResultsDirectory}"
     }
 
 }
