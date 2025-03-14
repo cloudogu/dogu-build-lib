@@ -30,6 +30,9 @@ class Playwright extends TestFramework {
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
             dockerArgs <<= " -e BASE_URL=https://${externalIP}"
+            dockerArgs <<= " -e ADMIN_USERNAME=${ecoSystem.currentConfig.adminUsername}"
+            dockerArgs <<= " -e ADMIN_PASSWORD=${ecoSystem.currentConfig.adminPassword}"
+            dockerArgs <<= " -e ADMIN_GROUP=${ecoSystem.currentConfig.adminGroup}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
             dockerArgs <<= " " + this.config.additionalDockerArgs
