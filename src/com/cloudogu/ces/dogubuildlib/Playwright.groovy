@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class Playwright extends TestFramework {
 
     public static def defaultIntegrationTestsConfig = [
-            playwrightImage      : "mcr.microsoft.com/playwright:v1.15.0-noble",
+            playwrightImage      : "mcr.microsoft.com/playwright:v1.51.0-noble",
             testDirectory        : "./integrationTests/playwright",
             enableVideo          : true,
             enableScreenshots    : true,
