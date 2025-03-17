@@ -9,7 +9,7 @@ class Playwright extends TestFramework {
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
-            additionalCypressArgs: ""
+            additionalPlaywrightArgs: ""
     ]
 
     Playwright(script, config = [:]) {
@@ -35,14 +35,14 @@ class Playwright extends TestFramework {
             dockerArgs <<= " -e ADMIN_GROUP=${ecoSystem.currentConfig.adminGroup}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
-            dockerArgs <<= " " + this.config.additionalDockerArgs
+            dockerArgs <<= " ${this.config.additionalDockerArgs}"
 
             script.docker.image(this.config.playwrightImage)
                     .inside(dockerArgs) {
-                        script.sh 'npm ci'
                         script.dir(this.config.testDirectory) {
+                            script.sh 'npm ci'
                             script.sh 'npx bddgen'
-                            script.sh "npx playwright test --reporter=junit"
+                            script.sh "npx playwright test --reporter=junit ${this.config.additionalPlaywrightArgs}"
                             script.junit allowEmptyResults: true, testResults: "./test-results/results.xml"
                         }
                     }
@@ -56,7 +56,7 @@ class Playwright extends TestFramework {
         script.echo "archiving videos and screenshots from test execution..."
         script.dir("${this.config.testDirectory}/test-results") {
             script.sh '''
-                    find . -type f -exec sh -c 'mv "$1" "$(dirname "$1")/$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
+                    find . -type f -exec sh -c 'mv "$1" "$(basename "$(dirname "$1")")_$(basename "$1")"' _ {} \\;
                 '''
             if (this.config.enableVideo) {
                 script.archiveArtifacts artifacts: "**/*.webm", allowEmptyArchive: true

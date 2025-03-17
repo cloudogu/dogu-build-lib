@@ -5,6 +5,7 @@ class Cypress extends TestFramework{
     def script
     public static def defaultIntegrationTestsConfig = [
             cypressImage         : "cypress/included:7.1.0",
+            testDirectory        : "./integrationTests/cypress",
             enableVideo          : true,
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
@@ -46,7 +47,7 @@ class Cypress extends TestFramework{
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
-                        script.sh "cd integrationTests/ && yarn install && yarn cypress run ${cypressRunArgs}"
+                        script.sh "cd ${this.config.testResultsDirectory}/ && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
     }
@@ -56,12 +57,12 @@ class Cypress extends TestFramework{
      */
     void archiveVideosAndScreenshots() {
         script.echo "archiving videos and screenshots from test execution..."
-        script.junit allowEmptyResults: true, testResults: "integrationTests/cypress-reports/TEST-*.xml"
+        script.junit allowEmptyResults: true, testResults: "${this.config.testResultsDirectory}/cypress-reports/TEST-*.xml"
         if (this.config.enableVideo) {
-            script.archiveArtifacts artifacts: "integrationTests/cypress/videos/**/*.mp4", allowEmptyArchive: true
+            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/cypress/videos/**/*.mp4", allowEmptyArchive: true
         }
         if (this.config.enableScreenshots) {
-            script.archiveArtifacts artifacts: "integrationTests/cypress/screenshots/**/*.png", allowEmptyArchive: true
+            script.archiveArtifacts artifacts: "${this.config.testResultsDirectory}/cypress/screenshots/**/*.png", allowEmptyArchive: true
         }
     }
 
@@ -72,19 +73,19 @@ class Cypress extends TestFramework{
      * global admin group from the etcd.
      */
     void updateCypressConfiguration(Vagrant vagrant) {
-        def hasCypressJsonFile = script.fileExists('integrationTests/cypress.json')
+        def hasCypressJsonFile = script.fileExists("${this.config.testResultsDirectory}/cypress.json")
         def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
         if (hasCypressJsonFile) {
-            def cypressConfig = script.readJSON(file: 'integrationTests/cypress.json')
+            def cypressConfig = script.readJSON(file: "${this.config.testResultsDirectory}/cypress.json")
             def adminGroup = cypressConfig.env.AdminGroup
 
             script.echo "Changing admin group name in integration test configuration (cypress.json)"
-            def cypressConfigString = script.readFile(file: 'integrationTests/cypress.json')
+            def cypressConfigString = script.readFile(file: "${this.config.testResultsDirectory}/cypress.json")
             cypressConfigString = cypressConfigString.replaceAll(adminGroup, newAdminGroup)
-            script.writeFile(file: 'integrationTests/cypress.json', text: cypressConfigString)
+            script.writeFile(file: "${this.config.testResultsDirectory}/cypress.json", text: cypressConfigString)
         } else {
             def adminGroupJson = "{\"AdminGroup\":  \"${newAdminGroup}\"}"
-            script.writeFile(file: 'integrationTests/cypress.env.json', text: adminGroupJson)
+            script.writeFile(file: "${this.config.testResultsDirectory}/cypress.env.json", text: adminGroupJson)
         }
     }
 
@@ -94,8 +95,8 @@ class Cypress extends TestFramework{
      */
     void preTestWork() {
         script.echo "cleaning up previous test results..."
-        script.sh "rm -rf integrationTests/cypress/videos"
-        script.sh "rm -rf integrationTests/cypress/screenshots"
-        script.sh "rm -rf integrationTests/cypress-reports"
+        script.sh "rm -rf ${this.config.testResultsDirectory}/cypress/videos"
+        script.sh "rm -rf ${this.config.testResultsDirectory}/cypress/screenshots"
+        script.sh "rm -rf ${this.config.testResultsDirectory}/cypress-reports"
     }
 }
