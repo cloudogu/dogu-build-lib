@@ -2,7 +2,6 @@ package com.cloudogu.ces.dogubuildlib
 
 class Cypress extends TestFramework{
 
-    def script
     public static def defaultIntegrationTestsConfig = [
             cypressImage         : "cypress/included:7.1.0",
             testDirectory        : "./integrationTests/cypress",
@@ -12,7 +11,6 @@ class Cypress extends TestFramework{
             additionalDockerArgs : "",
             additionalCypressArgs: ""
     ]
-    def config
 
     Cypress(script, config = [:]) {
         super(script)
