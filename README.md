@@ -40,7 +40,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 
 - changeNamespace(String namespace) | change dogu namespace
 - setVersion(String version) | define dogu version
-- provision(String mountPath, machineType = "n1-standard-4") | provision to a specific path
+- provision(String mountPath, machineType = "n1-standard-4", int timeoutInMinutes = 5) | provision to a specific path
 - loginBackend(String credentialsId)  | login with credentials
 - setup(config = [:]) | setup a ces instance based on a setup.json
 - waitForDogu(String dogu) | wait until the dogu state is healthy
