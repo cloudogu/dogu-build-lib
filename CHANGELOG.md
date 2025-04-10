@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.2.0] - 2025-04-10
+### Changed
+- Add timeout parameter to provision function 
+
 ## [v3.1.0] - 2025-01-22
 ### Changed
 - Use Ubuntu 24.04 based image family for EcoSystem provisioning; #62
