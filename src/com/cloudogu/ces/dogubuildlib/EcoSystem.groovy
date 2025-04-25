@@ -500,7 +500,7 @@ Vagrant.configure(2) do |config|
     google.auto_restart = false
     google.on_host_maintenance = "TERMINATE"
 
-    google.name = "ces-dogu-" + Time.now.to_i.to_s
+    google.name = "cas-oidc-debugging" + Time.now.to_i.to_s
 
     google.tags = ["http-server", "https-server", "setup"]
 
