@@ -10,7 +10,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coder_workspace
 
     MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials) {
-        super(script, gcloudCredentials, sshCredentials)
+        super(script, gcloudCredentials, "")
         this.coderCredentials = coderCredentials
         this.coder_workspace = MN_CODER_WORKSPACE
     }
