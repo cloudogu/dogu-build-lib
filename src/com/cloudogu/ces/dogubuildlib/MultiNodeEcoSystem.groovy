@@ -154,10 +154,37 @@ class MultiNodeEcoSystem extends EcoSystem {
     }
 
     void createMNParameter(List dogusToAdd = [], List componentsToAdd = []) {
-        def inputFile = 'integrationTests/mn_params.yaml'
+
+        def defaultMNParams = """
+MN-CES Machine Type: "e2-standard-4"
+MN-CES Node Count: "4"
+CES Namespace: "ecosystem"
+CES Setup Chart Namespace: "k8s"
+CES Setup Chart Version: "3.4.0"
+Necessary dogus:
+  - official/postfix
+  - k8s/nginx-static
+  - k8s/nginx-ingress
+  - official/ldap
+  - official/cas
+Additional dogus: []
+Component-Operator: "k8s/k8s-component-operator:latest"
+Component-Operator-CRD: "k8s/k8s-component-operator-crd:latest"
+Necessary components:
+  - k8s/k8s-dogu-operator
+  - k8s/k8s-dogu-operator-crd
+  - k8s/k8s-service-discovery
+Additional components: []
+Increase max map count on Nodes: "false"
+Enable Platform Login: "false"
+Enforce Platform Login: "false"
+Allowed oidc groups: []
+Initial oidc admin usernames: []
+        """
+
         def outputFile = 'integrationTests/mn_params_modified.yaml'
 
-        def yamlData = script.readYaml file: inputFile
+        def yamlData = script.readYaml text: defaultMNParams
 
         // Listen initialisieren, falls null
         yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
