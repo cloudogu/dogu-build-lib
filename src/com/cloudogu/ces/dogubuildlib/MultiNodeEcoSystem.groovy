@@ -9,6 +9,8 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coderCredentials
     String coder_workspace
 
+    boolean mnWorkspaceCreated
+
     MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials) {
         super(script, gcloudCredentials, "")
         this.coderCredentials = coderCredentials
@@ -72,6 +74,7 @@ class MultiNodeEcoSystem extends EcoSystem {
                 counter++
             }
             coder_workspace = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"curl -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/cluster-name\"")
+            mnWorkspaceCreated = true
         } else {
             coder_workspace = config.clustername
         }
@@ -179,6 +182,14 @@ class MultiNodeEcoSystem extends EcoSystem {
         script.writeYaml file: outputFile, data: yamlData
 
         script.echo "Modified YAML written to ${outputFile}"
+    }
+
+    void destroy() {
+        script.withCredentials([script.string(credentialsId: 'automatic_migration_coder_token', variable: 'token')]) {
+            if (mnWorkspaceCreated) {
+                script.sh "coder delete --yes --token $script.env.token $coder_workspace"
+            }
+        }
     }
 
     static String escapeToken(String token) {
