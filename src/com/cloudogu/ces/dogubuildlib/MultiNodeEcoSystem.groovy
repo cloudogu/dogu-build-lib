@@ -60,7 +60,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get pods -l app.kubernetes.io/name=k8s-ces-setup -o jsonpath='{.items[*].status.phase}'\"")
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get pods -l app.kubernetes.io/name=k8s-ces-setup --namespace=ecosystem -o jsonpath='{.items[*].status.phase}'\"")
                     if (setupStatus.isEmpty()) {
                         break
                     }
