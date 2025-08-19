@@ -22,9 +22,16 @@ class MultiNodeEcoSystem extends EcoSystem {
         return
     }
 
+    def multinodeConfig = [
+            additionalDogus: [],
+            additionalComponents: []
+    ]
+
     void setup(config = [:]) {
         // Merge default config with the one passed as parameter
-        currentConfig = defaultSetupConfig << config
+        currentConfig = defaultSetupConfig << multinodeConfig
+        currentConfig << config
+
 
         // setup go
         script.sh "sudo apt update && sudo apt install -y golang"
@@ -39,7 +46,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         }
 
         // patch mn-Parameter
-        createMNParameter(config.dependencies, [])
+        createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
 
         if (config.clustername.isEmpty()) {
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
