@@ -4,7 +4,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
     def MN_CODER_TEMPLATE = 'k8s-ces-cluster'
-    def MN_CODER_WORKSPACE = 'test-am-mn-' + CODER_SUFFIX
+    def MN_CODER_WORKSPACE = 'test-mn-' + CODER_SUFFIX
 
     String coderCredentials
     String coder_workspace
@@ -73,7 +73,6 @@ class MultiNodeEcoSystem extends EcoSystem {
                 script.sleep(time: 10, unit: 'SECONDS')
                 counter++
             }
-            coder_workspace = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"curl -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/cluster-name\"")
             mnWorkspaceCreated = true
         } else {
             coder_workspace = config.clustername
