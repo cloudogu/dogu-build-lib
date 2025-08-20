@@ -170,6 +170,43 @@ class MultiNodeEcoSystem extends EcoSystem {
         }
     }
 
+    void restartDogu(String doguName, boolean waitUntilAvailable = true) {
+        script.echo "Restarting ${doguName}..."
+        def restartYaml = """
+apiVersion: k8s.cloudogu.com/v2
+kind: DoguRestart
+metadata:
+  generateName: $doguName-restart-
+spec:
+  doguName: $doguName
+"""
+        script.writeFile encoding: 'UTF-8', file: '/tmp/restartDogu.yaml', text: restartYaml
+        script.sh "kubectl create -f /tmp/restartDogu.yaml"
+
+        if (waitUntilAvailable) {
+            script.echo "Waiting for dogu (${doguName}) to become available"
+            this.waitForDogu(doguName)
+        }
+    }
+
+    void changeGlobalAdminGroup(String newGlobalAdminGroup) {
+        script.echo "Change global admin group to ($newGlobalAdminGroup)."
+        def adminUsername = currentConfig.adminUsername
+        def adminPassword = currentConfig.adminPassword
+
+        def externalIP = getExternalIP()
+
+        script.echo "Creating the new admin group ($newGlobalAdminGroup) in usermgt and adding the user $adminUsername to it"
+        script.sh 'curl -u ' + adminUsername + ':' + adminPassword + ' --insecure -X POST https://' + externalIP + '/usermgt/api/groups -H \'accept: */*\' -H \'Content-Type: application/json\' -d \'{"description": "New admin group for testing", "members": ["' + adminUsername + '"], "name": "' + newGlobalAdminGroup + '"}\''
+
+        script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
+
+        def patchedMap = script.sh(returnStdout: true, script: "kubectl get configmap global-config -n ecosystem -o json | jq -r '.data[\"config.yaml\"]' | yq '.admin_group = \"$newGlobalAdminGroup\"'")
+        script.writeFile encoding: 'UTF-8', file: "new-config.yaml", text: patchedMap
+
+        script.sh "kubectl patch configmap global-config -n ecosystem --type merge -p \"\$(jq -n --argfile c new-config.yaml '{data: {\"config.yaml\": \$c | tojson | fromjson}}')\""
+    }
+
     void runCypressIntegrationTests(config = [:]) {
         Cypress cypress = new Cypress(this.script, config)
         def ip = getExternalIP()
