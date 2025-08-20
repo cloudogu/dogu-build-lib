@@ -143,8 +143,8 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     void verify(String dogu) {
         def veriFile = 'verify_mn.xml'
-        def gossFile = 'spec/goss/goss.yaml'
-        if (script.fileExists(gossFile)) {
+        def gossFile = './spec/goss/goss.yaml'
+        if (!script.fileExists(gossFile)) {
             script.echo "No goss-specification found. Skip verify"
             return
         }
@@ -152,7 +152,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.status.health}'\"")
+            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.status.health}'")
 
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
                        wget -qO /usr/local/bin/goss https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
