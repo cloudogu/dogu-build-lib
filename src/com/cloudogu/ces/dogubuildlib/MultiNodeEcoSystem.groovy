@@ -152,7 +152,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.status.health}'")
+            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
 
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
                        wget -qO /usr/local/bin/goss https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
