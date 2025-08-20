@@ -41,7 +41,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
         // setup coder
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
-            script.sh "curl -L https://coder.com/install.sh | sh"
+            script.sh "curl -L https://coder.cloudogu.com/install.sh | sh"
             script.sh "coder login https://coder.cloudogu.com --token ${script.env.token}"
         }
 
@@ -144,9 +144,10 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     void verify(String dogu) {
         def veriFile = 'verify_mn.xml'
-        def gossFile = './spec/goss/goss.yaml'
+        def gossFile = 'spec/goss/goss.yaml'
         if (script.fileExists(gossFile)) {
             script.echo "No goss-specification found. Skip verify"
+            return
         }
         if (script.fileExists(veriFile)) {
             script.sh "rm -f $veriFile"
