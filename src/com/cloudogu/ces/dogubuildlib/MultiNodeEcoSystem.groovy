@@ -204,7 +204,15 @@ spec:
         def patchedMap = script.sh(returnStdout: true, script: "kubectl get configmap global-config -n ecosystem -o json | jq -r '.data[\"config.yaml\"]' | .bin/yq '.admin_group = \"$newGlobalAdminGroup\"'")
         script.writeFile encoding: 'UTF-8', file: "new-config.yaml", text: patchedMap
 
-        script.sh "kubectl patch configmap global-config -n ecosystem --type merge -p \"\$(jq -n --argfile c new-config.yaml '{data: {\"config.yaml\": \$c | tojson | fromjson}}')\""
+        script.sh '''
+          kubectl patch configmap global-config -n ecosystem \
+            --type merge \
+            -p '{
+              "data": {
+                "config.yaml": "'"$(sed 's/"/\\"/g' new-config.yaml)"'"
+              }
+            }'
+        '''
     }
 
     void runCypressIntegrationTests(config = [:]) {
