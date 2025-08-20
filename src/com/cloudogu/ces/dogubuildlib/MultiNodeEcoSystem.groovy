@@ -54,7 +54,6 @@ class MultiNodeEcoSystem extends EcoSystem {
                    coder create  \
                        --template $MN_CODER_TEMPLATE \
                        --stop-after 1h \
-                       --preset none \
                        --verbose \
                        --rich-parameter-file 'integrationTests/mn_params_modified.yaml' \
                        --yes \
