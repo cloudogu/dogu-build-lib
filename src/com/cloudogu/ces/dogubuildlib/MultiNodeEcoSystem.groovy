@@ -201,18 +201,11 @@ spec:
 
         script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
 
-        def patchedMap = script.sh(returnStdout: true, script: "kubectl get configmap global-config -n ecosystem -o json | jq -r '.data[\"config.yaml\"]' | .bin/yq '.admin_group = \"$newGlobalAdminGroup\"'")
-        script.writeFile encoding: 'UTF-8', file: "new-config.yaml", text: patchedMap
-
-        script.sh '''
-          kubectl patch configmap global-config -n ecosystem \
-            --type merge \
-            -p '{
-              "data": {
-                "config.yaml": "'"$(sed 's/"/\\"/g' new-config.yaml)"'"
-              }
-            }'
-        '''
+        script.sh """
+          kubectl get configmap global-config -n ecosystem -o yaml \
+          | sed "s/^\\([[:space:]]*admin_group:\\).*/\\1 $newGlobalAdminGroup/" \
+          | kubectl apply -n ecosystem -f -
+        """
     }
 
     void runCypressIntegrationTests(config = [:]) {
