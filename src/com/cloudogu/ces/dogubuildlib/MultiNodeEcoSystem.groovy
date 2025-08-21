@@ -183,6 +183,9 @@ spec:
         script.writeFile encoding: 'UTF-8', file: '/tmp/restartDogu.yaml', text: restartYaml
         script.sh "kubectl create -f /tmp/restartDogu.yaml"
 
+        // wait for restart-cr to be reconciled
+        script.sleep(time: 10, unit: 'SECONDS')
+
         if (waitUntilAvailable) {
             script.echo "Waiting for dogu (${doguName}) to become available"
             this.waitForDogu(doguName)
