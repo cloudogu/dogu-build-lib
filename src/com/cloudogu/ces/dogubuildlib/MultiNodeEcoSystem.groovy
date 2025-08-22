@@ -13,7 +13,8 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials, String clusterSuffix = "") {
         super(script, gcloudCredentials, "")
-        MN_CODER_WORKSPACE = (MN_CODER_WORKSPACE + clusterSuffix + CODER_SUFFIX).substring(0,32)
+        MN_CODER_WORKSPACE = MN_CODER_WORKSPACE + clusterSuffix + CODER_SUFFIX
+        MN_CODER_WORKSPACE = MN_CODER_WORKSPACE.substring(0,Math.min(32, MN_CODER_WORKSPACE.length()))
         this.coderCredentials = coderCredentials
         this.coder_workspace = MN_CODER_WORKSPACE
     }
