@@ -4,15 +4,16 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
     def MN_CODER_TEMPLATE = 'k8s-ces-cluster'
-    def MN_CODER_WORKSPACE = 'test-mn-' + CODER_SUFFIX
+    def MN_CODER_WORKSPACE = 'test-mn-'
 
     String coderCredentials
     String coder_workspace
 
     boolean mnWorkspaceCreated
 
-    MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials) {
+    MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials, String clusterSuffix = "") {
         super(script, gcloudCredentials, "")
+        MN_CODER_WORKSPACE = (MN_CODER_WORKSPACE + clusterSuffix + CODER_SUFFIX).substring(0,32)
         this.coderCredentials = coderCredentials
         this.coder_workspace = MN_CODER_WORKSPACE
     }
@@ -128,12 +129,10 @@ class MultiNodeEcoSystem extends EcoSystem {
             def setupStatus = "init"
             try {
                 setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=ecosystem $dogu -o jsonpath='{.status.health}'\"")
-                script.echo setupStatus
                 if (setupStatus == "available") {
                     break
                 }
             } catch (Exception err) {
-                script.echo err
                 // this is okay
             }
             script.sleep(time: 10, unit: 'SECONDS')
@@ -232,7 +231,7 @@ spec:
 
         def defaultMNParams = """
 MN-CES Machine Type: "e2-standard-4"
-MN-CES Node Count: "4"
+MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
 CES Setup Chart Namespace: "k8s"
 CES Setup Chart Version: "3.4.0"
@@ -261,11 +260,11 @@ Initial oidc admin usernames: []
 
         def yamlData = script.readYaml text: defaultMNParams
 
-        // Listen initialisieren, falls null
+        // init list to prevent null value
         yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
         yamlData['Additional components'] = yamlData['Additional components'] ?: []
 
-        // Elemente hinzufügen, ohne Duplikate
+        // add elements without duplicates
         dogusToAdd.each { d ->
             if (!yamlData['Additional dogus'].contains(d)) {
                 yamlData['Additional dogus'] << d
