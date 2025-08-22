@@ -109,6 +109,36 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
+    private String sanitizeForLabel(String input) {
+        if (!input) {
+            return "unknown"
+        }
+
+        // Decode common URL-encoded characters
+        input = input.replaceAll("%2[fF]", "/")  // Convert "%2F" back to "/"
+                    .replaceAll("%20", "-")      // Convert "%20" (spaces) to "-"
+                    .replaceAll("%3[aA]", ":")   // Convert "%3A" to ":"
+                    .replaceAll("%", "")         // Remove any remaining '%'
+
+        // Convert to lowercase
+        input = input.toLowerCase()
+
+        // Replace invalid characters with "-"
+        input = input.replaceAll("[^a-z0-9_-]", "-")
+
+        // Trim to max 63 characters
+        return input.length() > 63 ? input.substring(0, 63) : input
+    }
+
+    private String getJenkinsUser() {
+        def cause = script.currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause)
+        return cause ? cause.getUserId() : "unknown"
+    }
+
+    private String getPipelineName() {
+        return sanitizeForLabel(script.env.JOB_NAME ?: "unknown")
+    }
+
     void purgeDogu(String doguName, parameters = "") {
         vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
     }
@@ -473,6 +503,9 @@ class EcoSystem {
     }
 
     private void writeVagrantConfiguration(String mountPath, machineType = "n1-standard-4") {
+        def jenkinsUser = getJenkinsUser()
+        def pipelineName = getPipelineName()
+
         script.writeFile file: 'Vagrantfile', text: """
 Vagrant.require_version ">= 1.9.0"
 
@@ -501,6 +534,12 @@ Vagrant.configure(2) do |config|
     google.on_host_maintenance = "TERMINATE"
 
     google.name = "ces-dogu-" + Time.now.to_i.to_s
+    
+    google.labels = { 
+        "vm_name" => "ces-dogu-vagrant", 
+        "user" => "${jenkinsUser}",
+        "pipeline_name" => "${pipelineName}"
+    }
 
     google.tags = ["http-server", "https-server", "setup"]
 
