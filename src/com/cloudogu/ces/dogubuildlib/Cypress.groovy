@@ -47,7 +47,7 @@ class Cypress {
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
-                        script.sh "cd integrationTests/ && yarn install && yarn cypress run ${cypressRunArgs}"
+                        script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
     }
