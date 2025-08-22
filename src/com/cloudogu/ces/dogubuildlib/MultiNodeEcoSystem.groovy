@@ -50,7 +50,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         // patch mn-Parameter
         createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
 
-        if (config.clustername.isEmpty()) {
+        if (config.clustername == null || config.clustername.isEmpty()) {
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
                    coder create  \
