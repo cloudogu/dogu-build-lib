@@ -154,14 +154,16 @@ class MultiNodeEcoSystem extends EcoSystem {
         try {
             def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
 
+            def gosspath = '/tmp/gossbin'
+
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
-                       wget -qO /usr/local/bin/goss https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
-                       chmod +x /usr/local/bin/goss'"
+                       wget -qO $gosspath https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
+                       chmod +x $gosspath'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
 
-            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- goss -g /tmp/goss.yaml validate --format junit")
+            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit")
             script.echo "Report:\n ${verifyReport}"
             script.writeFile encoding: 'UTF-8', file: "$veriFile", text: verifyReport
         } finally {
