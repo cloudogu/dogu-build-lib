@@ -51,6 +51,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
 
         if (config.clustername == null || config.clustername.isEmpty()) {
+            script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
                    coder create  \
@@ -58,6 +59,7 @@ class MultiNodeEcoSystem extends EcoSystem {
                        --stop-after 1h \
                        --verbose \
                        --rich-parameter-file 'integrationTests/mn_params_modified.yaml' \
+                       --preset 'none' \
                        --yes \
                        --token ${script.env.token} \
                        $coder_workspace
@@ -237,7 +239,7 @@ MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
 CES Setup Chart Namespace: "k8s"
-CES Setup Chart Version: "3.4.0"
+CES Setup Chart Version: "4.1.1"
 Necessary dogus:
   - official/postfix
   - k8s/nginx-static
