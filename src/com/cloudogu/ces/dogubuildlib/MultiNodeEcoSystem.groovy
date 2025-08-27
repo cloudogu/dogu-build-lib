@@ -239,7 +239,7 @@ MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
 CES Setup Chart Namespace: "k8s"
-CES Setup Chart Version: "3.4.0"
+CES Setup Chart Version: "4.1.1"
 Necessary dogus:
   - official/postfix
   - k8s/nginx-static
