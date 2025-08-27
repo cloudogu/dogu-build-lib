@@ -51,6 +51,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
 
         if (config.clustername == null || config.clustername.isEmpty()) {
+            script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
                    coder create  \
@@ -58,6 +59,7 @@ class MultiNodeEcoSystem extends EcoSystem {
                        --stop-after 1h \
                        --verbose \
                        --rich-parameter-file 'integrationTests/mn_params_modified.yaml' \
+                       --preset 'none' \
                        --yes \
                        --token ${script.env.token} \
                        $coder_workspace
@@ -154,16 +156,14 @@ class MultiNodeEcoSystem extends EcoSystem {
         try {
             def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
 
-            def gosspath = '/tmp/gossbin'
-
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
-                       wget -qO $gosspath https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
-                       chmod +x $gosspath'"
+                       wget -qO /usr/local/bin/goss https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
+                       chmod +x /usr/local/bin/goss'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
 
-            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit")
+            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- goss -g /tmp/goss.yaml validate --format junit")
             script.echo "Report:\n ${verifyReport}"
             script.writeFile encoding: 'UTF-8', file: "$veriFile", text: verifyReport
         } finally {
