@@ -248,6 +248,7 @@ Necessary dogus:
   - official/postfix
   - official/ldap
   - official/cas
+Additional dogus: []
 Component-Operator: "cloudogu/k8s-component-operator:1.10.1"
 Component-Operator-CRD: "k8s/k8s-component-operator-crd:1.10.1"
 Necessary components:
