@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
-    def MN_CODER_TEMPLATE = 'k8s-ces-cluster'
+    def MN_CODER_TEMPLATE = 'k8s-ces-cluster-test'
     def MN_CODER_WORKSPACE = 'test-mn-'
 
     String coderCredentials
@@ -238,22 +238,24 @@ spec:
 MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
-CES Setup Chart Namespace: "k8s"
-CES Setup Chart Version: "4.1.1"
+Ecosystem-Core Chart Namespace: "k8s"
+Ecosystem Core Chart Version: "0.2.2"
 Necessary dogus:
   - official/postfix
-  - k8s/nginx-static
-  - k8s/nginx-ingress
   - official/ldap
   - official/cas
-Additional dogus: []
-Component-Operator: "k8s/k8s-component-operator:latest"
-Component-Operator-CRD: "k8s/k8s-component-operator-crd:latest"
+Component-Operator: "cloudogu/k8s-component-operator:1.10.1"
+Component-Operator-CRD: "k8s/k8s-component-operator-crd:1.10.1"
 Necessary components:
-  - k8s/k8s-dogu-operator
-  - k8s/k8s-dogu-operator-crd
-  - k8s/k8s-service-discovery
-Additional components: []
+  - k8s/k8s-dogu-operator-crd:2.10.0
+  - k8s/k8s-dogu-operator:3.15.0
+  - k8s/k8s-service-discovery:3.0.0
+  - k8s/k8s-ces-gateway:1.0.1
+  - k8s/k8s-ces-assets:1.0.1
+  - k8s/k8s-debug-mode-operator-crd:0.2.3
+  - k8s/k8s-debug-mode-operator:0.3.0
+  - k8s/k8s-blueprint-operator-crd:2.0.1
+  - k8s/k8s-blueprint-operator:3.0.0-CR1
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
 Enforce Platform Login: "false"
@@ -265,19 +267,15 @@ Initial oidc admin usernames: []
 
         def yamlData = script.readYaml text: defaultMNParams
 
-        // init list to prevent null value
-        yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
-        yamlData['Additional components'] = yamlData['Additional components'] ?: []
-
         // add elements without duplicates
         dogusToAdd.each { d ->
-            if (!yamlData['Additional dogus'].contains(d)) {
-                yamlData['Additional dogus'] << d
+            if (!yamlData['Necessary dogus'].contains(d)) {
+                yamlData['Necessary dogus'] << d
             }
         }
         componentsToAdd.each { c ->
-            if (!yamlData['Additional components'].contains(c)) {
-                yamlData['Additional components'] << c
+            if (!yamlData['Necessary components'].contains(c)) {
+                yamlData['Necessary components'] << c
             }
         }
 
