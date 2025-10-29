@@ -274,10 +274,12 @@ Initial oidc admin usernames: []
 
         // init list to prevent null value
         yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
-        yamlData['Additional components'] = yamlData['Additional components'] ?: []
 
         // add elements without duplicates
         dogusToAdd.each { d ->
+            if (!yamlData['Additional dogus'].contains(d)) {
+                yamlData['Additional dogus'] << d
+            }
             if (!yamlData['Necessary dogus'].contains(d)) {
                 yamlData['Necessary dogus'] << d
             }
