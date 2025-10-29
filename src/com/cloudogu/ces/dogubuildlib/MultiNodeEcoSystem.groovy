@@ -272,6 +272,10 @@ Initial oidc admin usernames: []
 
         def yamlData = script.readYaml text: defaultMNParams
 
+        // init list to prevent null value
+        yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
+        yamlData['Additional components'] = yamlData['Additional components'] ?: []
+
         // add elements without duplicates
         dogusToAdd.each { d ->
             if (!yamlData['Necessary dogus'].contains(d)) {
