@@ -73,7 +73,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\"EcosystemHealthy\")].status}{\" \"}{.status.conditions[?(@.type==\"Completed\")].status}'")
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'")
                     if (setupStatus == "True True") {
                         break
                     }
