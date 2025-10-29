@@ -5,9 +5,11 @@ class MultiNodeEcoSystem extends EcoSystem {
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
     def MN_CODER_TEMPLATE = 'k8s-ces-cluster-test'
     def MN_CODER_WORKSPACE = 'test-mn-'
+    def ECOSYSTEM_BLUEPRINT = 'blueprint-ces-module'
 
     String coderCredentials
     String coder_workspace
+    String ecosystem_blueprint
 
     boolean mnWorkspaceCreated
 
@@ -17,6 +19,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         MN_CODER_WORKSPACE = MN_CODER_WORKSPACE.substring(0,Math.min(32, MN_CODER_WORKSPACE.length()))
         this.coderCredentials = coderCredentials
         this.coder_workspace = MN_CODER_WORKSPACE
+        this.ecosystem_blueprint = ECOSYSTEM_BLUEPRINT
     }
 
     void provision(String mountPath, machineType = "n1-standard-4", int timeoutInMinutes = 5) {
@@ -65,21 +68,22 @@ class MultiNodeEcoSystem extends EcoSystem {
                        $coder_workspace
                 """
             }
-            // wait for all dogus to get healthy
+            // wait for blueprint to be ready
             def counter = 0
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get pods -l app.kubernetes.io/name=k8s-ces-setup --namespace=ecosystem -o jsonpath='{.items[*].status.phase}'\"")
-                    if (setupStatus.isEmpty()) {
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\"EcosystemHealthy\")].status}{\" \"}{.status.conditions[?(@.type==\"Completed\")].status}")
+                    if (setupStatus == "True True") {
                         break
                     }
                 } catch (Exception ignored) {
                     // this is okay
                 }
                 if (setupStatus.contains("Failed")) {
-                    script.error("Failed to set up mn workspace. K8s-ces-setup failed")
+                    script.error("Failed to set up mn workspace. ecosystem-core failed")
                 }
+                script.echo "Blueprint not ready, waiting 10 seconds: '${setupStatus}'"
                 script.sleep(time: 10, unit: 'SECONDS')
                 counter++
             }
