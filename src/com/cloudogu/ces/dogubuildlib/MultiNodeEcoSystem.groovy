@@ -154,7 +154,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
+            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'""")
 
             def gosspath = '/tmp/gossbin'
 
@@ -253,6 +253,8 @@ Necessary components:
   - k8s/k8s-dogu-operator
   - k8s/k8s-dogu-operator-crd
   - k8s/k8s-service-discovery
+  - k8s/k8s-blueprint-operator:2.8.0
+  - k8s/k8s-blueprint-operator-crd:1.3.0
 Additional components: []
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
