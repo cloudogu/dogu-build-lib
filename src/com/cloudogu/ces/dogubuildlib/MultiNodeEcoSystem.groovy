@@ -251,6 +251,8 @@ Component-Operator: "k8s/k8s-component-operator:latest"
 Component-Operator-CRD: "k8s/k8s-component-operator-crd:latest"
 Necessary components:
   - k8s/k8s-dogu-operator
+  - k8s/k8s-ces-gateway
+  - k8s/k8s-ces-assets
   - k8s/k8s-dogu-operator-crd
   - k8s/k8s-service-discovery
   - k8s/k8s-blueprint-operator:2.8.0
