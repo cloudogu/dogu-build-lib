@@ -11,6 +11,12 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coder_workspace
     String ecosystem_blueprint
 
+    private static String VERSION_ECOSYSTEM_CORE = "1.2.0"
+    private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
+    private static String VERSION_K8S_DOGU_OPERATOR = "3.15.0"
+    private static String VERSION_K8S_DOGU_OPERATOR_CRD = "2.10.0"
+    private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
+
     boolean mnWorkspaceCreated
 
     MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials, String clusterSuffix = "") {
@@ -243,24 +249,23 @@ MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
 Ecosystem-Core Chart Namespace: "k8s"
-Ecosystem Core Chart Version: "1.1.0"
+Ecosystem Core Chart Version: "${VERSION_ECOSYSTEM_CORE}"
 Necessary dogus:
   - official/postfix
   - official/ldap
   - official/cas
 Additional dogus: []
-Component-Operator: "cloudogu/k8s-component-operator:1.10.1"
-Component-Operator-CRD: "k8s/k8s-component-operator-crd:1.10.1"
+Component-Operator: "cloudogu/k8s-component-operator:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
+Component-Operator-CRD: "k8s/k8s-component-operator-crd:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
+Blueprint-Operator: "cloudogu/k8s-component-operator:${VERSION_K8S_BLUEPRINT_OPERATOR_CRD}"
 Necessary components:
-  - k8s/k8s-dogu-operator-crd:2.10.0
-  - k8s/k8s-dogu-operator:3.15.0
-  - k8s/k8s-service-discovery:3.0.0
-  - k8s/k8s-ces-gateway:1.0.1
-  - k8s/k8s-ces-assets:1.0.1
-  - k8s/k8s-debug-mode-operator-crd:0.2.3
-  - k8s/k8s-debug-mode-operator:0.3.0
-  - k8s/k8s-blueprint-operator-crd:2.0.1
-  - k8s/k8s-blueprint-operator:3.1.0
+  - k8s/k8s-dogu-operator-crd:${VERSION_K8S_DOGU_OPERATOR_CRD}
+  - k8s/k8s-dogu-operator:${VERSION_K8S_DOGU_OPERATOR}
+  - k8s/k8s-service-discovery
+  - k8s/k8s-ces-gateway
+  - k8s/k8s-ces-assets
+  - k8s/k8s-debug-mode-operator-crd
+  - k8s/k8s-debug-mode-operator
 Additional components: []
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
