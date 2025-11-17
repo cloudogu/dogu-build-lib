@@ -158,13 +158,13 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
+            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'""")
 
             def gosspath = '/tmp/gossbin'
 
-            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
-                       wget -qO $gosspath https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
-                       chmod +x $gosspath'"
+            script.sh "mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
+            script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
+            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
@@ -243,7 +243,7 @@ MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
 Ecosystem-Core Chart Namespace: "k8s"
-Ecosystem Core Chart Version: "0.2.2"
+Ecosystem Core Chart Version: "1.1.0"
 Necessary dogus:
   - official/postfix
   - official/ldap
@@ -260,7 +260,8 @@ Necessary components:
   - k8s/k8s-debug-mode-operator-crd:0.2.3
   - k8s/k8s-debug-mode-operator:0.3.0
   - k8s/k8s-blueprint-operator-crd:2.0.1
-  - k8s/k8s-blueprint-operator:3.0.0-CR1
+  - k8s/k8s-blueprint-operator:3.1.0
+Additional components: []
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
 Enforce Platform Login: "false"
