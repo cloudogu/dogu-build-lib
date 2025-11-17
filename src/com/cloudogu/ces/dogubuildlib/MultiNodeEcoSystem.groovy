@@ -158,9 +158,9 @@ class MultiNodeEcoSystem extends EcoSystem {
 
             def gosspath = '/tmp/gossbin'
 
-            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
-                       wget -qO $gosspath https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
-                       chmod +x $gosspath'"
+            script.sh "mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
+            script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
+            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
@@ -251,6 +251,8 @@ Component-Operator: "k8s/k8s-component-operator:latest"
 Component-Operator-CRD: "k8s/k8s-component-operator-crd:latest"
 Necessary components:
   - k8s/k8s-dogu-operator
+  - k8s/k8s-ces-gateway
+  - k8s/k8s-ces-assets
   - k8s/k8s-dogu-operator-crd
   - k8s/k8s-service-discovery
   - k8s/k8s-blueprint-operator:2.8.0
