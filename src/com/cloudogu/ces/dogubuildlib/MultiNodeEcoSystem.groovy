@@ -257,7 +257,7 @@ Necessary dogus:
 Additional dogus: []
 Component-Operator: "cloudogu/k8s-component-operator:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
 Component-Operator-CRD: "k8s/k8s-component-operator-crd:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
-Blueprint-Operator: "cloudogu/k8s-component-operator:${VERSION_K8S_BLUEPRINT_OPERATOR_CRD}"
+Blueprint-Operator-CRD: "cloudogu/k8s-component-operator:${VERSION_K8S_BLUEPRINT_OPERATOR_CRD}"
 Necessary components:
   - k8s/k8s-dogu-operator-crd:${VERSION_K8S_DOGU_OPERATOR_CRD}
   - k8s/k8s-dogu-operator:${VERSION_K8S_DOGU_OPERATOR}
