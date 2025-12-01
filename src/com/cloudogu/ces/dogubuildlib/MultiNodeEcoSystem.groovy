@@ -7,6 +7,8 @@ class MultiNodeEcoSystem extends EcoSystem {
     def MN_CODER_WORKSPACE = 'test-mn-'
     def ECOSYSTEM_BLUEPRINT = 'blueprint-ces-module'
 
+    def MN_PARAMETER_FILE = 'integrationTests/mn_params_modified.yaml'
+
     String coderCredentials
     String coder_workspace
     String ecosystem_blueprint
@@ -67,7 +69,7 @@ class MultiNodeEcoSystem extends EcoSystem {
                        --template $MN_CODER_TEMPLATE \
                        --stop-after 1h \
                        --verbose \
-                       --rich-parameter-file 'integrationTests/mn_params_modified.yaml' \
+                       --rich-parameter-file '$MN_PARAMETER_FILE' \
                        --preset 'none' \
                        --yes \
                        --token ${script.env.token} \
@@ -92,6 +94,9 @@ class MultiNodeEcoSystem extends EcoSystem {
                 script.echo "Blueprint not ready, waiting 10 seconds: '${setupStatus}'"
                 script.sleep(time: 10, unit: 'SECONDS')
                 counter++
+            }
+            if (counter >= 360) {
+                script.error("Failed to set up mn workspace. ecosystem-core failed")
             }
             mnWorkspaceCreated = true
         } else {
@@ -277,7 +282,6 @@ Allowed oidc groups: []
 Initial oidc admin usernames: []
         """
 
-        def outputFile = 'integrationTests/mn_params_modified.yaml'
 
         def yamlData = script.readYaml text: defaultMNParams
 
@@ -286,9 +290,6 @@ Initial oidc admin usernames: []
 
         // add elements without duplicates
         dogusToAdd.each { d ->
-            if (!yamlData['Additional dogus'].contains(d)) {
-                yamlData['Additional dogus'] << d
-            }
             if (!yamlData['Necessary dogus'].contains(d)) {
                 yamlData['Necessary dogus'] << d
             }
@@ -303,7 +304,7 @@ Initial oidc admin usernames: []
         script.sh "rm -f ${outputFile}"
 
         // YAML schreiben
-        script.writeYaml file: outputFile, data: yamlData
+        script.writeYaml file: MN_PARAMETER_FILE, data: yamlData
 
         script.echo "Modified YAML written to ${outputFile}"
     }
