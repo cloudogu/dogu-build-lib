@@ -301,12 +301,12 @@ Initial oidc admin usernames: []
         }
 
         // Vorherige Datei löschen, falls existiert
-        script.sh "rm -f ${outputFile}"
+        script.sh "rm -f ${MN_PARAMETER_FILE}"
 
         // YAML schreiben
         script.writeYaml file: MN_PARAMETER_FILE, data: yamlData
 
-        script.echo "Modified YAML written to ${outputFile}"
+        script.echo "Modified YAML written to ${MN_PARAMETER_FILE}"
     }
 
     void destroy() {
