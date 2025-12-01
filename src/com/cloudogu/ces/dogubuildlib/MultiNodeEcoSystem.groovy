@@ -267,7 +267,7 @@ Enable Backup: false
 Backup components: [] 
 Enable Monitoring: false
 Monitoring components: []
-Necessary components:
+Base components:
   - k8s/k8s-dogu-operator-crd:${VERSION_K8S_DOGU_OPERATOR_CRD}
   - k8s/k8s-dogu-operator:${VERSION_K8S_DOGU_OPERATOR}
   - k8s/k8s-service-discovery
@@ -295,8 +295,8 @@ Initial oidc admin usernames: []
             }
         }
         componentsToAdd.each { c ->
-            if (!yamlData['Necessary components'].contains(c)) {
-                yamlData['Necessary components'] << c
+            if (!yamlData['Base components'].contains(c)) {
+                yamlData['Base components'] << c
             }
         }
 
