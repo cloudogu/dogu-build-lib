@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
-    def MN_CODER_TEMPLATE = 'k8s-ces-cluster-test'
+    def MN_CODER_TEMPLATE = 'k8s-ces-cluster'
     def MN_CODER_WORKSPACE = 'test-mn-'
     def ECOSYSTEM_BLUEPRINT = 'blueprint-ces-module'
 
