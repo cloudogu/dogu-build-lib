@@ -15,8 +15,6 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     private static String VERSION_ECOSYSTEM_CORE = "1.2.0"
     private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
-    private static String VERSION_K8S_DOGU_OPERATOR = "3.15.0"
-    private static String VERSION_K8S_DOGU_OPERATOR_CRD = "2.10.0"
     private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
 
     boolean mnWorkspaceCreated
@@ -268,8 +266,8 @@ Backup components: []
 Enable Monitoring: false
 Monitoring components: []
 Base components:
-  - k8s/k8s-dogu-operator-crd:${VERSION_K8S_DOGU_OPERATOR_CRD}
-  - k8s/k8s-dogu-operator:${VERSION_K8S_DOGU_OPERATOR}
+  - k8s/k8s-dogu-operator-crd
+  - k8s/k8s-dogu-operator
   - k8s/k8s-service-discovery
   - k8s/k8s-ces-gateway
   - k8s/k8s-ces-assets
