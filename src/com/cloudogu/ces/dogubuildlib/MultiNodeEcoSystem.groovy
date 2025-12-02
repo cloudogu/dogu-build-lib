@@ -13,7 +13,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coder_workspace
     String ecosystem_blueprint
 
-    private static String VERSION_ECOSYSTEM_CORE = "1.2.0"
+    private static String VERSION_ECOSYSTEM_CORE = "2.0.1"
     private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
     private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
 
