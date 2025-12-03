@@ -1,5 +1,7 @@
 package com.cloudogu.ces.dogubuildlib
 
+import groovy.json.JsonSlurper
+
 class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
@@ -55,6 +57,10 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "curl -L https://coder.cloudogu.com/install.sh | sh"
             script.sh "coder login https://coder.cloudogu.com --token ${script.env.token}"
         }
+
+        // get default Values
+        def richParamters = getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
+        script.echo richParamters
 
         // patch mn-Parameter
         createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
@@ -319,4 +325,35 @@ Initial oidc admin usernames: []
         token = token.replaceAll("\\\$", '\\\\\\\$')
         return token
     }
+
+    // coder default-values:
+    List getRichParameters(String baseUrl, String orgId, String templateName) {
+        script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
+            def jsonSlurper = new JsonSlurper()
+
+            // 1) get active template_ID (inkl. active_version_id)
+            def templateUrl = "${baseUrl}/api/v2/organizations/${orgId}/templates/${templateName}"
+
+            String templateJsonStr = script.sh(returnStdout: true, script: "curl -sS -H \"Accept: application/json\" -H \"Coder-Session-Token: ${script.env.token}\" \"${templateUrl}\"").trim()
+
+            def templateJson = jsonSlurper.parseText(templateJsonStr)
+            def versionId = templateJson.active_version_id
+            if (!versionId) {
+                script.error "Can not get active_version_id for template '${templateName}'"
+            }
+
+            // 2) get rich parameter for version
+            def paramsUrl = "${baseUrl}/api/v2/templateversions/${versionId}/rich-parameters"
+            String paramsJsonStr = script.sh(returnStdout: true, script: "curl -sS -H \"Accept: application/json\" -H \"Coder-Session-Token: ${script.env.token}\" \"${paramsUrl}\"").trim()
+
+            return (List) jsonSlurper.parseText(paramsJsonStr)
+        }
+        return []
+    }
+
+    static def getDefaultValueByName(List params, String name) {
+        def param = params.find { it.name == name }
+        return param?.default_value
+    }
+
 }
