@@ -60,7 +60,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
         // get default Values
         def richParamters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
-        script.echo richParamters
+        script.echo "${richParamters}"
 
         // patch mn-Parameter
         createMNParameter(currentConfig)
@@ -349,8 +349,6 @@ Initial oidc admin usernames: []
             if (!versionId) {
                 script.error "Can not get active_version_id for template '${templateName}'"
             }
-
-            script.echo "${versionId}"
 
             // 2) get rich parameter for version
             def paramsUrl = "${baseUrl}/api/v2/templateversions/${versionId}/rich-parameters"
