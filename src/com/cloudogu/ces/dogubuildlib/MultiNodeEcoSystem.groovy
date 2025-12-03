@@ -335,6 +335,7 @@ Initial oidc admin usernames: []
 
             String templateJsonStr = script.sh(returnStdout: true, script: "curl -sS -H \"Accept: application/json\" -H \"Coder-Session-Token: ${script.env.token}\" \"${templateUrl}\"").trim()
 
+            script.echo templateJsonStr
             def templateJson = jsonSlurper.parseText(templateJsonStr)
             def versionId = templateJson.active_version_id
             if (!versionId) {
