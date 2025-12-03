@@ -59,7 +59,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         }
 
         // get default Values
-        def richParamters = getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
+        def richParamters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
         script.echo richParamters
 
         // patch mn-Parameter
@@ -333,7 +333,7 @@ Initial oidc admin usernames: []
             // 1) get active template_ID (inkl. active_version_id)
             def templateUrl = "${baseUrl}/api/v2/organizations/${orgId}/templates/${templateName}"
 
-            String templateJsonStr = script.sh(returnStdout: true, script: "curl -H 'Accept: application/json' -H 'Coder-Session-Token: ${script.env.token}' '${templateUrl}'")
+            def templateJsonStr = script.sh(returnStdout: true, script: "curl ${templateUrl} -H 'Accept: application/json' -H 'Coder-Session-Token: ${script.env.token}'")
 
             script.echo templateJsonStr
             def templateJson = jsonSlurper.parseText(templateJsonStr)
