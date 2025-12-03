@@ -352,11 +352,15 @@ Initial oidc admin usernames: []
 
             // 2) get rich parameter for version
             def paramsUrl = "${baseUrl}/api/v2/templateversions/${versionId}/rich-parameters"
+            script.echo "${paramsUrl}"
             url = new URL(paramsUrl)
             conn = (HttpURLConnection) url.openConnection()
             conn.setRequestMethod("GET")
             conn.setRequestProperty("Accept", "application/json")
             conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+            if (conn.responseCode != 200) {
+                script.error("can not get rich parameters: HTTP ${conn.responseCode}")
+            }
             def paramsJson = new JsonSlurper().parse(conn.inputStream)
 
             return (List) paramsJson
