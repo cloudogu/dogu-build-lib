@@ -390,7 +390,7 @@ Initial oidc admin usernames: []
     def getDefaultValueByNameAsList(String name) {
         def param = coderRichParameters.find { it.name == name }
         def listvalue = new JsonSlurperClassic().parseText(param?.default_value)
-        return list.collect { "  - ${it}" }.join("\n")
+        return listvalue.collect { "  - ${it}" }.join("\n")
     }
 
 }
