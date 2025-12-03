@@ -271,7 +271,9 @@ Necessary dogus:
   - official/postfix
   - official/ldap
   - official/cas
-Additional dogus: []${config.versionK8SComponentOperatorCrd ? "\nComponent-Operator-CRD: \"k8s/k8s-component-operator-crd:${config.versionK8SComponentOperatorCrd}\"" : ""}${config.versionK8SBlueprintOperatorCrd ? "\nBlueprint-Operator-CRD: \"k8s/k8s-blueprint-operator-crd:${config.versionK8SBlueprintOperatorCrd}\"" : ""}
+Additional dogus: []
+Component-Operator-CRD: "${config.versionK8SComponentOperatorCrd ? "k8s/k8s-component-operator-crd:${config.versionK8SComponentOperatorCrd}" : getDefaultValueByName("Component-Operator-CRD")}"
+Blueprint-Operator-CRD: "${config.versionK8SBlueprintOperatorCrd ? "k8s/k8s-blueprint-operator-crd:${config.versionK8SBlueprintOperatorCrd}" : getDefaultValueByName("Blueprint-Operator-CRD")}"
 Enable Backup: false
 Backup components: []
 Enable Monitoring: false
