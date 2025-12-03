@@ -360,10 +360,13 @@ Initial oidc admin usernames: []
             conn.setRequestMethod("GET")
             conn.setRequestProperty("Accept", "application/json")
             conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+
             if (conn.responseCode != 200) {
                 script.error("can not get rich parameters: HTTP ${conn.responseCode}")
             }
-            def paramsJson = new JsonSlurper().parse(conn.inputStream)
+            def responseText = conn.inputStream.text
+            script.echo "${responseText}"
+            def paramsJson = new JsonSlurper().parseText(responseText)
 
             return (List) paramsJson
         }
