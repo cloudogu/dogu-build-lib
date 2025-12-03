@@ -330,7 +330,6 @@ Initial oidc admin usernames: []
     }
 
     // coder default-values:
-    @NonCPS
     def getRichParameters(String baseUrl, String orgId, String templateName) {
         def result = []
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
