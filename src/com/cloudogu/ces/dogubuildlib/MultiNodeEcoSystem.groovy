@@ -286,6 +286,8 @@ Base components:
   - k8s/k8s-ces-assets
   - k8s/k8s-debug-mode-operator-crd
   - k8s/k8s-debug-mode-operator
+Disabled Components:
+${getDefaultValueByNameAsList("Disabled Components")}
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
 Enforce Platform Login: "false"
@@ -382,6 +384,13 @@ Initial oidc admin usernames: []
     def getDefaultValueByName(String name) {
         def param = coderRichParameters.find { it.name == name }
         return param?.default_value
+    }
+
+    @NonCPS
+    def getDefaultValueByNameAsList(String name) {
+        def param = coderRichParameters.find { it.name == name }
+        def listvalue = new JsonSlurperClassic().parseText(param?.default_value)
+        return list.collect { "  - ${it}" }.join("\n")
     }
 
 }
