@@ -19,10 +19,6 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     def coderRichParameters
 
-//    private static String VERSION_ECOSYSTEM_CORE = "2.0.1"
-//    private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
-//    private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
-
     boolean mnWorkspaceCreated
 
     MultiNodeEcoSystem(Object script, String gcloudCredentials, String coderCredentials, String clusterSuffix = "") {
@@ -35,8 +31,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     }
 
     void provision(String mountPath, machineType = "n1-standard-4", int timeoutInMinutes = 5) {
-        // isEmpty
-        return
+        script.error "provisioning is not supported in Multinode-Ecosystem - use setup(config = [:]) instead"
     }
 
     def multinodeConfig = [
@@ -44,6 +39,9 @@ class MultiNodeEcoSystem extends EcoSystem {
             additionalComponents: []
     ]
 
+    /**
+     * Create Coder-cluster from template (MN_CODER_TEMPLATE)
+     */
     void setup(config = [:]) {
         // Merge default config with the one passed as parameter
         currentConfig = defaultSetupConfig << multinodeConfig

@@ -96,6 +96,30 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 - sshOut(String command) | execute command on vm
 - destroy() | remove vm with all data
 
+### Multinode-Ecosystem
+
+In order to test dogus via integration test on a multinode system, the Ecosystem-Subclass MultinodeEcoystem can be used.
+Since some functions behave differently in the multinode environment, the provision(...) method is omitted in the MultinodeEcosystem.
+Calling provision(..) on a MultinodeEcosystem will raise an error
+
+#### Setup-Configuration
+To use the setup for a new coder cluster 
+```groovy
+multinodeEcosystem.setup(config)
+```
+
+Some parameters can be passed to the System.
+
+- additionalDogus                  # List of dogus to install in ces
+- additionalComponents             # List of components to install in ces
+- adminUsername                    # admin login username
+- adminPassword                    # admin password 
+- adminGroup                       # name of the ces-admingroup
+- clustername                      # name of an existing cluster (optional)
+- versionEcosystemCore             # Version of ecosystem-core  e.g. 1.2.3 (optional)
+- versionK8SComponentOperatorCrd   # Version of k8s-component-operator-crd  e.g. 1.2.3 (optional)
+- versionK8SBlueprintOperatorCrd   # Version of k8s-blueprint-operator-crd  e.g. 1.2.3  (optional)
+
 ### Cypress
 
 #### Get Started

@@ -30,14 +30,14 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>2.6.3</version>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -52,6 +52,13 @@
             <groupId>com.lesfurets</groupId>
             <artifactId>jenkins-pipeline-unit</artifactId>
             <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-yaml</artifactId>
+            <version>3.0.21</version> <!-- oder die gewünschte Groovy 3.0.x Version -->
             <scope>test</scope>
         </dependency>
 
