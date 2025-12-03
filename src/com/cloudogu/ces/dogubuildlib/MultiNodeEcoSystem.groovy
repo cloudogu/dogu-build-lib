@@ -60,6 +60,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "coder login https://coder.cloudogu.com --token ${script.env.token}"
         }
 
+        /*
         // get default Values
         def richParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
         script.echo "Parameters retrieved"
@@ -67,10 +68,10 @@ class MultiNodeEcoSystem extends EcoSystem {
         def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParameters, "Ecosystem-Core Chart Version")
         script.echo "<<<<< ${ecosystemCoreChartVersionDefault}"
 
+         */
+
         // patch mn-Parameter
         createMNParameter(currentConfig)
-
-        script.error "fail on purpuse"
 
         if (config.clustername == null || config.clustername.isEmpty()) {
             script.sh "coder version"
@@ -267,7 +268,6 @@ spec:
 MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
-Ecosystem-Core Chart Namespace: "k8s"${config.versionEcosystemCore ? "\nEcosystem Core Chart Version: \"${config.versionEcosystemCore}\"" : ""}
 Necessary dogus:
   - official/postfix
   - official/ldap
