@@ -328,8 +328,8 @@ Initial oidc admin usernames: []
     }
 
     // coder default-values:
-    List getRichParameters(String baseUrl, String orgId, String templateName) {
-        List result = []
+    def getRichParameters(String baseUrl, String orgId, String templateName) {
+        def result = []
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
             def jsonSlurper = new JsonSlurper()
 
