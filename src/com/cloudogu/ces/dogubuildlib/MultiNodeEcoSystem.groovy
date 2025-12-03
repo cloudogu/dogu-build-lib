@@ -17,6 +17,8 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coder_workspace
     String ecosystem_blueprint
 
+    def coderRichParameters
+
 //    private static String VERSION_ECOSYSTEM_CORE = "2.0.1"
 //    private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
 //    private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
@@ -62,16 +64,12 @@ class MultiNodeEcoSystem extends EcoSystem {
 
 
         // get default Values
-        def richParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
-        script.echo "Parameters retrieved"
-        script.echo "Parameters retrieved ${richParameters}"
-        def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParameters, "Ecosystem Core Chart Version")
-        script.echo "<<<<< ${ecosystemCoreChartVersionDefault}"
-
-        script.error "fail on purpuse"
+        coderRichParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
 
         // patch mn-Parameter
         createMNParameter(currentConfig)
+
+        script.error "fail on purpuse"
 
         if (config.clustername == null || config.clustername.isEmpty()) {
             script.sh "coder version"
@@ -263,11 +261,12 @@ spec:
 
         List dogusToAdd = config.additionalDogus
         List componentsToAdd = config.additionalComponents
-
         def defaultMNParams = """
 MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
+Ecosystem-Core Chart Namespace: "k8s"
+Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
 Necessary dogus:
   - official/postfix
   - official/ldap
@@ -378,8 +377,8 @@ Initial oidc admin usernames: []
     }
 
     @NonCPS
-    static def getDefaultValueByName(List params, String name) {
-        def param = params.find { it.name == name }
+    def getDefaultValueByName(String name) {
+        def param = coderRichParameters.find { it.name == name }
         return param?.default_value
     }
 
