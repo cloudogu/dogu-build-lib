@@ -333,7 +333,17 @@ Initial oidc admin usernames: []
             // 1) get active template_ID (inkl. active_version_id)
             def templateUrl = "${baseUrl}/api/v2/organizations/${orgId}/templates/${templateName}"
 
-            def templateJsonStr = script.sh(returnStdout: true, script: "curl ${templateUrl} -H 'Accept: application/json' -H 'Coder-Session-Token: ${script.env.token}'")
+            def url = new URL(templateUrl)
+            def conn = (HttpURLConnection) url.openConnection()
+            conn.setRequestMethod("GET")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+
+            if (conn.responseCode != 200) {
+                script.error("Fehler beim Abrufen der Template-Metadaten: HTTP ${conn.responseCode}")
+            }
+
+            def templateJsonStr = new JsonSlurper().parse(conn.inputStream)
 
             script.echo templateJsonStr
             def templateJson = jsonSlurper.parseText(templateJsonStr)
