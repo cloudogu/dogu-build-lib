@@ -60,7 +60,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "coder login https://coder.cloudogu.com --token ${script.env.token}"
         }
 
-        /*
+
         // get default Values
         def richParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
         script.echo "Parameters retrieved"
@@ -68,7 +68,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParameters, "Ecosystem-Core Chart Version")
         script.echo "<<<<< ${ecosystemCoreChartVersionDefault}"
 
-         */
+
 
         // patch mn-Parameter
         createMNParameter(currentConfig)
