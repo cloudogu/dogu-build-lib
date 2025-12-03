@@ -2,6 +2,7 @@ package com.cloudogu.ces.dogubuildlib
 
 import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 class MultiNodeEcoSystem extends EcoSystem {
 
@@ -332,6 +333,7 @@ Initial oidc admin usernames: []
     }
 
     // coder default-values:
+    @NonCPS
     def getRichParameters(String baseUrl, String orgId, String templateName) {
         def result = []
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
@@ -349,8 +351,8 @@ Initial oidc admin usernames: []
             if (conn.responseCode != 200) {
                 script.error("can not get Template-Metadata: HTTP ${conn.responseCode}")
             }
-
-            def templateJson = new JsonSlurper().parse(conn.inputStream)
+            def responseText = conn.inputStream.text
+            def templateJson = new JsonSlurperClassic().parseText(responseText)
 
             def versionId = templateJson.active_version_id
             if (!versionId) {
@@ -369,9 +371,8 @@ Initial oidc admin usernames: []
             if (conn.responseCode != 200) {
                 script.error("can not get rich parameters: HTTP ${conn.responseCode}")
             }
-            def responseText = conn.inputStream.text
-            script.echo "${responseText}"
-            def paramsJson = script.readJSON text: responseText
+            responseText = conn.inputStream.text
+            def paramsJson = new JsonSlurperClassic().parseText(responseText)
             result = paramsJson
         }
         return result
