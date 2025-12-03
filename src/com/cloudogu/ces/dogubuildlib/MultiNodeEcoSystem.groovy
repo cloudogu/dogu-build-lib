@@ -1,5 +1,6 @@
 package com.cloudogu.ces.dogubuildlib
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonSlurper
 
 class MultiNodeEcoSystem extends EcoSystem {
@@ -60,7 +61,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
         // get default Values
         def richParamters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
-        def ecosystemCoreChartVersionDefault = this.getDefaultValueByName("Ecosystem-Core Chart Version")
+        def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParamters, "Ecosystem-Core Chart Version")
         script.echo "<<<<< ${ecosystemCoreChartVersionDefault}"
 
         // patch mn-Parameter
@@ -329,6 +330,7 @@ Initial oidc admin usernames: []
     }
 
     // coder default-values:
+    @NonCPS
     def getRichParameters(String baseUrl, String orgId, String templateName) {
         def result = []
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
@@ -369,12 +371,12 @@ Initial oidc admin usernames: []
             def responseText = conn.inputStream.text
             script.echo "${responseText}"
             def paramsJson = new JsonSlurper().parseText(responseText)
-
             result = paramsJson
         }
         return result
     }
 
+    @NonCPS
     static def getDefaultValueByName(List params, String name) {
         def param = params.find { it.name == name }
         return param?.default_value
