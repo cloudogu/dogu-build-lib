@@ -65,10 +65,10 @@ class MultiNodeEcoSystem extends EcoSystem {
         def richParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
         script.echo "Parameters retrieved"
         script.echo "Parameters retrieved ${richParameters}"
-        def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParameters, "Ecosystem-Core Chart Version")
+        def ecosystemCoreChartVersionDefault = this.getDefaultValueByName(richParameters, "Ecosystem Core Chart Version")
         script.echo "<<<<< ${ecosystemCoreChartVersionDefault}"
 
-
+        script.error "fail on purpuse"
 
         // patch mn-Parameter
         createMNParameter(currentConfig)
