@@ -329,6 +329,7 @@ Initial oidc admin usernames: []
 
     // coder default-values:
     List getRichParameters(String baseUrl, String orgId, String templateName) {
+        List result = []
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
             def jsonSlurper = new JsonSlurper()
 
@@ -368,9 +369,9 @@ Initial oidc admin usernames: []
             script.echo "${responseText}"
             def paramsJson = new JsonSlurper().parseText(responseText)
 
-            return (List) paramsJson
+            result = paramsJson
         }
-        return []
+        return result
     }
 
     static def getDefaultValueByName(List params, String name) {
