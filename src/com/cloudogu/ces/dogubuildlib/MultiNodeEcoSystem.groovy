@@ -340,23 +340,28 @@ Initial oidc admin usernames: []
             conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
 
             if (conn.responseCode != 200) {
-                script.error("Fehler beim Abrufen der Template-Metadaten: HTTP ${conn.responseCode}")
+                script.error("can not get Template-Metadata: HTTP ${conn.responseCode}")
             }
 
-            def templateJsonStr = new JsonSlurper().parse(conn.inputStream)
+            def templateJson = new JsonSlurper().parse(conn.inputStream)
 
-            script.echo templateJsonStr
-            def templateJson = jsonSlurper.parseText(templateJsonStr)
             def versionId = templateJson.active_version_id
             if (!versionId) {
                 script.error "Can not get active_version_id for template '${templateName}'"
             }
 
+            script.echo "${versionId}"
+
             // 2) get rich parameter for version
             def paramsUrl = "${baseUrl}/api/v2/templateversions/${versionId}/rich-parameters"
-            String paramsJsonStr = script.sh(returnStdout: true, script: "curl -sS -H \"Accept: application/json\" -H \"Coder-Session-Token: ${script.env.token}\" \"${paramsUrl}\"").trim()
+            url = new URL(paramsUrl)
+            conn = (HttpURLConnection) url.openConnection()
+            conn.setRequestMethod("GET")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+            def paramsJson = new JsonSlurper().parse(conn.inputStream)
 
-            return (List) jsonSlurper.parseText(paramsJsonStr)
+            return (List) paramsJson
         }
         return []
     }
