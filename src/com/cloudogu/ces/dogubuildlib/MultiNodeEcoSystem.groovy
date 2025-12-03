@@ -15,9 +15,9 @@ class MultiNodeEcoSystem extends EcoSystem {
     String coder_workspace
     String ecosystem_blueprint
 
-    private static String VERSION_ECOSYSTEM_CORE = "1.2.0"
-    private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
-    private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
+//    private static String VERSION_ECOSYSTEM_CORE = "2.0.1"
+//    private static String VERSION_K8S_COMPONENT_OPERATOR_CRD = "1.10.1"
+//    private static String VERSION_K8S_BLUEPRINT_OPERATOR_CRD = "3.1.0"
 
     boolean mnWorkspaceCreated
 
@@ -63,13 +63,13 @@ class MultiNodeEcoSystem extends EcoSystem {
         script.echo richParamters
 
         // patch mn-Parameter
-        createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
+        createMNParameter(currentConfig)
 
         if (config.clustername == null || config.clustername.isEmpty()) {
             script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
-                   coder create  \
+                   yes '' | coder create  \
                        --template $MN_CODER_TEMPLATE \
                        --stop-after 1h \
                        --verbose \
@@ -251,24 +251,23 @@ spec:
         }
     }
 
-    void createMNParameter(List dogusToAdd = [], List componentsToAdd = []) {
+    void createMNParameter(config = [:]) {
+
+        List dogusToAdd = config.additionalDogus
+        List componentsToAdd = config.additionalComponents
 
         def defaultMNParams = """
 MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
-Ecosystem-Core Chart Namespace: "k8s"
-Ecosystem Core Chart Version: "${VERSION_ECOSYSTEM_CORE}"
+Ecosystem-Core Chart Namespace: "k8s"${config.versionEcosystemCore ? "\nEcosystem Core Chart Version: \"${config.versionEcosystemCore}\"" : ""}
 Necessary dogus:
   - official/postfix
   - official/ldap
   - official/cas
-Additional dogus: []
-Component-Operator: "cloudogu/k8s-component-operator:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
-Component-Operator-CRD: "k8s/k8s-component-operator-crd:${VERSION_K8S_COMPONENT_OPERATOR_CRD}"
-Blueprint-Operator-CRD: "k8s/k8s-blueprint-operator-crd:${VERSION_K8S_BLUEPRINT_OPERATOR_CRD}"
+Additional dogus: []${config.versionK8SComponentOperatorCrd ? "\nComponent-Operator-CRD: \"k8s/k8s-component-operator-crd:${config.versionK8SComponentOperatorCrd}\"" : ""}${config.versionK8SBlueprintOperatorCrd ? "\nBlueprint-Operator-CRD: \"k8s/k8s-blueprint-operator-crd:${config.versionK8SBlueprintOperatorCrd}\"" : ""}
 Enable Backup: false
-Backup components: [] 
+Backup components: []
 Enable Monitoring: false
 Monitoring components: []
 Base components:
