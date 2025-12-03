@@ -286,7 +286,7 @@ Base components:
   - k8s/k8s-ces-assets
   - k8s/k8s-debug-mode-operator-crd
   - k8s/k8s-debug-mode-operator
-Disabled Components:
+Disabled components:
 ${getDefaultValueByNameAsList("Disabled components")}
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
