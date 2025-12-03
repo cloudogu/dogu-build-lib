@@ -1,11 +1,11 @@
 package com.cloudogu.ces.dogubuildlib
 
-import groovy.yaml.YamlSlurper
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import org.yaml.snakeyaml.Yaml
 
 import static org.junit.Assert.*
 import static org.mockito.ArgumentMatchers.anyMap
@@ -92,12 +92,13 @@ class MultiNodeEcoSystemTest {
     void createMNParameterShouldMergeAdditionalDogusAndComponentsIntoYaml() {
         // Arrange
         ScriptStub script = Mockito.mock(ScriptStub)
+        Yaml yaml = new Yaml()
 
         // readYaml(text: ...) -> parse text of createMnParameter
         doAnswer({ invocation ->
             Map args = invocation.getArgument(0)
             String text = args.text as String
-            return new YamlSlurper().parseText(text)
+            return yaml.load(text)
         }).when(script).readYaml(anyMap())
 
         // writeYaml(file: ..., data: ...) -> get yaml
