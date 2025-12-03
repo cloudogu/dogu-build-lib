@@ -369,7 +369,7 @@ Initial oidc admin usernames: []
             }
             def responseText = conn.inputStream.text
             script.echo "${responseText}"
-            def paramsJson = script.readJson text: responseText
+            def paramsJson = script.readJSON text: responseText
             result = paramsJson
         }
         return result
