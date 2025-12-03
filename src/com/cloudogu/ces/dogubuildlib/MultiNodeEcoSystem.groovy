@@ -333,7 +333,7 @@ Initial oidc admin usernames: []
             // 1) get active template_ID (inkl. active_version_id)
             def templateUrl = "${baseUrl}/api/v2/organizations/${orgId}/templates/${templateName}"
 
-            String templateJsonStr = script.sh(returnStdout: true, script: "curl -sS -H \"Accept: application/json\" -H \"Coder-Session-Token: ${script.env.token}\" \"${templateUrl}\"").trim()
+            String templateJsonStr = script.sh(returnStdout: true, script: "curl -H 'Accept: application/json' -H 'Coder-Session-Token: ${script.env.token}' '${templateUrl}'")
 
             script.echo templateJsonStr
             def templateJson = jsonSlurper.parseText(templateJsonStr)
