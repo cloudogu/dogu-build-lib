@@ -63,7 +63,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
-                   coder create  \
+                   yes '' | coder create  \
                        --template $MN_CODER_TEMPLATE \
                        --stop-after 1h \
                        --verbose \
