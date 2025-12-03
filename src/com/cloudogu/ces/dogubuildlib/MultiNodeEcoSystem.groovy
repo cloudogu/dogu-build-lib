@@ -69,8 +69,6 @@ class MultiNodeEcoSystem extends EcoSystem {
         // patch mn-Parameter
         createMNParameter(currentConfig)
 
-        script.error "fail on purpuse"
-
         if (config.clustername == null || config.clustername.isEmpty()) {
             script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
