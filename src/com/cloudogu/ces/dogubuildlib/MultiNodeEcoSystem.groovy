@@ -1,13 +1,23 @@
 package com.cloudogu.ces.dogubuildlib
 
+import com.cloudbees.groovy.cps.NonCPS
+import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
+
 class MultiNodeEcoSystem extends EcoSystem {
 
     def CODER_SUFFIX = UUID.randomUUID().toString().substring(0,12)
     def MN_CODER_TEMPLATE = 'k8s-ces-cluster'
     def MN_CODER_WORKSPACE = 'test-mn-'
+    def ECOSYSTEM_BLUEPRINT = 'blueprint-ces-module'
+
+    def MN_PARAMETER_FILE = 'integrationTests/mn_params_modified.yaml'
 
     String coderCredentials
     String coder_workspace
+    String ecosystem_blueprint
+
+    def coderRichParameters
 
     boolean mnWorkspaceCreated
 
@@ -17,11 +27,11 @@ class MultiNodeEcoSystem extends EcoSystem {
         MN_CODER_WORKSPACE = MN_CODER_WORKSPACE.substring(0,Math.min(32, MN_CODER_WORKSPACE.length()))
         this.coderCredentials = coderCredentials
         this.coder_workspace = MN_CODER_WORKSPACE
+        this.ecosystem_blueprint = ECOSYSTEM_BLUEPRINT
     }
 
     void provision(String mountPath, machineType = "n1-standard-4", int timeoutInMinutes = 5) {
-        // isEmpty
-        return
+        script.error "provisioning is not supported in Multinode-Ecosystem - use setup(config = [:]) instead"
     }
 
     def multinodeConfig = [
@@ -29,6 +39,9 @@ class MultiNodeEcoSystem extends EcoSystem {
             additionalComponents: []
     ]
 
+    /**
+     * Create Coder-cluster from template (MN_CODER_TEMPLATE)
+     */
     void setup(config = [:]) {
         // Merge default config with the one passed as parameter
         currentConfig = defaultSetupConfig << multinodeConfig
@@ -47,41 +60,49 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "coder login https://coder.cloudogu.com --token ${script.env.token}"
         }
 
+
+        // get default Values
+        coderRichParameters = this.getRichParameters("https://coder.cloudogu.com", "default", MN_CODER_TEMPLATE)
+
         // patch mn-Parameter
-        createMNParameter(currentConfig.additionalDogus, currentConfig.additionalComponents)
+        createMNParameter(currentConfig)
 
         if (config.clustername == null || config.clustername.isEmpty()) {
             script.sh "coder version"
             script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
                 script.sh """
-                   coder create  \
+                   yes '' | coder create  \
                        --template $MN_CODER_TEMPLATE \
                        --stop-after 1h \
                        --verbose \
-                       --rich-parameter-file 'integrationTests/mn_params_modified.yaml' \
+                       --rich-parameter-file '$MN_PARAMETER_FILE' \
                        --preset 'none' \
                        --yes \
                        --token ${script.env.token} \
                        $coder_workspace
                 """
             }
-            // wait for all dogus to get healthy
+            // wait for blueprint to be ready
             def counter = 0
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get pods -l app.kubernetes.io/name=k8s-ces-setup --namespace=ecosystem -o jsonpath='{.items[*].status.phase}'\"")
-                    if (setupStatus.isEmpty()) {
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'\"")
+                    if (setupStatus == "True True") {
                         break
                     }
                 } catch (Exception ignored) {
                     // this is okay
                 }
                 if (setupStatus.contains("Failed")) {
-                    script.error("Failed to set up mn workspace. K8s-ces-setup failed")
+                    script.error("Failed to set up mn workspace. ecosystem-core failed")
                 }
+                script.echo "Blueprint not ready, waiting 10 seconds: '${setupStatus}'"
                 script.sleep(time: 10, unit: 'SECONDS')
                 counter++
+            }
+            if (counter >= 360) {
+                script.error("Failed to set up mn workspace. ecosystem-core failed")
             }
             mnWorkspaceCreated = true
         } else {
@@ -154,13 +175,13 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: "kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'")
+            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'""")
 
             def gosspath = '/tmp/gossbin'
 
-            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c '\
-                       wget -qO $gosspath https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64 &&\
-                       chmod +x $gosspath'"
+            script.sh "mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
+            script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
+            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
@@ -232,28 +253,37 @@ spec:
         }
     }
 
-    void createMNParameter(List dogusToAdd = [], List componentsToAdd = []) {
+    void createMNParameter(config = [:]) {
 
+        List dogusToAdd = config.additionalDogus
+        List componentsToAdd = config.additionalComponents
         def defaultMNParams = """
 MN-CES Machine Type: "e2-standard-4"
 MN-CES Node Count: "1"
 CES Namespace: "ecosystem"
-CES Setup Chart Namespace: "k8s"
-CES Setup Chart Version: "4.1.1"
+Ecosystem-Core Chart Namespace: "k8s"
+Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
 Necessary dogus:
   - official/postfix
-  - k8s/nginx-static
-  - k8s/nginx-ingress
   - official/ldap
   - official/cas
 Additional dogus: []
-Component-Operator: "k8s/k8s-component-operator:latest"
-Component-Operator-CRD: "k8s/k8s-component-operator-crd:latest"
-Necessary components:
-  - k8s/k8s-dogu-operator
+Component-Operator-CRD: "${config.versionK8SComponentOperatorCrd ? "k8s/k8s-component-operator-crd:${config.versionK8SComponentOperatorCrd}" : getDefaultValueByName("Component-Operator-CRD")}"
+Blueprint-Operator-CRD: "${config.versionK8SBlueprintOperatorCrd ? "k8s/k8s-blueprint-operator-crd:${config.versionK8SBlueprintOperatorCrd}" : getDefaultValueByName("Blueprint-Operator-CRD")}"
+Enable Backup: false
+Backup components: []
+Enable Monitoring: false
+Monitoring components: []
+Base components:
   - k8s/k8s-dogu-operator-crd
+  - k8s/k8s-dogu-operator
   - k8s/k8s-service-discovery
-Additional components: []
+  - k8s/k8s-ces-gateway
+  - k8s/k8s-ces-assets
+  - k8s/k8s-debug-mode-operator-crd
+  - k8s/k8s-debug-mode-operator
+Disabled components:
+${getDefaultValueByNameAsList("Disabled components")}
 Increase max map count on Nodes: "false"
 Enable Platform Login: "false"
 Enforce Platform Login: "false"
@@ -261,33 +291,31 @@ Allowed oidc groups: []
 Initial oidc admin usernames: []
         """
 
-        def outputFile = 'integrationTests/mn_params_modified.yaml'
 
         def yamlData = script.readYaml text: defaultMNParams
 
         // init list to prevent null value
         yamlData['Additional dogus'] = yamlData['Additional dogus'] ?: []
-        yamlData['Additional components'] = yamlData['Additional components'] ?: []
 
         // add elements without duplicates
         dogusToAdd.each { d ->
-            if (!yamlData['Additional dogus'].contains(d)) {
-                yamlData['Additional dogus'] << d
+            if (!yamlData['Necessary dogus'].contains(d)) {
+                yamlData['Necessary dogus'] << d
             }
         }
         componentsToAdd.each { c ->
-            if (!yamlData['Additional components'].contains(c)) {
-                yamlData['Additional components'] << c
+            if (!yamlData['Base components'].contains(c)) {
+                yamlData['Base components'] << c
             }
         }
 
         // Vorherige Datei löschen, falls existiert
-        script.sh "rm -f ${outputFile}"
+        script.sh "rm -f ${MN_PARAMETER_FILE}"
 
         // YAML schreiben
-        script.writeYaml file: outputFile, data: yamlData
+        script.writeYaml file: MN_PARAMETER_FILE, data: yamlData
 
-        script.echo "Modified YAML written to ${outputFile}"
+        script.echo "Modified YAML written to ${MN_PARAMETER_FILE}"
     }
 
     void destroy() {
@@ -302,4 +330,63 @@ Initial oidc admin usernames: []
         token = token.replaceAll("\\\$", '\\\\\\\$')
         return token
     }
+
+    // coder default-values:
+    def getRichParameters(String baseUrl, String orgId, String templateName) {
+        def result = []
+        script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
+            def jsonSlurper = new JsonSlurper()
+
+            // 1) get active template_ID (inkl. active_version_id)
+            def templateUrl = "${baseUrl}/api/v2/organizations/${orgId}/templates/${templateName}"
+
+            def url = new URL(templateUrl)
+            def conn = (HttpURLConnection) url.openConnection()
+            conn.setRequestMethod("GET")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+
+            if (conn.responseCode != 200) {
+                script.error("can not get Template-Metadata: HTTP ${conn.responseCode}")
+            }
+            def responseText = conn.inputStream.text
+            def templateJson = new JsonSlurperClassic().parseText(responseText)
+
+            def versionId = templateJson.active_version_id
+            if (!versionId) {
+                script.error "Can not get active_version_id for template '${templateName}'"
+            }
+
+            // 2) get rich parameter for version
+            def paramsUrl = "${baseUrl}/api/v2/templateversions/${versionId}/rich-parameters"
+            script.echo "${paramsUrl}"
+            url = new URL(paramsUrl)
+            conn = (HttpURLConnection) url.openConnection()
+            conn.setRequestMethod("GET")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Coder-Session-Token", "${script.env.token}")
+
+            if (conn.responseCode != 200) {
+                script.error("can not get rich parameters: HTTP ${conn.responseCode}")
+            }
+            responseText = conn.inputStream.text
+            def paramsJson = new JsonSlurperClassic().parseText(responseText)
+            result = paramsJson
+        }
+        return result
+    }
+
+    @NonCPS
+    def getDefaultValueByName(String name) {
+        def param = coderRichParameters.find { it.name == name }
+        return param?.default_value
+    }
+
+    @NonCPS
+    def getDefaultValueByNameAsList(String name) {
+        def param = coderRichParameters.find { it.name == name }
+        def listvalue = new JsonSlurperClassic().parseText(param?.default_value)
+        return listvalue.collect { "  - ${it}" }.join("\n")
+    }
+
 }
