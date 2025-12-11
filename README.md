@@ -119,6 +119,8 @@ Some parameters can be passed to the System.
 - versionEcosystemCore             # Version of ecosystem-core  e.g. 1.2.3 (optional)
 - versionK8SComponentOperatorCrd   # Version of k8s-component-operator-crd  e.g. 1.2.3 (optional)
 - versionK8SBlueprintOperatorCrd   # Version of k8s-blueprint-operator-crd  e.g. 1.2.3  (optional)
+- enableBackup                     # enable Backup-Component-Stack (default: false)
+- enableMonitoring                 # enable Monitoring-Component-Stack (default: false)
 
 ### Cypress
 

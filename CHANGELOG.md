@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.1] - 2025-12-11
+### Fixed
+- make backup.enabled and monitoring.enabled configurable
+
 ## [v3.5.0] - 2025-12-04
 ### Changed
 - use ecosystem-core in setup of MultiNodeEcoSystem
