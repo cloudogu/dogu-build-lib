@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v3.5.1] - 2025-12-11
+## [v3.5.1] - 2025-12-12
 ### Fixed
 - make backup.enabled and monitoring.enabled configurable
 
