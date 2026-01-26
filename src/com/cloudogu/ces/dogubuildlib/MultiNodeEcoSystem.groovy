@@ -250,7 +250,7 @@ spec:
 
         // Sed-Befehl für Linux/macOS
         script.sh """
-        sed -i 's|baseUrl: .*|baseUrl: "${newUrl}",|' ./integrationTests/cypress.config.ts
+        sed -i 's|baseUrl: .*|baseUrl: "${newUrl}",|' ./integrationTests/cypress.config.*
         """
         try {
             cypress.preTestWork()
