@@ -179,7 +179,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
             def gosspath = '/tmp/gossbin'
 
-            script.sh "mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
+            script.sh "rm -rf ./tmp_goss && mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
             script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
