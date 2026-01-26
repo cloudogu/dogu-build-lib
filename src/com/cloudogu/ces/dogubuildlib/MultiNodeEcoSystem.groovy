@@ -185,10 +185,17 @@ class MultiNodeEcoSystem extends EcoSystem {
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
-
-            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit")
+            def cmd = "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
+            def status = script.sh(
+                    returnStatus: true,
+                    script: """
+    set +e
+    ${cmd} > ${veriFile}
+    exit \$?
+  """
+            )
+            def verifyReport = script.readFile(file: veriFile)
             script.echo "Report:\n ${verifyReport}"
-            script.writeFile encoding: 'UTF-8', file: "$veriFile", text: verifyReport
         } finally {
             script.junit allowEmptyResults: true, testResults: "$veriFile"
             script.archiveArtifacts artifacts: "$veriFile", allowEmptyArchive: true
