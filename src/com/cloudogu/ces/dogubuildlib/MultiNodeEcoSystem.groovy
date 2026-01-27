@@ -254,7 +254,7 @@ spec:
         sed -i 's|baseUrl: .*|baseUrl: "${newUrl}",|' ./integrationTests/cypress.config.*
         """
         script.sh """
-        sed -i '/env: {/a\\            "IsMultinode": "true",'
+        sed -i '/env: {/a\\            "IsMultinode": "true",' ./integrationTests/cypress.config.*
         """
         try {
             cypress.preTestWork()
