@@ -245,12 +245,16 @@ spec:
 
     void runCypressIntegrationTests(config = [:]) {
         Cypress cypress = new Cypress(this.script, config)
+
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
         // Sed-Befehl für Linux/macOS
         script.sh """
         sed -i 's|baseUrl: .*|baseUrl: "${newUrl}",|' ./integrationTests/cypress.config.*
+        """
+        script.sh """
+        sed -i '/env: {/a\\            "IsMultinode": "true",'
         """
         try {
             cypress.preTestWork()
