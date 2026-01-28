@@ -256,21 +256,16 @@ spec:
                 "ADMIN_UN=${adminUN}",
                 "ADMIN_PW=${adminPW}"
         ]) {
-            script.wrap([$class: 'MaskPasswordsBuildWrapper',
-                         varPasswordPairs: [
-                                 [var: 'ADMIN_PW', password: adminPW]
-                         ]]) {
-                script.sh '''#!/usr/bin/env bash
-                  set -eu
-            
-                  sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
-                  sed -i "s|AdminUsername: .*|AdminUsername: \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
-                  sed -i "s|AdminGroup: .*|AdminGroup: \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
-            
-                  pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
-                  sed -i "s|AdminPassword: .*|AdminPassword: \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
-                '''
-            }
+            script.sh '''#!/usr/bin/env bash
+              set -eu
+        
+              sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|AdminUsername: .*|AdminUsername: \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|AdminGroup: .*|AdminGroup: \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
+        
+              pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
+              sed -i "s|AdminPassword: .*|AdminPassword: \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
+            '''
         }
         try {
             cypress.preTestWork()
