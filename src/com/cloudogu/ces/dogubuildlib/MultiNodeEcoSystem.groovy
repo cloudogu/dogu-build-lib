@@ -260,7 +260,7 @@ spec:
         script.withEnv(["ADMIN_PW=${adminPW}"]) {
             script.sh '''
               #!/usr/bin/env bash
-              set -euo pipefail
+              set -eu
             
               pw_escaped=$(printf '%s' "$ADMIN_PW" \
                 | sed -e 's/[\\&|]/\\&/g' -e 's/"/\\"/g')
