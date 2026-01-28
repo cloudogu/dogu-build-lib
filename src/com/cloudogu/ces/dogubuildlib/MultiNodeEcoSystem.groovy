@@ -267,6 +267,7 @@ spec:
             
               sed -i "s|AdminPassword: .*|AdminPassword: \"${pw_escaped}\",|" ./integrationTests/cypress.config.*
             '''
+        }
         def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim()
         script.sh """
         sed -i 's|AdminUsername: .*|AdminUsername: "${adminUN}",|' ./integrationTests/cypress.config.*
