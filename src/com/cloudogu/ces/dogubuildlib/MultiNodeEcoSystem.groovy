@@ -256,11 +256,15 @@ spec:
         script.sh """
         sed -i '/env: {/a\\            "IsMultinode": "true",' ./integrationTests/cypress.config.*
         """
-        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"")
-        script.sh """
-        sed -i 's|AdminPassword: .*|AdminPassword: "${adminPW}",|' ./integrationTests/cypress.config.*
-        """
-        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"")
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim()
+        script.withEnv(["ADMIN_PW=${adminPW}"]) {
+        script.sh '''
+        set -euo pipefail
+        pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
+        sed -i "s|AdminPassword: .*|AdminPassword: \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
+        '''
+        }
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim()
         script.sh """
         sed -i 's|AdminUsername: .*|AdminUsername: "${adminUN}",|' ./integrationTests/cypress.config.*
         """
