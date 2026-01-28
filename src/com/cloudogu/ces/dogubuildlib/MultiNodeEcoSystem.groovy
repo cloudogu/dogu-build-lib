@@ -260,11 +260,11 @@ spec:
               set -eu
         
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
-              sed -i "s|AdminUsername: .*|AdminUsername: \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
-              sed -i "s|AdminGroup: .*|AdminGroup: \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|\\"AdminGroup\\": .*|\\"AdminGroup\\": \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
         
               pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
-              sed -i "s|AdminPassword: .*|AdminPassword: \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
             '''
         }
         try {
