@@ -256,6 +256,17 @@ spec:
         script.sh """
         sed -i '/env: {/a\\            "IsMultinode": "true",' ./integrationTests/cypress.config.*
         """
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"")
+        script.sh """
+        sed -i 's|AdminPassword: .*|AdminPassword: "${adminPW}",|' ./integrationTests/cypress.config.*
+        """
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"")
+        script.sh """
+        sed -i 's|AdminUsername: .*|AdminUsername: "${adminUN}",|' ./integrationTests/cypress.config.*
+        """
+        script.sh """
+        sed -i 's|AdminGroup: .*|AdminGroup: "cesAdmin",|' ./integrationTests/cypress.config.*
+        """
         try {
             cypress.preTestWork()
             cypress.runIntegrationTests(this)
