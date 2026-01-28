@@ -258,6 +258,7 @@ spec:
         ]) {
             script.sh '''#!/usr/bin/env bash
               set -eu
+              set +x
         
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
