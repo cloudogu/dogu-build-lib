@@ -259,7 +259,7 @@ spec:
         def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim()
         script.withEnv(["ADMIN_PW=${adminPW}"]) {
         script.sh '''
-        set -euo pipefail
+        set -eu
         pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
         sed -i "s|AdminPassword: .*|AdminPassword: \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
         '''
