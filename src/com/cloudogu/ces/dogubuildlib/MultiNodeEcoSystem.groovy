@@ -37,7 +37,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     def multinodeConfig = [
             additionalDogus: [],
             additionalComponents: [],
-            nodeCount: 1
+            nodeCount: "1"
     ]
 
     /**
