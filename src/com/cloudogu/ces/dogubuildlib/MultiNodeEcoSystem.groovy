@@ -287,6 +287,7 @@ MN-CES Node Count: "${config.nodeCount}"
 CES Namespace: "ecosystem"
 Ecosystem-Core Chart Namespace: "k8s"
 Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
+Blueprint: ""
 Necessary dogus:
   - official/postfix
   - official/ldap
