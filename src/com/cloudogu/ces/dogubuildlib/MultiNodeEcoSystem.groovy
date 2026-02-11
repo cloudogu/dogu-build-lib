@@ -250,8 +250,8 @@ spec:
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
-        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim()
-        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim()
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
         script.withEnv([
                 "NEW_URL=${newUrl}",
                 "ADMIN_UN=${adminUN}",
