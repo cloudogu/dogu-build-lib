@@ -36,7 +36,8 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     def multinodeConfig = [
             additionalDogus: [],
-            additionalComponents: []
+            additionalComponents: [],
+            nodeCount: "1"
     ]
 
     /**
@@ -179,16 +180,23 @@ class MultiNodeEcoSystem extends EcoSystem {
 
             def gosspath = '/tmp/gossbin'
 
-            script.sh "mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
+            script.sh "rm -rf ./tmp_goss && mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
             script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
             script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
             script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
-
-            def verifyReport = script.sh(returnStdout: true, script: "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit")
+            def cmd = "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
+            def status = script.sh(
+                    returnStatus: true,
+                    script: """
+    set +e
+    ${cmd} > ${veriFile}
+    exit \$?
+  """
+            )
+            def verifyReport = script.readFile(file: veriFile)
             script.echo "Report:\n ${verifyReport}"
-            script.writeFile encoding: 'UTF-8', file: "$veriFile", text: verifyReport
         } finally {
             script.junit allowEmptyResults: true, testResults: "$veriFile"
             script.archiveArtifacts artifacts: "$veriFile", allowEmptyArchive: true
@@ -238,13 +246,29 @@ spec:
 
     void runCypressIntegrationTests(config = [:]) {
         Cypress cypress = new Cypress(this.script, config)
+
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
-        // Sed-Befehl für Linux/macOS
-        script.sh """
-        sed -i 's|baseUrl: .*|baseUrl: "${newUrl}",|' ./integrationTests/cypress.config.ts
-        """
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
+        script.withEnv([
+                "NEW_URL=${newUrl}",
+                "ADMIN_UN=${adminUN}",
+                "ADMIN_PW=${adminPW}"
+        ]) {
+            script.sh '''#!/usr/bin/env bash
+              set -eu
+              set +x
+        
+              sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
+              sed -i "s|\\"AdminGroup\\": .*|\\"AdminGroup\\": \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
+        
+              pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
+              sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
+            '''
+        }
         try {
             cypress.preTestWork()
             cypress.runIntegrationTests(this)
@@ -259,14 +283,16 @@ spec:
         List componentsToAdd = config.additionalComponents
         def defaultMNParams = """
 MN-CES Machine Type: "e2-standard-4"
-MN-CES Node Count: "1"
+MN-CES Node Count: "${config.nodeCount}"
 CES Namespace: "ecosystem"
 Ecosystem-Core Chart Namespace: "k8s"
 Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
+Blueprint: ""
 Necessary dogus:
   - official/postfix
   - official/ldap
   - official/cas
+  - official/usermgt
 Additional dogus: []
 Component-Operator-CRD: "${config.versionK8SComponentOperatorCrd ? "k8s/k8s-component-operator-crd:${config.versionK8SComponentOperatorCrd}" : getDefaultValueByName("Component-Operator-CRD")}"
 Blueprint-Operator-CRD: "${config.versionK8SBlueprintOperatorCrd ? "k8s/k8s-blueprint-operator-crd:${config.versionK8SBlueprintOperatorCrd}" : getDefaultValueByName("Blueprint-Operator-CRD")}"
