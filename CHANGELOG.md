@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.3] - 2026-04-15
+### Changed
+- use status loadbalancer ingress ip instead of spec.LoadbalancerIP for MN external IP
+
 ## [v3.5.2] - 2026-02-19
 ### Fixed
 - pass values correct for multinode integration tests
