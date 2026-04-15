@@ -136,7 +136,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     public String getExternalIP() {
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
-            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath='{.spec.loadBalancerIP}'\"")
+            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath='{.status.loadBalancer.ingress[0].ip}'\"")
             return "$ip"
         }
     }
