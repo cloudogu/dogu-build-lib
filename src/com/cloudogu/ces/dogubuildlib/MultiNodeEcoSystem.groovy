@@ -50,7 +50,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
 
         // setup go
-        script.sh "sudo apt update && sudo apt install -y golang"
+        script.sh "which go >/dev/null || ( sudo apt update && sudo apt install -y golang )"
 
         // setup yq
         script.sh "make install-yq"
@@ -260,11 +260,11 @@ spec:
             script.sh '''#!/usr/bin/env bash
               set -eu
               set +x
-        
+
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminGroup\\": .*|\\"AdminGroup\\": \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
-        
+
               pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
               sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
             '''
