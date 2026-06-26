@@ -116,8 +116,8 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "curl -LO \"https://dl.k8s.io/release/\$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\""
             script.sh "chmod +x kubectl"
             script.sh "sudo mv kubectl /usr/local/bin/"
-            script.sh "echo \"deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main\" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list"
-            script.sh "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -"
+            script.sh "echo \"deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main\" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list"
+            script.sh "curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
             script.sh "sudo apt update"
             script.sh "sudo apt install -y google-cloud-sdk-gke-gcloud-auth-plugin"
         }
@@ -260,11 +260,11 @@ spec:
             script.sh '''#!/usr/bin/env bash
               set -eu
               set +x
-        
+
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminGroup\\": .*|\\"AdminGroup\\": \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
-        
+
               pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
               sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
             '''
