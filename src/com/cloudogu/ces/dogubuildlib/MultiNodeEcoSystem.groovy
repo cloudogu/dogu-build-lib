@@ -117,7 +117,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "chmod +x kubectl"
             script.sh "sudo mv kubectl /usr/local/bin/"
             script.sh "echo \"deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main\" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list"
-            script.sh "curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+            script.sh "curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor --yes -o /usr/share/keyrings/cloud.google.gpg"
             script.sh "sudo apt update"
             script.sh "sudo apt install -y google-cloud-sdk-gke-gcloud-auth-plugin"
         }
