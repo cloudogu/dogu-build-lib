@@ -88,6 +88,8 @@ class EcoSystem {
         vagrant.ssh "sudo mv ${mountPath}/setup.staging.json /etc/ces/setup.staging.json"
         vagrant.ssh "sudo mv /etc/ces/setup.staging.json /etc/ces/setup.json"
         vagrant.ssh "while sudo pgrep -u root ces-setup > /dev/null; do sleep 1; done"
+        // Wait safely instead of racing the next ssh call
+        vagrant.waitUntilSSHReachable()
         vagrant.ssh "sudo journalctl -u ces-setup -n 100"
     }
 

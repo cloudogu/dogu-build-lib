@@ -40,6 +40,24 @@ class Vagrant implements Serializable {
         }
     }
 
+    /**
+     * Poll until the VM responds to SSH again, once per second.
+     *
+     * @param timeoutInSeconds Sec to wait before failing. Default: 60.
+     */
+    void waitUntilSSHReachable(int timeoutInSeconds = 60) {
+        withVagrantCredentials {
+            for (int i = 0; i < timeoutInSeconds; i++) {
+                int exitCode = script.sh(script: "vagrant ssh -c \"true\"", returnStatus: true)
+                if (exitCode == 0) {
+                    return
+                }
+                script.sleep 1
+            }
+            script.error "VM did not become reachable via SSH within ${timeoutInSeconds} seconds."
+        }
+    }
+
     String getExternalIP() {
         return sshOut("curl http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip -H 'Metadata-Flavor: Google'")
     }

@@ -92,6 +92,7 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 - sync() | sync host and remote
 - up() | start vm
 - ssh() | connect to vm
+- waitUntilSSHReachable(int timeoutInSeconds = 60) | wait for ssh
 - getExternalIP() | get ip for connection
 - sshOut(String command) | execute command on vm
 - destroy() | remove vm with all data
