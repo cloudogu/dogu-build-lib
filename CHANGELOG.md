@@ -5,8 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v3.5.4] - 2026-07-13
 ### Fixed
-- replace legacy apt-key command with gpg for google-cloud-sdk installation
+- Replace legacy apt-key command with gpg for google-cloud-sdk installation
 
 ## [v3.5.3] - 2026-04-15
 ### Changed
