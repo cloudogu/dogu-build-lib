@@ -149,7 +149,11 @@ timeoutInMinutes: 15,
 additionalDockerArgs: "",
 
 # Additional cypress argument
-additionalCypressArgs: ""
+additionalCypressArgs: "",
+
+# CES admin group for cypress
+# (passed to container as CYPRESS_ADMIN_GROUP)
+adminGroup: "CesAdministrators"
 ```
 
 #### Functions

@@ -160,6 +160,8 @@ class EcoSystem {
 
         script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
         this.vagrant.ssh "etcdctl set /config/_global/admin_group $newGlobalAdminGroup"
+
+        currentConfig.adminGroup = newGlobalAdminGroup
     }
 
     /**
@@ -320,12 +322,13 @@ class EcoSystem {
      * <li>timeoutInMinutes - Determines the complete timeout in minutes for the tests. Default: 15.</li>
      * <li>additionalDockerArgs - A list containing arguments that are given to docker.</li>
      * <li>additionalCypressArgs - A list containing argument that are given to cypress.</li>
+     * <li>adminGroup - The admin group cypress should use. Default: currentConfig.adminGroup (usually "CesAdministrators").</li>
      */
     void runCypressIntegrationTests(config = [:]) {
-        Cypress cypress = new Cypress(this.script, config)
+        // currentConfig.adminGroup provides the default value, config entries passed as arguments always win on conflict.
+        Cypress cypress = new Cypress(this.script, [adminGroup: currentConfig.adminGroup] + config)
 
         try {
-            cypress.updateCypressConfiguration(vagrant)
             cypress.preTestWork()
             cypress.runIntegrationTests(this)
         } finally {

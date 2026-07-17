@@ -37,7 +37,8 @@ class MultiNodeEcoSystem extends EcoSystem {
     def multinodeConfig = [
             additionalDogus: [],
             additionalComponents: [],
-            nodeCount: "1"
+            nodeCount: "1",
+            adminGroup: 'cesAdmin'
     ]
 
     /**
@@ -242,10 +243,15 @@ spec:
           | sed "s/^\\([[:space:]]*admin_group:\\).*/\\1 $newGlobalAdminGroup/" \
           | kubectl apply -n ecosystem -f -
         """
+
+        // keep in sync for subsequent integration test runs
+        currentConfig.adminGroup = newGlobalAdminGroup
     }
 
     void runCypressIntegrationTests(config = [:]) {
-        Cypress cypress = new Cypress(this.script, config)
+        // currentConfig.adminGroup (set via multinodeConfig in setup()) provides the default,
+        // config entries always win on conflict.
+        Cypress cypress = new Cypress(this.script, [adminGroup: currentConfig.adminGroup] + config)
 
         def ip = getExternalIP()
         def newUrl = "https://$ip"
@@ -263,7 +269,6 @@ spec:
 
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
               sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
-              sed -i "s|\\"AdminGroup\\": .*|\\"AdminGroup\\": \\"cesAdmin\\",|" ./integrationTests/cypress.config.*
 
               pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
               sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*

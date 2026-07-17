@@ -9,7 +9,8 @@ class Cypress {
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
-            additionalCypressArgs: ""
+            additionalCypressArgs: "",
+            adminGroup           : "CesAdministrators"
     ]
     def config
 
@@ -33,6 +34,7 @@ class Cypress {
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
             dockerArgs <<= " -e CYPRESS_BASE_URL=https://${externalIP}"
+            dockerArgs <<= " -e CYPRESS_ADMIN_GROUP=${this.config.adminGroup}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
             dockerArgs <<= " " + this.config.additionalDockerArgs
@@ -71,7 +73,12 @@ class Cypress {
      *
      * @param vagrant The vagrant instance used to communicate with the EcoSystem. Is required to read the current
      * global admin group from the etcd.
+     *
+     * @deprecated adminGroup is now passed to cypress via CYPRESS_ADMIN_GROUP automatically in
+     * EcoSystem.runCypressIntegrationTests(). This method is no longer used because patching
+     * shared workspace files will cause issues when running classic + multinode tests in parallel.
      */
+    @Deprecated
     void updateCypressConfiguration(Vagrant vagrant) {
         def hasCypressJsonFile = script.fileExists('integrationTests/cypress.json')
         def newAdminGroup = vagrant.sshOut "etcdctl get /config/_global/admin_group"
