@@ -249,29 +249,28 @@ spec:
     }
 
     void runCypressIntegrationTests(config = [:]) {
-        // currentConfig.adminGroup (set via multinodeConfig in setup()) provides the default,
-        // config entries always win on conflict.
-        Cypress cypress = new Cypress(this.script, [adminGroup: currentConfig.adminGroup] + config)
-
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
-        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
         def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
+
+        // adminUsername and adminPassword are fetched from k8s
+        // config entries passed as arguments always win on conflict
+        Cypress cypress = new Cypress(this.script, [
+                adminGroup   : currentConfig.adminGroup,
+                adminUsername: adminUN,
+                adminPassword: adminPW
+        ] + config)
+
         script.withEnv([
                 "NEW_URL=${newUrl}",
-                "ADMIN_UN=${adminUN}",
-                "ADMIN_PW=${adminPW}"
         ]) {
             script.sh '''#!/usr/bin/env bash
               set -eu
               set +x
 
               sed -i "s|baseUrl: .*|baseUrl: \\"${NEW_URL}\\",|" ./integrationTests/cypress.config.*
-              sed -i "s|\\"AdminUsername\\": .*|\\"AdminUsername\\": \\"${ADMIN_UN}\\",|" ./integrationTests/cypress.config.*
-
-              pw_escaped=$(printf '%s' "$ADMIN_PW" | sed -e 's/[\\\\&|]/\\\\&/g' -e 's/"/\\\\\\"/g')
-              sed -i "s|\\"AdminPassword\\": .*|\\"AdminPassword\\": \\"${pw_escaped}\\",|" ./integrationTests/cypress.config.*
             '''
         }
         try {

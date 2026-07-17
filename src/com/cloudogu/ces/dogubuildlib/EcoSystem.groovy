@@ -324,10 +324,16 @@ class EcoSystem {
      * <li>additionalDockerArgs - A list containing arguments that are given to docker.</li>
      * <li>additionalCypressArgs - A list containing argument that are given to cypress.</li>
      * <li>adminGroup - The admin group cypress should use. Default: currentConfig.adminGroup (usually "CesAdministrators").</li>
+     * <li>adminUsername - The admin username cypress should use. Default: currentConfig.adminUsername.</li>
+     * <li>adminPassword - The admin password cypress should use. Default: currentConfig.adminPassword.</li>
      */
     void runCypressIntegrationTests(config = [:]) {
-        // currentConfig.adminGroup provides the default value, config entries passed as arguments always win on conflict.
-        Cypress cypress = new Cypress(this.script, [adminGroup: currentConfig.adminGroup] + config)
+        // currentConfig provides the default values, config entries passed as arguments always win on conflict.
+        Cypress cypress = new Cypress(this.script, [
+                adminGroup   : currentConfig.adminGroup,
+                adminUsername: currentConfig.adminUsername,
+                adminPassword: currentConfig.adminPassword
+        ] + config)
 
         try {
             cypress.preTestWork()

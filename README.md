@@ -151,9 +151,11 @@ additionalDockerArgs: "",
 # Additional cypress argument
 additionalCypressArgs: "",
 
-# CES admin group for cypress
-# (passed via the cypress --env AdminGroup=... CLI flag)
-adminGroup: "CesAdministrators"
+# CES admin group, username, and password for cypress
+# (passed via the cypress --env AdminGroup=/AdminUsername=/AdminPassword=... CLI flags)
+adminGroup: "CesAdministrators",
+adminUsername: "ces-admin",
+adminPassword: "Ecosystem2016!"
 ```
 
 #### Functions

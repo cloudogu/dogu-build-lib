@@ -251,7 +251,9 @@ class CypressTest {
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
         assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
-        assert mockedScript.shList[2].contains(" --env AdminGroup=CesAdministrators")
+        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators'")
+        assert mockedScript.shList[2].contains(" --env AdminUsername='ces-admin'")
+        assert mockedScript.shList[2].contains(" --env AdminPassword='Ecosystem2016!'")
     }
 
     //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
@@ -293,8 +295,24 @@ class CypressTest {
         assert mockedScript.shList[2].contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
         assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
         assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
-        assert mockedScript.shList[2].contains(" --env AdminGroup=CesAdministrators")
+        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators'")
+        assert mockedScript.shList[2].contains(" --env AdminUsername='ces-admin'")
+        assert mockedScript.shList[2].contains(" --env AdminPassword='Ecosystem2016!'")
         assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsEscapesAdminPasswordWithSingleQuoteWrap() {
+        // given
+        String passwordWithQuote = "it's a secret"
+        Cypress cypress = new Cypress(mockedScript, [adminPassword: passwordWithQuote])
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --env AdminPassword='it'\\''s a secret'")
     }
 
     @Test

@@ -10,7 +10,9 @@ class Cypress {
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
             additionalCypressArgs: "",
-            adminGroup           : "CesAdministrators"
+            adminGroup           : "CesAdministrators",
+            adminUsername        : "ces-admin",
+            adminPassword        : "Ecosystem2016!"
     ]
     def config
 
@@ -47,11 +49,17 @@ class Cypress {
                         cypressRunArgs <<= " --config video=" + this.config.enableVideo
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
-                        cypressRunArgs <<= " --env AdminGroup=" + this.config.adminGroup
+                        cypressRunArgs <<= " --env AdminGroup=" + singleQuoteWrap(this.config.adminGroup)
+                        cypressRunArgs <<= " --env AdminUsername=" + singleQuoteWrap(this.config.adminUsername)
+                        cypressRunArgs <<= " --env AdminPassword=" + singleQuoteWrap(this.config.adminPassword)
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
+    }
+
+    private static String singleQuoteWrap(String value) {
+        return "'" + value.replace("'", "'\\''") + "'"
     }
 
     /**
