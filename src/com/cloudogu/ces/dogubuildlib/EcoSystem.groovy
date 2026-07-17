@@ -161,6 +161,7 @@ class EcoSystem {
         script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
         this.vagrant.ssh "etcdctl set /config/_global/admin_group $newGlobalAdminGroup"
 
+        // keep local config in sync
         currentConfig.adminGroup = newGlobalAdminGroup
     }
 

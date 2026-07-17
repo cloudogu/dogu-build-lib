@@ -244,7 +244,7 @@ spec:
           | kubectl apply -n ecosystem -f -
         """
 
-        // keep in sync for subsequent integration test runs
+        // keep local config in sync
         currentConfig.adminGroup = newGlobalAdminGroup
     }
 
