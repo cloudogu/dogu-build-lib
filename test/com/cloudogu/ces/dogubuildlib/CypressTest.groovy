@@ -249,8 +249,9 @@ class CypressTest {
         assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
-        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 -e CYPRESS_ADMIN_GROUP=CesAdministrators --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
+        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
         assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
+        assert mockedScript.shList[2].contains(" --env AdminGroup=CesAdministrators")
     }
 
     //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
@@ -287,11 +288,12 @@ class CypressTest {
         assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == expectedImage
-        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 -e CYPRESS_ADMIN_GROUP=CesAdministrators --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro ${expectedDockerArgs}"
+        assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro ${expectedDockerArgs}"
         assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless")
         assert mockedScript.shList[2].contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
         assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
         assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
+        assert mockedScript.shList[2].contains(" --env AdminGroup=CesAdministrators")
         assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
     }
 

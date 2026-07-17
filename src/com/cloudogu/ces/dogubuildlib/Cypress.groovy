@@ -34,7 +34,6 @@ class Cypress {
             // Create args for the docker run
             String dockerArgs = "--ipc=host"
             dockerArgs <<= " -e CYPRESS_BASE_URL=https://${externalIP}"
-            dockerArgs <<= " -e CYPRESS_ADMIN_GROUP=${this.config.adminGroup}"
             dockerArgs <<= " --entrypoint=''"
             dockerArgs <<= " -v ${script.pwd()}/${passwdPath}:/etc/passwd:ro"
             dockerArgs <<= " " + this.config.additionalDockerArgs
@@ -48,6 +47,7 @@ class Cypress {
                         cypressRunArgs <<= " --config video=" + this.config.enableVideo
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
+                        cypressRunArgs <<= " --env AdminGroup=" + this.config.adminGroup
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
@@ -74,9 +74,9 @@ class Cypress {
      * @param vagrant The vagrant instance used to communicate with the EcoSystem. Is required to read the current
      * global admin group from the etcd.
      *
-     * @deprecated adminGroup is now passed to cypress via CYPRESS_ADMIN_GROUP automatically in
-     * EcoSystem.runCypressIntegrationTests(). This method is no longer used because patching
-     * shared workspace files will cause issues when running classic + multinode tests in parallel.
+     * @deprecated adminGroup is now passed to cypress via the --env AdminGroup=... CLI flag in
+     * runIntegrationTests(). This method is no longer used because patching shared workspace
+     * files will cause issues when running classic + multinode tests in parallel.
      */
     @Deprecated
     void updateCypressConfiguration(Vagrant vagrant) {

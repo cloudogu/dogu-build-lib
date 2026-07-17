@@ -152,7 +152,7 @@ additionalDockerArgs: "",
 additionalCypressArgs: "",
 
 # CES admin group for cypress
-# (passed to container as CYPRESS_ADMIN_GROUP)
+# (passed via the cypress --env AdminGroup=... CLI flag)
 adminGroup: "CesAdministrators"
 ```
 
