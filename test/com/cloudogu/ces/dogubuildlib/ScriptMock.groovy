@@ -114,6 +114,10 @@ class ScriptMock {
         closure.call()
     }
 
+    // Real Jenkins pipeline code (loginBackend(), pushPreRelease()) calls the
+    // two-argument form withCredentials(bindings, closure). This mock ignores the
+    // binding list's content (the test sets env.TOKEN_ID/TOKEN_SECRET directly) and
+    // just runs the closure.
     static def withCredentials(List bindings, Closure closure) {
         closure.call()
     }

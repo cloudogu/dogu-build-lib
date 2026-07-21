@@ -219,9 +219,9 @@ class EcoSystemTest {
         sut.loginBackend("someCredentialsId")
 
         // then
-        // Passwort wird nicht mehr als Klartext-Argument übergeben: erst in eine Datei
-        // geschrieben, per scp auf die VM kopiert, cesapp liest sie über -p. Datei danach
-        // lokal und remote wieder entfernt.
+        // The password is no longer passed as a cleartext argument: it's written to a file
+        // first, copied to the VM via scp, and cesapp reads it via -p. The file is removed
+        // again afterwards, both locally and on the VM.
         assert scriptMock.writeFileParams.any { it.text == "mySecretPassword" }
         String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
 
@@ -231,6 +231,8 @@ class EcoSystemTest {
         verifyNoMoreInteractions(vagrantMock)
         assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
 
+        // Scan every shell argument that was actually executed and make
+        // sure the plaintext password never shows up in any of them.
         for (String arg : scriptMock.allActualArgs) {
             assert !arg.contains("mySecretPassword")
         }
@@ -254,7 +256,7 @@ class EcoSystemTest {
         sut.pushPreRelease("/dogu")
 
         // then
-        // Passwort wird nicht mehr als Klartext-Argument übergeben, analog zu loginBackend.
+        // Same fix as loginBackend(): the password is no longer passed as a cleartext argument.
         assert scriptMock.writeFileParams.any { it.text == "mySecretPassword" }
         String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
 
@@ -265,6 +267,8 @@ class EcoSystemTest {
         verifyNoMoreInteractions(vagrantMock)
         assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
 
+        // Scan every shell argument that was actually executed and make
+        // sure the plaintext password never shows up in any of them.
         for (String arg : scriptMock.allActualArgs) {
             assert !arg.contains("mySecretPassword")
         }
