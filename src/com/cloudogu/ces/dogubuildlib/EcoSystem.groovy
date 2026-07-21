@@ -223,7 +223,13 @@ class EcoSystem {
             script.echo "Push Dogu as Prerelease"
             // escaping $ in user variable
             def escToken = script.env.TOKEN_ID.replaceAll("\\\$", '\\\\\\\$')
-            vagrant.ssh "sudo cesapp login '${escToken}' '${script.env.TOKEN_SECRET}'"
+            String passwordFile = "cesapp-login.password"
+            String remotePasswordFile = "/tmp/${passwordFile}"
+            script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
+            vagrant.scp(passwordFile, remotePasswordFile)
+            vagrant.ssh "sudo cesapp login '${escToken}' -p ${remotePasswordFile}"
+            vagrant.ssh "sudo rm -f ${remotePasswordFile}"
+            script.sh "rm -f ${passwordFile}"
             vagrant.ssh "sudo cesapp push ${doguPath}"
         }
     }

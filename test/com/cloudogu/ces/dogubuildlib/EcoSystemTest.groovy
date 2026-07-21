@@ -237,6 +237,40 @@ class EcoSystemTest {
     }
 
     @Test
+    void test_EcoSystem_pushPreRelease() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.env.TOKEN_ID = "harborUser"
+        scriptMock.env.TOKEN_SECRET = "mySecretPassword"
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+        doNothing().when(vagrantMock).scp(any(), any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.pushPreRelease("/dogu")
+
+        // then
+        // Passwort wird nicht mehr als Klartext-Argument übergeben, analog zu loginBackend.
+        assert scriptMock.writeFileParams.any { it.text == "mySecretPassword" }
+        String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
+
+        verify(vagrantMock).scp(passwordFile, "/tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp login 'harborUser' -p /tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo rm -f /tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp push /dogu")
+        verifyNoMoreInteractions(vagrantMock)
+        assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
+
+        for (String arg : scriptMock.allActualArgs) {
+            assert !arg.contains("mySecretPassword")
+        }
+    }
+
+    @Test
     void test_EcoSystem_upgrade() {
         // given
         def scriptMock = new ScriptMock()
