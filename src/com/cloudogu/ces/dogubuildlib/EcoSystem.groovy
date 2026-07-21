@@ -73,7 +73,13 @@ class EcoSystem {
 
     void loginBackend(String credentialsId) {
         script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: credentialsId, usernameVariable: 'TOKEN_ID', passwordVariable: 'TOKEN_SECRET']]) {
-            vagrant.ssh "sudo cesapp login ${script.env.TOKEN_ID} ${script.env.TOKEN_SECRET}"
+            String passwordFile = "cesapp-login.password"
+            String remotePasswordFile = "/tmp/${passwordFile}"
+            script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
+            vagrant.scp(passwordFile, remotePasswordFile)
+            vagrant.ssh "sudo cesapp login ${script.env.TOKEN_ID} -p ${remotePasswordFile}"
+            vagrant.ssh "sudo rm -f ${remotePasswordFile}"
+            script.sh "rm -f ${passwordFile}"
         }
     }
 

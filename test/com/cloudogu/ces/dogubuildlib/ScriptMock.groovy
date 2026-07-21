@@ -114,6 +114,10 @@ class ScriptMock {
         closure.call()
     }
 
+    static def withCredentials(List bindings, Closure closure) {
+        closure.call()
+    }
+
     void usernamePassword(Map args) {
         actualUsernamePasswordArgs.add(args)
     }
