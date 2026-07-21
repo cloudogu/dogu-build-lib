@@ -81,7 +81,9 @@ class EcoSystem {
             String remotePasswordFile = "/tmp/${passwordFile}"
             script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
             vagrant.scp(passwordFile, remotePasswordFile)
-            vagrant.ssh "sudo cesapp login ${script.env.TOKEN_ID} -p ${remotePasswordFile}"
+            // Flags must come before the positional username argument, or cesapp's CLI
+            // parser stops recognizing flags after the first positional token.
+            vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} ${script.env.TOKEN_ID}"
             // Remove the password file again, both on the VM and in the local Jenkins
             // workspace, so the plaintext credential doesn't linger anywhere afterwards.
             vagrant.ssh "sudo rm -f ${remotePasswordFile}"
@@ -235,7 +237,9 @@ class EcoSystem {
             String remotePasswordFile = "/tmp/${passwordFile}"
             script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
             vagrant.scp(passwordFile, remotePasswordFile)
-            vagrant.ssh "sudo cesapp login '${escToken}' -p ${remotePasswordFile}"
+            // Flags must come before the positional username argument, or cesapp's CLI
+            // parser stops recognizing flags after the first positional token.
+            vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} '${escToken}'"
             // Remove the password file again, both remotely and locally.
             vagrant.ssh "sudo rm -f ${remotePasswordFile}"
             script.sh "rm -f ${passwordFile}"

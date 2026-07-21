@@ -226,7 +226,7 @@ class EcoSystemTest {
         String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
 
         verify(vagrantMock).scp(passwordFile, "/tmp/${passwordFile}")
-        verify(vagrantMock).ssh("sudo cesapp login myUser -p /tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp login -p /tmp/${passwordFile} myUser")
         verify(vagrantMock).ssh("sudo rm -f /tmp/${passwordFile}")
         verifyNoMoreInteractions(vagrantMock)
         assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
@@ -261,7 +261,7 @@ class EcoSystemTest {
         String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
 
         verify(vagrantMock).scp(passwordFile, "/tmp/${passwordFile}")
-        verify(vagrantMock).ssh("sudo cesapp login 'harborUser' -p /tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp login -p /tmp/${passwordFile} 'harborUser'")
         verify(vagrantMock).ssh("sudo rm -f /tmp/${passwordFile}")
         verify(vagrantMock).ssh("sudo cesapp push /dogu")
         verifyNoMoreInteractions(vagrantMock)
