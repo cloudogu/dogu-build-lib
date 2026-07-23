@@ -12,7 +12,13 @@ class Cypress {
             additionalCypressArgs: "",
             adminGroup           : "CesAdministrators",
             adminUsername        : "ces-admin",
-            adminPassword        : "Ecosystem2016!"
+            adminPassword        : "Ecosystem2016!",
+            // Extra --env values to pass to cypress, merged with (and able to override)
+            // adminGroup/adminUsername/adminPassword. Use this rather than adding another
+            // --env/-e flag via additionalCypressArgs - Cypress's CLI doesn't merge repeated
+            // --env flags, so a second one there would silently replace this class's own
+            // AdminGroup/AdminUsername/AdminPassword instead of adding to them.
+            additionalEnv        : [:]
     ]
     def config
 
@@ -45,13 +51,20 @@ class Cypress {
                         def runID = UUID.randomUUID().toString()
                         String cypressRunArgs = "-q"
                         cypressRunArgs <<= " --headless"
-                        cypressRunArgs <<= " --config screenshotOnRunFailure=" + this.config.enableScreenshots
-                        cypressRunArgs <<= " --config video=" + this.config.enableVideo
+                        // Cypress's CLI doesn't merge repeated --config/--env flags!
+                        // Last occurrence silently wins, so we need to build one combined flag.
+                        cypressRunArgs <<= " --config " + joinAsCypressArgValue([
+                                screenshotOnRunFailure: this.config.enableScreenshots,
+                                video                 : this.config.enableVideo
+                        ])
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
-                        cypressRunArgs <<= " --env AdminGroup=" + singleQuoteWrap(this.config.adminGroup)
-                        cypressRunArgs <<= " --env AdminUsername=" + singleQuoteWrap(this.config.adminUsername)
-                        cypressRunArgs <<= " --env AdminPassword=" + singleQuoteWrap(this.config.adminPassword)
+                        def envVars = [
+                                AdminGroup   : this.config.adminGroup,
+                                AdminUsername: this.config.adminUsername,
+                                AdminPassword: this.config.adminPassword
+                        ] + this.config.additionalEnv
+                        cypressRunArgs <<= " --env " + joinAsCypressArgValue(envVars, true)
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
@@ -60,6 +73,16 @@ class Cypress {
 
     private static String singleQuoteWrap(String value) {
         return "'" + value.replace("'", "'\\''") + "'"
+    }
+
+    /**
+     * Joins args into comma-separated key=value args for Cypress CLI.
+     */
+    private static String joinAsCypressArgValue(Map<String, ?> entries, boolean quoteValues = false) {
+        return entries.collect { key, value ->
+            String stringValue = value.toString()
+            "${key}=" + (quoteValues ? singleQuoteWrap(stringValue) : stringValue)
+        }.join(",")
     }
 
     /**

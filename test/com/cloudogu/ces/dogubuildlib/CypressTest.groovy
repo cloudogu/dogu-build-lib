@@ -250,10 +250,8 @@ class CypressTest {
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
-        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
-        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators'")
-        assert mockedScript.shList[2].contains(" --env AdminUsername='ces-admin'")
-        assert mockedScript.shList[2].contains(" --env AdminPassword='Ecosystem2016!'")
+        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true,video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
+        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators',AdminUsername='ces-admin',AdminPassword='Ecosystem2016!'")
     }
 
     //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
@@ -293,11 +291,8 @@ class CypressTest {
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro ${expectedDockerArgs}"
         assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless")
         assert mockedScript.shList[2].contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
-        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
-        assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
-        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators'")
-        assert mockedScript.shList[2].contains(" --env AdminUsername='ces-admin'")
-        assert mockedScript.shList[2].contains(" --env AdminPassword='Ecosystem2016!'")
+        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot},video=${expectedRecordVideo}")
+        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators',AdminUsername='ces-admin',AdminPassword='Ecosystem2016!'")
         assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
     }
 
@@ -312,7 +307,33 @@ class CypressTest {
         cypress.runIntegrationTests(ecoSystem)
 
         // then
-        assert mockedScript.shList[2].contains(" --env AdminPassword='it'\\''s a secret'")
+        assert mockedScript.shList[2].contains("AdminPassword='it'\\''s a secret'")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsMergesAdditionalEnv() {
+        // given
+        Cypress cypress = new Cypress(mockedScript, [additionalEnv: [TAGS: "not @ignore"]])
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --env AdminGroup='CesAdministrators',AdminUsername='ces-admin',AdminPassword='Ecosystem2016!',TAGS='not @ignore'")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsAdditionalEnvOverridesBuiltIn() {
+        // given
+        Cypress cypress = new Cypress(mockedScript, [additionalEnv: [AdminGroup: "OverriddenGroup"]])
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --env AdminGroup='OverriddenGroup',AdminUsername='ces-admin',AdminPassword='Ecosystem2016!'")
     }
 
     @Test

@@ -155,7 +155,14 @@ additionalCypressArgs: "",
 # (passed via the cypress --env AdminGroup=/AdminUsername=/AdminPassword=... CLI flags)
 adminGroup: "CesAdministrators",
 adminUsername: "ces-admin",
-adminPassword: "Ecosystem2016!"
+adminPassword: "Ecosystem2016!",
+
+# Extra --env values to pass to cypress, merged with (and able to override)
+# adminGroup/adminUsername/adminPassword. Use this rather than adding another
+# --env/-e flag via additionalCypressArgs - Cypress's CLI doesn't merge repeated
+# --env flags, so a second one there would silently replace this class's own
+# AdminGroup/AdminUsername/AdminPassword instead of adding to them.
+additionalEnv: [:]
 ```
 
 #### Functions
