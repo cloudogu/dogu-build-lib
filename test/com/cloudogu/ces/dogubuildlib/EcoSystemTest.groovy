@@ -202,6 +202,79 @@ class EcoSystemTest {
     }
 
     @Test
+    void test_EcoSystem_loginBackend() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.env.TOKEN_ID = "myUser"
+        scriptMock.env.TOKEN_SECRET = "mySecretPassword"
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+        doNothing().when(vagrantMock).scp(any(), any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.loginBackend("someCredentialsId")
+
+        // then
+        // The password is no longer passed as a cleartext argument: it's written to a file
+        // first, copied to the VM via scp, and cesapp reads it via -p. The file is removed
+        // again afterwards, both locally and on the VM.
+        assert scriptMock.writeFileParams.any { it.text == "mySecretPassword" }
+        String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
+
+        verify(vagrantMock).scp(passwordFile, "/tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp login -p /tmp/${passwordFile} myUser")
+        verify(vagrantMock).ssh("sudo rm -f /tmp/${passwordFile}")
+        verifyNoMoreInteractions(vagrantMock)
+        assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
+
+        // Scan every shell argument that was actually executed and make
+        // sure the plaintext password never shows up in any of them.
+        for (String arg : scriptMock.allActualArgs) {
+            assert !arg.contains("mySecretPassword")
+        }
+    }
+
+    @Test
+    void test_EcoSystem_pushPreRelease() {
+        // given
+        def scriptMock = new ScriptMock()
+        scriptMock.env.TOKEN_ID = "harborUser"
+        scriptMock.env.TOKEN_SECRET = "mySecretPassword"
+
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+        doNothing().when(vagrantMock).scp(any(), any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.pushPreRelease("/dogu")
+
+        // then
+        // Same fix as loginBackend(): the password is no longer passed as a cleartext argument.
+        assert scriptMock.writeFileParams.any { it.text == "mySecretPassword" }
+        String passwordFile = scriptMock.writeFileParams.find { it.text == "mySecretPassword" }.file
+
+        verify(vagrantMock).scp(passwordFile, "/tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp login -p /tmp/${passwordFile} 'harborUser'")
+        verify(vagrantMock).ssh("sudo rm -f /tmp/${passwordFile}")
+        verify(vagrantMock).ssh("sudo cesapp push /dogu")
+        verifyNoMoreInteractions(vagrantMock)
+        assert scriptMock.allActualArgs.contains("rm -f ${passwordFile}".toString())
+
+        // Scan every shell argument that was actually executed and make
+        // sure the plaintext password never shows up in any of them.
+        for (String arg : scriptMock.allActualArgs) {
+            assert !arg.contains("mySecretPassword")
+        }
+    }
+
+    @Test
     void test_EcoSystem_upgrade() {
         // given
         def scriptMock = new ScriptMock()
