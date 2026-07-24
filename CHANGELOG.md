@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.5] - 2026-07-24
 ### Security
 - transfer the registry password via a password file instead of a cleartext `cesapp login` argument
 
