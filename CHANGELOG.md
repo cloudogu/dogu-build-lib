@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- transfer the registry password via a password file instead of a cleartext `cesapp login` argument
+
 ## [v3.5.4] - 2026-07-13
 ### Fixed
 - Replace legacy apt-key command with gpg for google-cloud-sdk installation
