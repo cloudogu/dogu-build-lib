@@ -73,22 +73,29 @@ class EcoSystem {
 
     void loginBackend(String credentialsId) {
         script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: credentialsId, usernameVariable: 'TOKEN_ID', passwordVariable: 'TOKEN_SECRET']]) {
-            // The password must never appear as a cleartext command-line argument (cesapp
-            // rejects that syntax anyway, see cesapp #57698) or it would end up in cesapp's
-            // debug log, the VM's shell history and its process list. Instead, write it to a
-            // file and let cesapp read it via -p.
-            String passwordFile = "cesapp-login.password"
-            String remotePasswordFile = "/tmp/${passwordFile}"
-            script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
-            vagrant.scp(passwordFile, remotePasswordFile)
-            // Flags must come before the positional username argument, or cesapp's CLI
-            // parser stops recognizing flags after the first positional token.
-            vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} ${script.env.TOKEN_ID}"
-            // Remove the password file again, both on the VM and in the local Jenkins
-            // workspace, so the plaintext credential doesn't linger anywhere afterwards.
-            vagrant.ssh "sudo rm -f ${remotePasswordFile}"
-            script.sh "rm -f ${passwordFile}"
+            loginWithPasswordFile(script.env.TOKEN_ID)
         }
+    }
+
+    /**
+     * Logs in to cesapp using a password file instead of passing the password as a
+     * cleartext command-line argument (cesapp rejects that syntax anyway), because it
+     * would otherwise end up in cesapp's debug log, the VM's shell history and its
+     * process list. usernameArg is inserted into the SSH command as-is, so callers
+     * must quote/escape it themselves if necessary.
+     */
+    private void loginWithPasswordFile(String usernameArg) {
+        String passwordFile = "cesapp-login.password"
+        String remotePasswordFile = "/tmp/${passwordFile}"
+        script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
+        vagrant.scp(passwordFile, remotePasswordFile)
+        // Flags must come before the positional username argument, or cesapp's CLI
+        // parser stops recognizing flags after the first positional token.
+        vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} ${usernameArg}"
+        // Remove the password file again, both on the VM and in the local Jenkins
+        // workspace, so the plaintext credential doesn't linger anywhere afterwards.
+        vagrant.ssh "sudo rm -f ${remotePasswordFile}"
+        script.sh "rm -f ${passwordFile}"
     }
 
     void setup(config = [:]) {
@@ -231,18 +238,7 @@ class EcoSystem {
             script.echo "Push Dogu as Prerelease"
             // escaping $ in user variable
             def escToken = script.env.TOKEN_ID.replaceAll("\\\$", '\\\\\\\$')
-            // Same password-file approach as loginBackend(): the password must never be
-            // passed as a cleartext command-line argument, see cesapp #57698.
-            String passwordFile = "cesapp-login.password"
-            String remotePasswordFile = "/tmp/${passwordFile}"
-            script.writeFile file: passwordFile, text: script.env.TOKEN_SECRET
-            vagrant.scp(passwordFile, remotePasswordFile)
-            // Flags must come before the positional username argument, or cesapp's CLI
-            // parser stops recognizing flags after the first positional token.
-            vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} '${escToken}'"
-            // Remove the password file again, both remotely and locally.
-            vagrant.ssh "sudo rm -f ${remotePasswordFile}"
-            script.sh "rm -f ${passwordFile}"
+            loginWithPasswordFile("'${escToken}'")
             vagrant.ssh "sudo cesapp push ${doguPath}"
         }
     }
