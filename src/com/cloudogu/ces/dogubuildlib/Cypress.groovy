@@ -47,7 +47,12 @@ class Cypress {
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
-                        script.sh "cd integrationTests/ && rm -rf node_modules && yarn install --mutex file:${script.pwd()}/.yarn-mutex && yarn cypress run ${cypressRunArgs}"
+                        // If another pipeline-branch shares this workspace and runs concurrently,
+                        // it might corrupt the yarn cache ("appears to be corrupt", ENOENT, EEXIST).
+                        // Because of this, we use flock (file mutex) as execution wrapper.
+                        String cypressRunScript = "run-cypress-${runID}.sh"
+                        script.writeFile file: cypressRunScript, text: "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
+                        script.sh "flock ${script.pwd()}/.integration-tests.lock sh ${cypressRunScript}"
                     }
         }
     }

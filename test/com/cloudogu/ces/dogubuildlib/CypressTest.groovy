@@ -246,11 +246,14 @@ class CypressTest {
         assert mockedScript.shList[0] == "whoami"
         assert mockedScript.shList[1] == "cat /etc/passwd | grep jenkins"
         assert mockedScript.pwdCalled == 3
-        assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
-        assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
-        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install --mutex file:/home/jenkins/.yarn-mutex && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
+        // Script filename is random (runID) - verify sh references the same file that was written.
+        assert mockedScript.shList[2].startsWith("flock /home/jenkins/.integration-tests.lock sh run-cypress-")
+        assert mockedScript.shList[2].endsWith(".sh")
+        String scriptFile = mockedScript.shList[2] - "flock /home/jenkins/.integration-tests.lock sh "
+        assert mockedScript.writenFileInfo.file == scriptFile
+        assert mockedScript.writenFileInfo.text.contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
     }
 
     //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
@@ -284,15 +287,17 @@ class CypressTest {
         assert mockedScript.shList[0] == "whoami"
         assert mockedScript.shList[1] == "cat /etc/passwd | grep jenkins"
         assert mockedScript.pwdCalled == 3
-        assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
-        assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == expectedImage
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro ${expectedDockerArgs}"
-        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install --mutex file:/home/jenkins/.yarn-mutex && yarn cypress run -q --headless")
-        assert mockedScript.shList[2].contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
-        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
-        assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
-        assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
+        assert mockedScript.shList[2].startsWith("flock /home/jenkins/.integration-tests.lock sh run-cypress-")
+        assert mockedScript.shList[2].endsWith(".sh")
+        String scriptFile = mockedScript.shList[2] - "flock /home/jenkins/.integration-tests.lock sh "
+        assert mockedScript.writenFileInfo.file == scriptFile
+        assert mockedScript.writenFileInfo.text.contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless")
+        assert mockedScript.writenFileInfo.text.contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
+        assert mockedScript.writenFileInfo.text.contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
+        assert mockedScript.writenFileInfo.text.contains(" --config video=${expectedRecordVideo}")
+        assert mockedScript.writenFileInfo.text.contains(" ${expectedCypressArgs}")
     }
 
     @Test
