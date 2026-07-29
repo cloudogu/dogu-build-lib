@@ -245,7 +245,7 @@ class CypressTest {
         assert mockedScript.timeoutInfo.unit == ["MINUTES"]
         assert mockedScript.shList[0] == "whoami"
         assert mockedScript.shList[1] == "cat /etc/passwd | grep jenkins"
-        assert mockedScript.pwdCalled == 2
+        assert mockedScript.pwdCalled == 3
         assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
@@ -283,7 +283,7 @@ class CypressTest {
         assert mockedScript.timeoutInfo.unit == ["MINUTES"]
         assert mockedScript.shList[0] == "whoami"
         assert mockedScript.shList[1] == "cat /etc/passwd | grep jenkins"
-        assert mockedScript.pwdCalled == 2
+        assert mockedScript.pwdCalled == 3
         assert mockedScript.writenFileInfo.file == ".jenkins/etc/passwd"
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == expectedImage
