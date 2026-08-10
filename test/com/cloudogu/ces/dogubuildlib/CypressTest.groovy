@@ -117,6 +117,21 @@ class CypressTest {
     }
 
     @Test
+    void testPreWorkWithArtifactPathPrefix() {
+        // given
+        Cypress cypress = new Cypress(mockedScript, [artifactPathPrefix: "classic"])
+
+        // when
+        cypress.preTestWork()
+
+        // then
+        assert mockedScript.echoList[0] == "cleaning up previous test results..."
+        assert mockedScript.shList[0] == "rm -rf integrationTests/classic/cypress/videos"
+        assert mockedScript.shList[1] == "rm -rf integrationTests/classic/cypress/screenshots"
+        assert mockedScript.shList[2] == "rm -rf integrationTests/cypress-reports"
+    }
+
+    @Test
     void testAchieveArtifactsWithEmptyConfig() {
         // given
         def config = [:]
@@ -170,6 +185,33 @@ class CypressTest {
         assert mockedScript.archiveArtifactsConfig.size() == 2
         assert mockedScript.archiveArtifactsConfig[1].allowEmptyArchive == true
         assert mockedScript.archiveArtifactsConfig[1].artifacts == "integrationTests/cypress/screenshots/**/*.png"
+    }
+
+    @Test
+    void testAchieveArtifactsWithArtifactPathPrefix() {
+        // given
+        def config = [artifactPathPrefix: "multinode"]
+        Cypress cypress = new Cypress(mockedScript, config)
+
+        // when
+        cypress.archiveVideosAndScreenshots()
+
+        // then
+        assert mockedScript.archiveArtifactsConfig[1].artifacts == "integrationTests/multinode/cypress/videos/**/*.mp4"
+        assert mockedScript.archiveArtifactsConfig[2].artifacts == "integrationTests/multinode/cypress/screenshots/**/*.png"
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsWithArtifactPathPrefix() {
+        // given
+        Cypress cypress = new Cypress(mockedScript, [artifactPathPrefix: "classic"])
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=true,video=true,screenshotsFolder=classic/cypress/screenshots,videosFolder=classic/cypress/videos")
     }
 
     @Test
@@ -250,7 +292,7 @@ class CypressTest {
         assert mockedScript.writenFileInfo.text == "jenkins:x:1000:1000::/home/jenkins:/bin/sh"
         assert mockedScript.docker.dockerUsedImage == Cypress.defaultIntegrationTestsConfig.cypressImage
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro "
-        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true --config video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
+        assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless --config screenshotOnRunFailure=true,video=true --reporter junit --reporter-options mochaFile=cypress-reports/")
     }
 
     //--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro
@@ -290,8 +332,7 @@ class CypressTest {
         assert mockedScript.docker.dockerArgs == "--ipc=host -e CYPRESS_BASE_URL=https://192.168.56.2 --entrypoint='' -v /home/jenkins/.jenkins/etc/passwd:/etc/passwd:ro ${expectedDockerArgs}"
         assert mockedScript.shList[2].contains("cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run -q --headless")
         assert mockedScript.shList[2].contains(" --reporter junit --reporter-options mochaFile=cypress-reports/")
-        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot}")
-        assert mockedScript.shList[2].contains(" --config video=${expectedRecordVideo}")
+        assert mockedScript.shList[2].contains(" --config screenshotOnRunFailure=${expectedRecordScreenshot},video=${expectedRecordVideo}")
         assert mockedScript.shList[2].contains(" ${expectedCypressArgs}")
     }
 
