@@ -56,12 +56,20 @@ class Cypress {
                             // Map.collect always routes through callClosureForMapEntry (regardless of
                             // closure arity), which the sandbox rejects.
                             Map additionalEnv = this.config.additionalEnv
-                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=${additionalEnv[key]}" }.join(",")
+                            // Single-quote each value - this whole string is handed to a real shell
+                            // (script.sh), not an argv array, so an unquoted value containing a space
+                            // (e.g. "not @ignore") gets word-split, silently truncating it and handing
+                            // cypress a stray extra argument that crashes it before any test runs.
+                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=" + singleQuoteWrap(additionalEnv[key].toString()) }.join(",")
                         }
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
+    }
+
+    private static String singleQuoteWrap(String value) {
+        return "'" + value.replace("'", "'\\''") + "'"
     }
 
     /**
