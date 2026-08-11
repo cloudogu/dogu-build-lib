@@ -306,7 +306,22 @@ class CypressTest {
         cypress.runIntegrationTests(ecoSystem)
 
         // then
-        assert mockedScript.shList[2].contains(" --env TAGS=not @ignore,SOME_OTHER_VAR=someValue")
+        // Values are single-quoted to survive shell word-splitting on spaces.
+        assert mockedScript.shList[2].contains(" --env TAGS='not @ignore',SOME_OTHER_VAR='someValue'")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsWithAdditionalEnvEscapesSingleQuotes() {
+        // given
+        def config = [additionalEnv: [TAGS: "it's @ignore"]]
+        Cypress cypress = new Cypress(mockedScript, config)
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --env TAGS='it'\\''s @ignore'")
     }
 
     @Test

@@ -52,12 +52,17 @@ class Cypress {
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
                         if (this.config.additionalEnv) {
                             Map additionalEnv = this.config.additionalEnv
-                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=${additionalEnv[key]}" }.join(",")
+                            // Single-quote each value to survive shell word-splitting (e.g. "not @ignore").
+                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=" + singleQuoteWrap(additionalEnv[key].toString()) }.join(",")
                         }
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
+    }
+
+    private static String singleQuoteWrap(String value) {
+        return "'" + value.replace("'", "'\\''") + "'"
     }
 
     /**
