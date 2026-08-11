@@ -9,7 +9,12 @@ class Cypress {
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
-            additionalCypressArgs: ""
+            additionalCypressArgs: "",
+            // Extra --env values to pass to cypress (e.g. [TAGS: "not @ignore"] to skip
+            // @ignore-tagged scenarios). Use this rather than embedding another --env flag in
+            // additionalCypressArgs - Cypress's CLI doesn't merge repeated --env flags, only the
+            // last one wins.
+            additionalEnv        : [:]
     ]
     def config
 
@@ -46,6 +51,13 @@ class Cypress {
                         cypressRunArgs <<= " --config video=" + this.config.enableVideo
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
+                        if (this.config.additionalEnv) {
+                            // Iterate keySet() rather than the Map itself - Jenkins' CPS-transformed
+                            // Map.collect always routes through callClosureForMapEntry (regardless of
+                            // closure arity), which the sandbox rejects.
+                            Map additionalEnv = this.config.additionalEnv
+                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=${additionalEnv[key]}" }.join(",")
+                        }
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
