@@ -402,7 +402,9 @@ class EcoSystem {
     }
 
     void collectLogs() {
-        vagrant.ssh "sudo tar cvfz /tmp/logs.tar.gz /var/log/docker"
+        // tar -c exits 1 on any file race.
+        // actually fatal errors will be exit code 2.
+        vagrant.ssh "sudo tar cvfz /tmp/logs.tar.gz /var/log/docker; test \$? -le 1"
         vagrant.scp(":/tmp/logs.tar.gz", "logs.tar.gz")
         script.archiveArtifacts "logs.tar.gz"
     }
