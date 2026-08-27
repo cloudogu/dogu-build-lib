@@ -119,7 +119,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "echo \"deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main\" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list"
             script.sh "curl -f https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor --yes -o /usr/share/keyrings/cloud.google.gpg"
             script.sh "sudo apt update"
-            script.sh "sudo apt install -y google-cloud-sdk-gke-gcloud-auth-plugin"
+            script.sh "sudo apt install -y google-cloud-cli-gke-gcloud-auth-plugin"
         }
 
         // docker login
