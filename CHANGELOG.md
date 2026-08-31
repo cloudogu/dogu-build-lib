@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.8] - 2026-08-31
+### Fixed
+- fix insufficient character escape
+
 ## [v3.5.7] - 2026-08-31
 ### Changed
 - use long-form password flag for compatibility with all vagrant images
