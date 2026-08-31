@@ -91,7 +91,7 @@ class EcoSystem {
         vagrant.scp(passwordFile, remotePasswordFile)
         // Flags must come before the positional username argument, or cesapp's CLI
         // parser stops recognizing flags after the first positional token.
-        vagrant.ssh "sudo cesapp login -p ${remotePasswordFile} ${usernameArg}"
+        vagrant.ssh "sudo cesapp login --password-file ${remotePasswordFile} ${usernameArg}"
         // Remove the password file again, both on the VM and in the local Jenkins
         // workspace, so the plaintext credential doesn't linger anywhere afterwards.
         vagrant.ssh "sudo rm -f ${remotePasswordFile}"
