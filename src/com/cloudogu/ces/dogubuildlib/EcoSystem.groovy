@@ -519,9 +519,9 @@ Vagrant.configure(2) do |config|
     google.machine_type = "${machineType}"
 
     # preemptible
-    google.preemptible = true
+    google.preemptible = false
     google.auto_restart = false
-    google.on_host_maintenance = "TERMINATE"
+    google.on_host_maintenance = "MIGRATE"
 
     google.name = "ces-dogu-" + Time.now.to_i.to_s
 
