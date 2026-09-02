@@ -9,7 +9,14 @@ class Cypress {
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
-            additionalCypressArgs: ""
+            additionalCypressArgs: "",
+            // Optional subdirectory prefix for videos/screenshots (e.g. "classic", "multinode").
+            // Needed when multiple branches call archiveVideosAndScreenshots() with the same
+            // artifact glob pattern within the same build - Jenkins' archiveArtifacts stores
+            // artifacts in one flat, build-level namespace keyed by that path string regardless
+            // of which workspace produced the file, so same-named artifacts from different
+            // branches silently overwrite each other without this.
+            artifactPathPrefix   : ""
     ]
     def config
 
@@ -42,8 +49,21 @@ class Cypress {
                         def runID = UUID.randomUUID().toString()
                         String cypressRunArgs = "-q"
                         cypressRunArgs <<= " --headless"
-                        cypressRunArgs <<= " --config screenshotOnRunFailure=" + this.config.enableScreenshots
-                        cypressRunArgs <<= " --config video=" + this.config.enableVideo
+                        // Cypress's CLI doesn't merge repeated --config flags - only the last one
+                        // survives - so this needs to be one combined flag, especially now that
+                        // screenshotsFolder/videosFolder can be added below.
+                        Map cypressConfig = [
+                                screenshotOnRunFailure: this.config.enableScreenshots,
+                                video                 : this.config.enableVideo,
+                        ]
+                        if (this.config.artifactPathPrefix) {
+                            cypressConfig.screenshotsFolder = "${this.config.artifactPathPrefix}/cypress/screenshots"
+                            cypressConfig.videosFolder = "${this.config.artifactPathPrefix}/cypress/videos"
+                        }
+                        // Iterate keySet() rather than the Map itself - Jenkins' CPS-transformed
+                        // Map.collect always routes through callClosureForMapEntry (regardless of
+                        // closure arity), which the sandbox rejects.
+                        cypressRunArgs <<= " --config " + cypressConfig.keySet().collect { key -> "${key}=${cypressConfig[key]}" }.join(",")
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
@@ -59,11 +79,29 @@ class Cypress {
         script.echo "archiving videos and screenshots from test execution..."
         script.junit allowEmptyResults: true, testResults: "integrationTests/cypress-reports/TEST-*.xml"
         if (this.config.enableVideo) {
-            script.archiveArtifacts artifacts: "integrationTests/cypress/videos/**/*.mp4", allowEmptyArchive: true
+            script.archiveArtifacts artifacts: "${videosDir()}/**/*.mp4", allowEmptyArchive: true
         }
         if (this.config.enableScreenshots) {
-            script.archiveArtifacts artifacts: "integrationTests/cypress/screenshots/**/*.png", allowEmptyArchive: true
+            script.archiveArtifacts artifacts: "${screenshotsDir()}/**/*.png", allowEmptyArchive: true
         }
+    }
+
+    /**
+     * Videos directory, namespaced under artifactPathPrefix when configured (see
+     * defaultIntegrationTestsConfig.artifactPathPrefix).
+     */
+    private String videosDir() {
+        String prefix = this.config.artifactPathPrefix ? "${this.config.artifactPathPrefix}/" : ""
+        return "integrationTests/${prefix}cypress/videos"
+    }
+
+    /**
+     * Screenshots directory, namespaced under artifactPathPrefix when configured (see
+     * defaultIntegrationTestsConfig.artifactPathPrefix).
+     */
+    private String screenshotsDir() {
+        String prefix = this.config.artifactPathPrefix ? "${this.config.artifactPathPrefix}/" : ""
+        return "integrationTests/${prefix}cypress/screenshots"
     }
 
     /**
@@ -95,8 +133,8 @@ class Cypress {
      */
     void preTestWork() {
         script.echo "cleaning up previous test results..."
-        script.sh "rm -rf integrationTests/cypress/videos"
-        script.sh "rm -rf integrationTests/cypress/screenshots"
+        script.sh "rm -rf ${videosDir()}"
+        script.sh "rm -rf ${screenshotsDir()}"
         script.sh "rm -rf integrationTests/cypress-reports"
     }
 
