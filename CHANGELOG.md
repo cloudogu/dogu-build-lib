@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.9] - 2026-09-02
+### Changed
+- disable gcp preemptible mode for vagrant ces machines
+
 ## [v3.5.8] - 2026-08-31
 ### Fixed
 - fix insufficient character escape
