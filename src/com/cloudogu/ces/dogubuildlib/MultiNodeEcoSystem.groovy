@@ -50,7 +50,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
 
         // setup go
-        script.sh "sudo apt update && sudo apt install -y golang"
+        script.sh "which go >/dev/null || ( sudo apt update && sudo apt install -y golang )"
 
         // setup yq
         script.sh "make install-yq"
