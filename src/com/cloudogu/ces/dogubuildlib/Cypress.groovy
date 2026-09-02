@@ -16,7 +16,12 @@ class Cypress {
             // artifacts in one flat, build-level namespace keyed by that path string regardless
             // of which workspace produced the file, so same-named artifacts from different
             // branches silently overwrite each other without this.
-            artifactPathPrefix   : ""
+            artifactPathPrefix   : "",
+            // Extra --env values to pass to cypress (e.g. [TAGS: "not @ignore"] to skip
+            // @ignore-tagged scenarios). Use this rather than embedding another --env flag in
+            // additionalCypressArgs - Cypress's CLI doesn't merge repeated --env flags, only the
+            // last one wins.
+            additionalEnv        : [:]
     ]
     def config
 
@@ -66,10 +71,25 @@ class Cypress {
                         cypressRunArgs <<= " --config " + cypressConfig.keySet().collect { key -> "${key}=${cypressConfig[key]}" }.join(",")
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
+                        if (this.config.additionalEnv) {
+                            // Iterate keySet() rather than the Map itself - Jenkins' CPS-transformed
+                            // Map.collect always routes through callClosureForMapEntry (regardless of
+                            // closure arity), which the sandbox rejects.
+                            Map additionalEnv = this.config.additionalEnv
+                            // Single-quote each value - this whole string is handed to a real shell
+                            // (script.sh), not an argv array, so an unquoted value containing a space
+                            // (e.g. "not @ignore") gets word-split, silently truncating it and handing
+                            // cypress a stray extra argument that crashes it before any test runs.
+                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=" + singleQuoteWrap(additionalEnv[key].toString()) }.join(",")
+                        }
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
+    }
+
+    private static String singleQuoteWrap(String value) {
+        return "'" + value.replace("'", "'\\''") + "'"
     }
 
     /**
