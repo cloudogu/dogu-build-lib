@@ -147,10 +147,9 @@ class MultiNodeEcoSystemTest {
         assertNotNull(additionalDogus)
         assertTrue(additionalDogus.isEmpty())
 
-        // 3) Base components from lib
+        // 3) Base components contains only the additionally passed components
         List baseComponents = data["Base components"] as List
-        assertNotNull(baseComponents)
-        assertTrue(baseComponents.isEmpty())
+        assertEquals(["k8s/my-component"], baseComponents)
 
         // 4) Disabled components contains passed values
         List disabledComponents = data["Disabled components"] as List
