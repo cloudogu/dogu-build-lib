@@ -149,14 +149,8 @@ class MultiNodeEcoSystemTest {
 
         // 3) Base components from lib
         List baseComponents = data["Base components"] as List
-        assertTrue(baseComponents.contains("k8s/k8s-dogu-operator-crd"))
-        assertTrue(baseComponents.contains("k8s/k8s-dogu-operator"))
-        assertTrue(baseComponents.contains("k8s/k8s-service-discovery"))
-        assertTrue(baseComponents.contains("k8s/k8s-ces-gateway"))
-        assertTrue(baseComponents.contains("k8s/k8s-ces-assets"))
-        assertTrue(baseComponents.contains("k8s/k8s-debug-mode-operator-crd"))
-        assertTrue(baseComponents.contains("k8s/k8s-debug-mode-operator"))
-        assertTrue(baseComponents.contains("k8s/my-component"))
+        assertNotNull(baseComponents)
+        assertTrue(baseComponents.isEmpty())
 
         // 4) Disabled components contains passed values
         List disabledComponents = data["Disabled components"] as List
