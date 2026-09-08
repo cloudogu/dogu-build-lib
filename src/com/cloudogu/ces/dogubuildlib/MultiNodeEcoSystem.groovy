@@ -300,14 +300,7 @@ Enable Backup: ${config.enableBackup ? config.enableBackup : "false"}
 Backup components: []
 Enable Monitoring: ${config.enableMonitoring ? config.enableMonitoring : "false"}
 Monitoring components: []
-Base components:
-  - k8s/k8s-dogu-operator-crd
-  - k8s/k8s-dogu-operator
-  - k8s/k8s-service-discovery
-  - k8s/k8s-ces-gateway
-  - k8s/k8s-ces-assets
-  - k8s/k8s-debug-mode-operator-crd
-  - k8s/k8s-debug-mode-operator
+Base components: []
 Disabled components:
 ${getDefaultValueByNameAsList("Disabled components")}
 Increase max map count on Nodes: "false"
