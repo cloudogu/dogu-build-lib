@@ -37,6 +37,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     def multinodeConfig = [
             additionalDogus: [],
             additionalComponents: [],
+            machineType: "n1-standard-4",
             nodeCount: "1"
     ]
 
