@@ -37,6 +37,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     def multinodeConfig = [
             additionalDogus: [],
             additionalComponents: [],
+            machineType: "n2-standard-4",
             nodeCount: "1"
     ]
 
@@ -282,7 +283,7 @@ spec:
         List dogusToAdd = config.additionalDogus
         List componentsToAdd = config.additionalComponents
         def defaultMNParams = """
-MN-CES Machine Type: "e2-standard-4"
+MN-CES Machine Type: "${config.machineType}"
 MN-CES Node Count: "${config.nodeCount}"
 CES Namespace: "ecosystem"
 Ecosystem-Core Chart Namespace: "k8s"
