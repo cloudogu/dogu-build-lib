@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.11] - 2026-09-09
+### Changed
+- make machineType configurable
+- set machineType default to n2-standard-4
+
 ## [v3.5.10] - 2026-09-08
 ### Changed
 - do not set "Base Components" for MultiNodeEcoSystem to use the default version from ecosystem-core
