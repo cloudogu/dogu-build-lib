@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- make machineType and nodeCount configurable
+- make machineType configurable
+- set machineType default to n2-standard-4
 
 ## [v3.5.10] - 2026-09-08
 ### Changed
