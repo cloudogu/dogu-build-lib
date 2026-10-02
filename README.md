@@ -149,7 +149,16 @@ timeoutInMinutes: 15,
 additionalDockerArgs: "",
 
 # Additional cypress argument
-additionalCypressArgs: ""
+additionalCypressArgs: "",
+
+# Subdirectory prefix for archived videos/screenshots
+artifactPathPrefix: ""
+```
+
+#### Example
+
+```groovy
+Cypress cy = new Cypress(script, [artifactPathPrefix: "classic"])
 ```
 
 #### Functions
