@@ -149,7 +149,16 @@ timeoutInMinutes: 15,
 additionalDockerArgs: "",
 
 # Additional cypress argument
-additionalCypressArgs: ""
+additionalCypressArgs: "",
+
+# Extra --env values to pass to cypress
+additionalEnv: [:]
+```
+
+#### Example
+
+```groovy
+Cypress cy = new Cypress(script, [additionalEnv: [TAGS: "not @ignore"]])
 ```
 
 #### Functions
