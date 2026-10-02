@@ -153,12 +153,16 @@ additionalCypressArgs: "",
 
 # Extra --env values to pass to cypress
 additionalCypressEnv: [:]
+
+# Subdirectory prefix for archived videos/screenshots
+artifactPathPrefix: ""
 ```
 
 #### Example
 
 ```groovy
 Cypress cy = new Cypress(script, [additionalCypressEnv: [TAGS: "not @ignore"]])
+Cypress cy = new Cypress(script, [artifactPathPrefix: "classic"])
 ```
 
 #### Functions
