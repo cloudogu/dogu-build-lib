@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- additionalEnv config to pass extra --env values to cypress
+
+### Fixed
+- shell word-splitting of additionalEnv values
 
 ## [v3.5.11] - 2026-09-09
 ### Changed
