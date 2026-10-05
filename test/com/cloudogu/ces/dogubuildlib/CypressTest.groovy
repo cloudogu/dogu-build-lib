@@ -296,6 +296,48 @@ class CypressTest {
     }
 
     @Test
+    void testRunCypressIntegrationTestsWithAdditionalEnv() {
+        // given
+        def config = [additionalEnv: [TAGS: "not @ignore", SOME_OTHER_VAR: "someValue"]]
+        Cypress cypress = new Cypress(mockedScript, config)
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        // Values are single-quoted to survive shell word-splitting on spaces.
+        assert mockedScript.shList[2].contains(" --env TAGS='not @ignore',SOME_OTHER_VAR='someValue'")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsWithAdditionalEnvEscapesSingleQuotes() {
+        // given
+        def config = [additionalEnv: [TAGS: "it's @ignore"]]
+        Cypress cypress = new Cypress(mockedScript, config)
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert mockedScript.shList[2].contains(" --env TAGS='it'\\''s @ignore'")
+    }
+
+    @Test
+    void testRunCypressIntegrationTestsWithoutAdditionalEnvOmitsEnvFlag() {
+        // given
+        Cypress cypress = new Cypress(mockedScript)
+        when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
+
+        // when
+        cypress.runIntegrationTests(ecoSystem)
+
+        // then
+        assert !mockedScript.shList[2].contains(" --env ")
+    }
+
+    @Test
     void test_Cypress_updateCypressConfiguration_noCypressAvailable() {
         // given
         ScriptMock scriptMock = new ScriptMock()

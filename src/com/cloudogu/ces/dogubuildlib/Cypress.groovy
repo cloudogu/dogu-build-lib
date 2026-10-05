@@ -9,7 +9,11 @@ class Cypress {
             enableScreenshots    : true,
             timeoutInMinutes     : 15,
             additionalDockerArgs : "",
-            additionalCypressArgs: ""
+            additionalCypressArgs: "",
+            // Extra --env values to pass to cypress (e.g. [TAGS: "not @ignore"].
+            // Use this rather than embedding another --env flag in additionalCypressArgs.
+            // Cypress's CLI does not merge repeated --env flags, only the last one wins!
+            additionalEnv        : [:]
     ]
     def config
 
@@ -46,10 +50,19 @@ class Cypress {
                         cypressRunArgs <<= " --config video=" + this.config.enableVideo
                         cypressRunArgs <<= " --reporter junit"
                         cypressRunArgs <<= " --reporter-options mochaFile=cypress-reports/TEST-${runID}-[hash].xml"
+                        if (this.config.additionalEnv) {
+                            Map additionalEnv = this.config.additionalEnv
+                            // Single-quote each value to survive shell word-splitting (e.g. "not @ignore").
+                            cypressRunArgs <<= " --env " + additionalEnv.keySet().collect { key -> "${key}=" + singleQuoteWrap(additionalEnv[key].toString()) }.join(",")
+                        }
                         cypressRunArgs <<= " " + this.config.additionalCypressArgs
                         script.sh "cd integrationTests/ && rm -rf node_modules && yarn install && yarn cypress run ${cypressRunArgs}"
                     }
         }
+    }
+
+    private static String singleQuoteWrap(String value) {
+        return "'" + value.replace("'", "'\\''") + "'"
     }
 
     /**
