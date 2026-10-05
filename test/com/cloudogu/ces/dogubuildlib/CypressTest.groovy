@@ -298,7 +298,7 @@ class CypressTest {
     @Test
     void testRunCypressIntegrationTestsWithAdditionalEnv() {
         // given
-        def config = [additionalEnv: [TAGS: "not @ignore", SOME_OTHER_VAR: "someValue"]]
+        def config = [additionalCypressEnv: [TAGS: "not @ignore", SOME_OTHER_VAR: "someValue"]]
         Cypress cypress = new Cypress(mockedScript, config)
         when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
 
@@ -313,7 +313,7 @@ class CypressTest {
     @Test
     void testRunCypressIntegrationTestsWithAdditionalEnvEscapesSingleQuotes() {
         // given
-        def config = [additionalEnv: [TAGS: "it's @ignore"]]
+        def config = [additionalCypressEnv: [TAGS: "it's @ignore"]]
         Cypress cypress = new Cypress(mockedScript, config)
         when(ecoSystem.getExternalIP()).thenReturn("192.168.56.2")
 

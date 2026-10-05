@@ -152,13 +152,13 @@ additionalDockerArgs: "",
 additionalCypressArgs: "",
 
 # Extra --env values to pass to cypress
-additionalEnv: [:]
+additionalCypressEnv: [:]
 ```
 
 #### Example
 
 ```groovy
-Cypress cy = new Cypress(script, [additionalEnv: [TAGS: "not @ignore"]])
+Cypress cy = new Cypress(script, [additionalCypressEnv: [TAGS: "not @ignore"]])
 ```
 
 #### Functions

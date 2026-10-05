@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- additionalEnv config to pass extra --env values to cypress
+- additionalCypressEnv config to pass extra --env values to cypress
 
 ### Fixed
-- shell word-splitting of additionalEnv values
+- shell word-splitting of additionalCypressEnv values
 
 ## [v3.5.11] - 2026-09-09
 ### Changed
