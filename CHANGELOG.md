@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.6.0] - 2026-10-06
+### Added
+- additionalCypressEnv config to pass extra --env values to cypress
+- artifactPathPrefix config to namespace archived cypress videos/screenshots
+
+### Fixed
+- shell word-splitting of additionalCypressEnv values
+
 ## [v3.5.11] - 2026-09-09
 ### Changed
 - make machineType configurable
