@@ -191,7 +191,7 @@ class ScriptMock {
 
     void writeJSON(Map<String, Object> args) {
         String path = args.get("file")
-        String json = args.get('json')
+        def json = args.get('json')
         if (json != null && path != null) {
             jsonFiles.put(path, json)
             return
