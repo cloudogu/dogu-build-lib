@@ -226,6 +226,108 @@ spec:
         }
     }
 
+    /**
+     * Installs a dogu by applying its Dogu CR directly - the k8s-dogu-operator pulls the
+     * already-published image once the CR is applied, no local build needed. doguFullName
+     * matches EcoSystem.installDogu's format: "namespace/name" (latest released version is
+     * looked up in the registry) or "namespace/name version" (explicit version, e.g. for
+     * OldDoguVersionForUpgradeTest).
+     */
+    void installDogu(String doguFullName) {
+        if (!doguFullName.contains("/")) {
+            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+            return
+        }
+        def parts = doguFullName.trim().split(" ")
+        String namespace = parts[0].split("/")[0]
+        String name = parts[0].split("/")[1]
+        String version = parts.size() > 1 ? parts[1] : latestReleasedVersion(namespace, name)
+
+        String doguCrYaml = """
+apiVersion: k8s.cloudogu.com/v2
+kind: Dogu
+metadata:
+  name: ${name}
+  labels:
+    app: ces
+spec:
+  name: ${namespace}/${name}
+  version: "${version}"
+"""
+        script.writeFile encoding: 'UTF-8', file: '/tmp/installDogu.yaml', text: doguCrYaml
+        script.sh "kubectl apply --namespace=ecosystem -f /tmp/installDogu.yaml"
+    }
+
+    /**
+     * Deletes the dogu's CR - the k8s-dogu-operator tears the dogu down via its finalizer.
+     * parameters only exists to match EcoSystem.purgeDogu's signature; cesapp's purge flags
+     * (e.g. --keep-container) have no k8s equivalent and are ignored here.
+     */
+    void purgeDogu(String doguName, parameters = "") {
+        script.sh "kubectl delete dogu ${doguName} --namespace=ecosystem --ignore-not-found"
+    }
+
+    /**
+     * No-op in MultiNode: installDogu() applying the Dogu CR already triggers the
+     * k8s-dogu-operator's full install-and-start reconciliation - there's no separate
+     * "start" phase the way cesapp has one on the Classic VM.
+     */
+    void startDogu(String doguName) {
+        script.echo "startDogu is a no-op in MultiNode - installDogu already starts the dogu via the k8s-dogu-operator"
+    }
+
+    /**
+     * Upgrades the dogu by rebuilding from local source with a new version - same contract as
+     * EcoSystem.upgradeDogu(String), but via build() (make build) instead of vagrant/cesapp.
+     */
+    void upgradeDogu(String newDoguVersion) {
+        this.setVersion(newDoguVersion)
+        this.build("/dogu")
+    }
+
+    /**
+     * Overrides EcoSystem.waitUntilAvailable(), which reads the inherited "externalIP" field -
+     * MultiNodeEcoSystem never sets that field, it resolves the cluster's IP lazily via
+     * getExternalIP() instead.
+     */
+    void waitUntilAvailable(String doguName, int timeout = 30) {
+        String ip = getExternalIP()
+        for (int i = 0; i < timeout; i++) {
+            def response = script.sh(script: "curl --insecure --silent --head https://${ip}/${doguName} | head -n 1", returnStdout: true)
+            if (response.contains("302")) {
+                break
+            }
+            script.sleep 1
+        }
+    }
+
+    /**
+     * Resolves the highest released version tag for a dogu image in the CES registry, via the
+     * standard Docker Registry v2 token-auth flow (Harbor serves the token endpoint at
+     * /service/token). Needed because, unlike cesapp's "install namespace/name" with no version,
+     * a Dogu CR's spec.version is mandatory - there's no "latest" keyword for it.
+     */
+    private String latestReleasedVersion(String namespace, String name) {
+        String version
+        script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "cesmarvin-setup", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD']]) {
+            script.withEnv(["REPOSITORY=${namespace}/${name}"]) {
+                version = script.sh(returnStdout: true, script: '''
+                    set -eu
+                    TOKEN=$(curl -s -u "$REGISTRY_USER:$REGISTRY_PASSWORD" "https://registry.cloudogu.com/service/token?service=registry.cloudogu.com&scope=repository:${REPOSITORY}:pull" | jq -r .token)
+                    curl -s -H "Authorization: Bearer $TOKEN" "https://registry.cloudogu.com/v2/${REPOSITORY}/tags/list" \\
+                      | jq -r '.tags[]' \\
+                      | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+$' \\
+                      | sort -V \\
+                      | tail -n1
+                ''').trim()
+            }
+        }
+        if (!version || version == "null") {
+            script.error "Could not resolve latest released version for ${namespace}/${name}"
+        }
+        return version
+    }
+
     void changeGlobalAdminGroup(String newGlobalAdminGroup) {
         script.echo "Change global admin group to ($newGlobalAdminGroup)."
         def adminUsername = currentConfig.adminUsername

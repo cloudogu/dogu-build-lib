@@ -1,5 +1,6 @@
 package com.cloudogu.ces.dogubuildlib
 
+import groovy.json.JsonSlurper
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -160,5 +161,102 @@ class MultiNodeEcoSystemTest {
 
         // Optional: check for deleting file
         verify(script).sh("rm -f integrationTests/mn_params_modified.yaml")
+    }
+
+    @Test
+    void installDoguWithExplicitVersionShouldApplyDoguCR() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.installDogu("official/cockpit 2.5.0-1")
+
+        // Assert
+        assertEquals(1, scriptMock.writeFileParams.size())
+        def written = scriptMock.writeFileParams[0]
+        assertEquals("/tmp/installDogu.yaml", written.file)
+        assertTrue(written.text.contains("name: official/cockpit"))
+        assertTrue(written.text.contains('version: "2.5.0-1"'))
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl apply --namespace=ecosystem -f /tmp/installDogu.yaml"))
+    }
+
+    @Test
+    void installDoguWithoutSlashShouldEchoAndNotApply() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.installDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualEcho.any { it.contains("Could not install cockpit") })
+        assertTrue(scriptMock.writeFileParams.isEmpty())
+    }
+
+    @Test
+    void purgeDoguShouldDeleteDoguCR() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.purgeDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found"))
+    }
+
+    @Test
+    void startDoguShouldBeNoOp() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.startDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.isEmpty())
+        assertTrue(scriptMock.actualEcho.any { it.contains("no-op") })
+    }
+
+    @Test
+    void upgradeDoguWithVersionShouldSetVersionAndBuild() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.jsonFiles.put("dogu.json", new JsonSlurper().parseText('{ "Name": "official/cockpit", "Version": "2.5.0-1" }'))
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.upgradeDogu("2.5.0-2")
+
+        // Assert
+        assertEquals("2.5.0-2", scriptMock.jsonFiles.get("dogu.json").Version)
+        assertTrue(scriptMock.actualShStringArgs.contains("make build"))
+    }
+
+    @Test
+    void waitUntilAvailableShouldPollUntilRedirect() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.coder_workspace = "test-mn-abc"
+
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath=\'{.status.loadBalancer.ingress[0].ip}\'"',
+                "1.2.3.4"
+        )
+        scriptMock.expectedShRetValueForScript.put(
+                "curl --insecure --silent --head https://1.2.3.4/cockpit | head -n 1",
+                "HTTP/1.1 302 Found"
+        )
+
+        // Act
+        eco.waitUntilAvailable("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --head https://1.2.3.4/cockpit | head -n 1"))
     }
 }
