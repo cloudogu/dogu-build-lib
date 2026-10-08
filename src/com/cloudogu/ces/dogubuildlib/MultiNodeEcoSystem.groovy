@@ -149,14 +149,20 @@ class MultiNodeEcoSystem extends EcoSystem {
         script.sh "make build"  // target from k8s-dogu.mk
     }
 
+    /**
+     * Same contract as EcoSystem.waitForDogu() (cesapp healthy --wait --timeout 1200
+     * --fail-fast): waits up to 20 minutes, fails the build if the dogu never
+     * becomes healthy in that time.
+     */
     void waitForDogu(String dogu) {
-        def counter = 0
-        while(counter < 30) {
+        int counter = 0
+        int maxAttempts = 120 // 120 * 10s = 1200s = 20 minutes
+        while (counter < maxAttempts) {
             def setupStatus = "init"
             try {
                 setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=ecosystem $dogu -o jsonpath='{.status.health}'\"")
                 if (setupStatus == "available") {
-                    break
+                    return
                 }
             } catch (Exception err) {
                 // this is okay
@@ -164,6 +170,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sleep(time: 10, unit: 'SECONDS')
             counter++
         }
+        script.error "Dogu ${dogu} did not become healthy within 20 minutes"
     }
 
     void verify(String dogu) {

@@ -216,6 +216,42 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void waitForDoguShouldReturnOnceAvailable() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=ecosystem cockpit -o jsonpath=\'{.status.health}\'"',
+                "available"
+        )
+
+        // Act
+        eco.waitForDogu("cockpit")
+
+        // Assert
+        assertEquals(1, scriptMock.actualShMapArgs.size())
+    }
+
+    @Test
+    void waitForDoguShouldFailAfterTwentyMinutes() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedDefaultShRetValue = "unavailable"
+
+        // Act + Assert
+        RuntimeException ex = assertThrows(RuntimeException) {
+            eco.waitForDogu("cockpit")
+        }
+
+        assertTrue(ex.message.contains("did not become healthy within 20 minutes"))
+        // 120 attempts * 10s = 1200s = 20 minutes, matching EcoSystem's cesapp --timeout 1200
+        assertEquals(120, scriptMock.actualShMapArgs.size())
+    }
+
+    @Test
     void purgeDoguShouldDeleteDoguCR() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
