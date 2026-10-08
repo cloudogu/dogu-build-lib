@@ -92,12 +92,12 @@ class EcoSystemTest {
     void testIncreaseVersion() {
         String start = "2.222.4-1"
         String expected = "2.222.4-2"
-        String result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        String result = EcoSystem.increaseDoguReleaseVersionByOne(start)
         assert expected == result
 
         start = "2.222.4-9"
         expected = "2.222.4-10"
-        result = EcoSystem.increaseDoguReleaseVersionByOne("\"Version\": \"${start}\",")
+        result = EcoSystem.increaseDoguReleaseVersionByOne(start)
         assert expected == result
     }
 
@@ -278,7 +278,7 @@ class EcoSystemTest {
     void test_EcoSystem_upgrade() {
         // given
         def scriptMock = new ScriptMock()
-        scriptMock.expectedShRetValueForScript.put("grep .Version dogu.json", "\"Version\": \"1.2.3-4\",")
+        scriptMock.expectedShRetValueForScript.put("jq -r .Version dogu.json", "1.2.3-4")
         def jsonSlurper = new JsonSlurper()
         def doguJson = jsonSlurper.parseText('{ "Name": "testing/dogu", "Version": "1.2.3-4" }')
         scriptMock.jsonFiles.put("dogu.json", doguJson)
