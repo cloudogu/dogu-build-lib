@@ -122,6 +122,19 @@ Some parameters can be passed to the System.
 - enableBackup                     # enable Backup-Component-Stack (default: false)
 - enableMonitoring                 # enable Monitoring-Component-Stack (default: false)
 
+#### Functions
+
+- provision(...) | unsupported in MultiNodeEcosystem - raises an error, use setup(config) instead
+- setup(config = [:]) | create a Coder cluster from the MN-CES template
+- getExternalIP() | get the k8s ingress IP of the cluster
+- build(String doguPath) | build the dogu and deploy it into the cluster (`make build`)
+- waitForDogu(String dogu) | wait until the dogu state is healthy
+- verify(String dogu) | execute the goss tests
+- restartDogu(String doguName, boolean waitUntilAvailable=true) | restarts a dogu and by default waits until it is available again
+- changeGlobalAdminGroup(String newAdminGroup) | changes the global admin group to the given value
+- runCypressIntegrationTests(config = [:]) | runs cypress integration tests against the cluster
+- destroy() | deletes the Coder workspace, if one was created
+
 ### Cypress
 
 #### Get Started
