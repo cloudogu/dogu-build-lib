@@ -199,10 +199,12 @@ class EcoSystem {
      * E.g. version 2.222.4-1 upgrades to 2.222.4-2.
      */
     void upgradeDogu() {
-        // currentDoguVersionString, e.g. "Version": "2.222.4-1",
-        String currentDoguVersionString = script.sh(returnStdout: true, script: 'grep .Version dogu.json').trim()
+        // currentDoguVersion, e.g. 2.222.4-1
+        // jq, not grep - dogu.json commonly has other "Version" fields too (e.g. in
+        // Dependencies entries), which a plain grep would also match.
+        String currentDoguVersion = script.sh(returnStdout: true, script: 'jq -r .Version dogu.json').trim()
         // newDoguVersion, e.g. 2.222.4-2
-        String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersionString)
+        String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersion)
         this.upgradeDogu(newDoguVersion)
     }
 
@@ -543,14 +545,13 @@ end
 """
     }
 
-    static String increaseDoguReleaseVersionByOne(String currentDoguVersionString) {
-        // releaseNumber, e.g. 1
-        int releaseNumber = (currentDoguVersionString.split('-')[1] - "\",").toInteger()
-        // newReleaseNumber, e.g. 2
-        int newReleaseNumber = releaseNumber + 1
-        // currentDoguVersion, e.g. 2.222.4-1
-        String currentDoguVersion = currentDoguVersionString.split("\"")[3]
-        // newDoguVersion, e.g. 2.222.4-2
-        return currentDoguVersion.split("-")[0] + "-" + newReleaseNumber
+    /**
+     * @param currentDoguVersion e.g. 2.222.4-1
+     * @return e.g. 2.222.4-2
+     */
+    static String increaseDoguReleaseVersionByOne(String currentDoguVersion) {
+        List<String> parts = currentDoguVersion.split('-')
+        int newReleaseNumber = parts[-1].toInteger() + 1
+        return parts[0..-2].join('-') + "-" + newReleaseNumber
     }
 }
