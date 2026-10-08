@@ -302,30 +302,39 @@ spec:
     }
 
     /**
-     * Resolves the highest released version tag for a dogu image in the CES registry, via the
-     * standard Docker Registry v2 token-auth flow (Harbor serves the token endpoint at
-     * /service/token). Needed because, unlike cesapp's "install namespace/name" with no version,
-     * a Dogu CR's spec.version is mandatory - there's no "latest" keyword for it.
+     * Resolves the highest released version tag for a dogu image in the CES registry. Needed
+     * because, unlike cesapp's "install namespace/name" with no version, a Dogu CR's
+     * spec.version is mandatory - there's no "latest" keyword for it. Mirrors
+     * ces-build-lib's K3d.getLatestVersion() - registry.cloudogu.com's /v2/.../tags/list
+     * accepts plain Basic Auth directly, no token-exchange step needed.
      */
     private String latestReleasedVersion(String namespace, String name) {
-        String version
+        String tags = "{}"
         script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "cesmarvin-setup", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD']]) {
-            script.withEnv(["REPOSITORY=${namespace}/${name}"]) {
-                version = script.sh(returnStdout: true, script: '''
-                    set -eu
-                    TOKEN=$(curl -s -u "$REGISTRY_USER:$REGISTRY_PASSWORD" "https://registry.cloudogu.com/service/token?service=registry.cloudogu.com&scope=repository:${REPOSITORY}:pull" | jq -r .token)
-                    curl -s -H "Authorization: Bearer $TOKEN" "https://registry.cloudogu.com/v2/${REPOSITORY}/tags/list" \\
-                      | jq -r '.tags[]' \\
-                      | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+$' \\
-                      | sort -V \\
-                      | tail -n1
-                ''').trim()
-            }
+            tags = script.sh(returnStdout: true, script: "curl -s https://registry.cloudogu.com/v2/${namespace}/${name}/tags/list -u ${script.env.REGISTRY_USER}:${script.env.REGISTRY_PASSWORD}").trim()
         }
-        if (!version || version == "null") {
+        def obj = new JsonSlurper().parseText(tags)
+        String version = obj.tags?.max { t -> sortableDoguVersion("${t}") }
+        if (!version) {
             script.error "Could not resolve latest released version for ${namespace}/${name}"
         }
         return version
+    }
+
+    /**
+     * Zero-pads a dogu version (e.g. "2.222.4-1") into a lexicographically sortable string,
+     * for use with Groovy's max{}. Same approach as ces-build-lib's K3d.parseTag().
+     */
+    private static String sortableDoguVersion(String tag) {
+        def m = (tag =~ /^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-(\d+))?$/)
+        if (!m.matches()) {
+            return "00000.00000.00000.00000"
+        }
+        def major = (m[0][1] ?: "0") as int
+        def minor = (m[0][2] ?: "0") as int
+        def patch = (m[0][3] ?: "0") as int
+        def build = (m[0][4] ?: "0") as int
+        return sprintf("%05d.%05d.%05d.%05d", major, minor, patch, build)
     }
 
     void changeGlobalAdminGroup(String newGlobalAdminGroup) {
