@@ -5,8 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v4.0.0] - 2026-10-08
 ### Fixed
 - upgradeDogu() read dogu.json's top-level Version field only, instead of matching every "Version" occurrence in the file
+
+### Changed
+- **BREAKING**: increaseDoguReleaseVersionByOne(String) now takes a plain dogu version (e.g. "2.222.4-1"), not a raw dogu.json "Version" line fragment
 
 ## [v3.6.0] - 2026-10-06
 ### Added
