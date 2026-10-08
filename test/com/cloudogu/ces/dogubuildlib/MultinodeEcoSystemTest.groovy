@@ -196,6 +196,26 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void installDoguWithoutVersionShouldResolveLatestFromRegistry() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/cockpit/tags/list -u user:pass",
+                '{"tags":["2.5.0-1","2.5.0-2","2.4.9-3"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.installDogu("official/cockpit")
+
+        // Assert
+        def written = scriptMock.writeFileParams[0]
+        assertTrue(written.text.contains('version: "2.5.0-2"'))
+    }
+
+    @Test
     void purgeDoguShouldDeleteDoguCR() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
