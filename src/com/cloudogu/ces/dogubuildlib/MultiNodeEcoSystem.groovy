@@ -150,9 +150,9 @@ class MultiNodeEcoSystem extends EcoSystem {
     }
 
     /**
-     * Same contract as EcoSystem.waitForDogu() (cesapp healthy --wait --timeout 1200
-     * --fail-fast): waits up to 20 minutes, fails the build if the dogu never
-     * becomes healthy in that time.
+     * Same contract as EcoSystem.waitForDogu():
+     * Waits up to 20 minutes and fails the build
+     * if the dogu never becomes healthy in that time.
      */
     void waitForDogu(String dogu) {
         int counter = 0
@@ -234,58 +234,56 @@ spec:
     }
 
     /**
-     * Installs a dogu by applying its Dogu CR directly - the k8s-dogu-operator pulls the
-     * already-published image once the CR is applied, no local build needed. doguFullName
-     * matches EcoSystem.installDogu's format: "namespace/name" (latest released version is
-     * looked up in the registry) or "namespace/name version" (explicit version, e.g. for
-     * OldDoguVersionForUpgradeTest).
+     * Installs a dogu by applying its Dogu CR directly.
+     * The dogu-operator pulls the image once the CR is applied.
+     *
+     * @param doguFullName e.g. "official/cockpit".
+     * @param doguVersion explicit version to install, e.g. "2.5.0-1".
+     * If empty (default), the latest version is looked up from the registry.
      */
-    void installDogu(String doguFullName) {
+    void installDogu(String doguFullName, String doguVersion = "") {
         if (!doguFullName.contains("/")) {
             script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
             return
         }
-        def parts = doguFullName.trim().split(" ")
-        String namespace = parts[0].split("/")[0]
-        String name = parts[0].split("/")[1]
-        String version = parts.size() > 1 ? parts[1] : latestReleasedVersion(namespace, name)
+        String namespace = doguFullName.split("/")[0]
+        String name = doguFullName.split("/")[1]
+        String version = doguVersion ?: latestReleasedVersion(namespace, name)
 
-        String doguCrYaml = """
+        script.sh """kubectl apply -f - << 'EOF'
 apiVersion: k8s.cloudogu.com/v2
 kind: Dogu
 metadata:
   name: ${name}
+  namespace: ecosystem
   labels:
     app: ces
 spec:
   name: ${namespace}/${name}
   version: "${version}"
+EOF
 """
-        script.writeFile encoding: 'UTF-8', file: '/tmp/installDogu.yaml', text: doguCrYaml
-        script.sh "kubectl apply --namespace=ecosystem -f /tmp/installDogu.yaml"
     }
 
     /**
-     * Deletes the dogu's CR - the k8s-dogu-operator tears the dogu down via its finalizer.
-     * parameters only exists to match EcoSystem.purgeDogu's signature; cesapp's purge flags
-     * (e.g. --keep-container) have no k8s equivalent and are ignored here.
+     * Deletes the dogu's CR, causing the dogu-operator to tear down the dogu via its finalizer.
      */
     void purgeDogu(String doguName, parameters = "") {
-        script.sh "kubectl delete dogu ${doguName} --namespace=ecosystem --ignore-not-found"
+        script.sh "kubectl delete dogu ${doguName} --namespace=ecosystem --ignore-not-found ${parameters}"
     }
 
     /**
-     * No-op in MultiNode: installDogu() applying the Dogu CR already triggers the
-     * k8s-dogu-operator's full install-and-start reconciliation - there's no separate
-     * "start" phase the way cesapp has one on the Classic VM.
+     * No-op in MultiNode.
+     * Applying the Dogu CR triggers the dogu-operator's full install-and-start reconciliation.
+     * There is no separate "start" phase like in the classic CES.
      */
     void startDogu(String doguName) {
-        script.echo "startDogu is a no-op in MultiNode - installDogu already starts the dogu via the k8s-dogu-operator"
+        script.echo "Doing nothing. startDogu is a no-op in MultiNode. installDogu already starts the dogu via the dogu-operator."
     }
 
     /**
-     * Upgrades the dogu by rebuilding from local source with a new version - same contract as
-     * EcoSystem.upgradeDogu(String), but via build() (make build) instead of vagrant/cesapp.
+     * Upgrades the dogu by rebuilding from local source with a new version.
+     * Same contract as EcoSystem.upgradeDogu(String), but via build() (make build) instead of vagrant/cesapp.
      */
     void upgradeDogu(String newDoguVersion) {
         this.setVersion(newDoguVersion)
@@ -293,9 +291,8 @@ spec:
     }
 
     /**
-     * Overrides EcoSystem.waitUntilAvailable(), which reads the inherited "externalIP" field -
-     * MultiNodeEcoSystem never sets that field, it resolves the cluster's IP lazily via
-     * getExternalIP() instead.
+     * Overrides EcoSystem.waitUntilAvailable(), which reads the inherited "externalIP" field.
+     * MultiNodeEcoSystem never sets that field, it resolves the cluster's IP lazily via getExternalIP() instead.
      */
     void waitUntilAvailable(String doguName, int timeout = 30) {
         String ip = getExternalIP()
@@ -309,11 +306,8 @@ spec:
     }
 
     /**
-     * Resolves the highest released version tag for a dogu image in the CES registry. Needed
-     * because, unlike cesapp's "install namespace/name" with no version, a Dogu CR's
-     * spec.version is mandatory - there's no "latest" keyword for it. Mirrors
-     * ces-build-lib's K3d.getLatestVersion() - registry.cloudogu.com's /v2/.../tags/list
-     * accepts plain Basic Auth directly, no token-exchange step needed.
+     * Resolves the highest released version tag for a dogu image in the CES registry.
+     * Same approach as ces-build-lib K3d.getLatestVersion().
      */
     private String latestReleasedVersion(String namespace, String name) {
         String tags = "{}"
@@ -330,7 +324,7 @@ spec:
 
     /**
      * Zero-pads a dogu version (e.g. "2.222.4-1") into a lexicographically sortable string,
-     * for use with Groovy's max{}. Same approach as ces-build-lib's K3d.parseTag().
+     * for use with Groovy's max{}. Same approach as ces-build-lib K3d.parseTag().
      */
     private static String sortableDoguVersion(String tag) {
         def m = (tag =~ /^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-(\d+))?$/)

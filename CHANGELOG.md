@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- MultiNodeEcoSystem overrides for installDogu/purgeDogu/startDogu/upgradeDogu/waitUntilAvailable, enabling TestDoguUpgrade on MultiNode (previously Classic-only)
+
+### Changed
+- **BREAKING**: installDogu(String doguFullName) is now installDogu(String doguFullName, String doguVersion = "") - pass the version as a separate argument instead of appending it to doguFullName
 
 ## [v4.0.0] - 2026-10-08
 ### Fixed

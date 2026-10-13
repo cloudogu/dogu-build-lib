@@ -134,9 +134,9 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
     }
 
-    void installDogu(String doguFullName) {
+    void installDogu(String doguFullName, String doguVersion = "") {
         if (doguFullName.contains("/")) {
-            vagrant.ssh "sudo cesapp install ${doguFullName}"
+            vagrant.ssh "sudo cesapp install ${doguFullName} ${doguVersion}"
         } else {
             script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
         }
@@ -274,7 +274,7 @@ class EcoSystem {
 
         if (oldDoguVersionForUpgradeTest != '' && !oldDoguVersionForUpgradeTest.contains('v')) {
             script.echo "Installing user defined version of dogu: " + oldDoguVersionForUpgradeTest
-            this.installDogu(namespace + "/" + doguName + " " + oldDoguVersionForUpgradeTest)
+            this.installDogu(namespace + "/" + doguName, oldDoguVersionForUpgradeTest)
         } else {
             script.echo "Installing latest released version of dogu..."
             this.installDogu(namespace + "/" + doguName)

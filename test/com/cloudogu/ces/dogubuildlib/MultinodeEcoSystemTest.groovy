@@ -170,15 +170,15 @@ class MultiNodeEcoSystemTest {
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
 
         // Act
-        eco.installDogu("official/cockpit 2.5.0-1")
+        eco.installDogu("official/cockpit", "2.5.0-1")
 
         // Assert
-        assertEquals(1, scriptMock.writeFileParams.size())
-        def written = scriptMock.writeFileParams[0]
-        assertEquals("/tmp/installDogu.yaml", written.file)
-        assertTrue(written.text.contains("name: official/cockpit"))
-        assertTrue(written.text.contains('version: "2.5.0-1"'))
-        assertTrue(scriptMock.actualShStringArgs.contains("kubectl apply --namespace=ecosystem -f /tmp/installDogu.yaml"))
+        assertEquals(1, scriptMock.actualShStringArgs.size())
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.startsWith("kubectl apply -f - << 'EOF'"))
+        assertTrue(applied.contains("name: official/cockpit"))
+        assertTrue(applied.contains('version: "2.5.0-1"'))
+        assertTrue(applied.contains("namespace: ecosystem"))
     }
 
     @Test
@@ -192,7 +192,7 @@ class MultiNodeEcoSystemTest {
 
         // Assert
         assertTrue(scriptMock.actualEcho.any { it.contains("Could not install cockpit") })
-        assertTrue(scriptMock.writeFileParams.isEmpty())
+        assertTrue(scriptMock.actualShStringArgs.isEmpty())
     }
 
     @Test
@@ -211,8 +211,8 @@ class MultiNodeEcoSystemTest {
         eco.installDogu("official/cockpit")
 
         // Assert
-        def written = scriptMock.writeFileParams[0]
-        assertTrue(written.text.contains('version: "2.5.0-2"'))
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains('version: "2.5.0-2"'))
     }
 
     @Test
@@ -261,7 +261,20 @@ class MultiNodeEcoSystemTest {
         eco.purgeDogu("cockpit")
 
         // Assert
-        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found"))
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found "))
+    }
+
+    @Test
+    void purgeDoguShouldPassThroughParameters() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.purgeDogu("cockpit", "--grace-period=0")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found --grace-period=0"))
     }
 
     @Test
