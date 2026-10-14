@@ -38,7 +38,8 @@ class MultiNodeEcoSystem extends EcoSystem {
             additionalDogus: [],
             additionalComponents: [],
             machineType: "n2-standard-4",
-            nodeCount: "1"
+            nodeCount: "1",
+            namespace: "ecosystem"
     ]
 
     /**
@@ -143,7 +144,7 @@ class MultiNodeEcoSystem extends EcoSystem {
     }
 
     void build(String doguPath) {
-        script.env.NAMESPACE="ecosystem"
+        script.env.NAMESPACE=currentConfig.namespace
         script.env.RUNTIME_ENV="remote"
 
         script.sh "make build"  // target from k8s-dogu.mk
@@ -397,7 +398,7 @@ EOF
         def defaultMNParams = """
 MN-CES Machine Type: "${config.machineType}"
 MN-CES Node Count: "${config.nodeCount}"
-CES Namespace: "ecosystem"
+CES Namespace: "${config.namespace}"
 Ecosystem-Core Chart Namespace: "k8s"
 Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
 Blueprint: ""
