@@ -138,7 +138,7 @@ class EcoSystem {
         if (doguFullName.contains("/")) {
             vagrant.ssh "sudo cesapp install ${doguFullName} ${doguVersion}"
         } else {
-            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+            script.echo "Could not install ${doguFullName} ${doguVersion}. Please use full name, e.g. official/jenkins"
         }
     }
 
