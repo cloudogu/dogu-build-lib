@@ -168,6 +168,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
 
         // Act
         eco.installDogu("official/cockpit", "2.5.0-1")
@@ -206,6 +207,7 @@ class MultiNodeEcoSystemTest {
                 '{"tags":["2.5.0-1","2.5.0-2","2.4.9-3"]}'
         )
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
 
         // Act
         eco.installDogu("official/cockpit")
@@ -220,6 +222,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
         eco.coder_workspace = "test-mn-abc"
         scriptMock.expectedShRetValueForScript.put(
                 'coder ssh test-mn-abc "kubectl get dogus --namespace=ecosystem cockpit -o jsonpath=\'{.status.health}\'"',
@@ -238,6 +241,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
         eco.coder_workspace = "test-mn-abc"
         scriptMock.expectedDefaultShRetValue = "unavailable"
 
@@ -256,6 +260,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
 
         // Act
         eco.purgeDogu("cockpit")
@@ -269,6 +274,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
 
         // Act
         eco.purgeDogu("cockpit", "--grace-period=0")
@@ -311,6 +317,7 @@ class MultiNodeEcoSystemTest {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
         MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
         eco.coder_workspace = "test-mn-abc"
 
         scriptMock.expectedShRetValueForScript.put(

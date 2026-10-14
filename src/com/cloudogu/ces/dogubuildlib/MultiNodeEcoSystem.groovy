@@ -90,7 +90,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'\"")
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=${currentConfig.namespace} -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'\"")
                     if (setupStatus == "True True") {
                         break
                     }
@@ -138,7 +138,7 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     public String getExternalIP() {
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
-            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath='{.status.loadBalancer.ingress[0].ip}'\"")
+            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=${currentConfig.namespace} ces-loadbalancer -o jsonpath='{.status.loadBalancer.ingress[0].ip}'\"")
             return "$ip"
         }
     }
@@ -161,7 +161,7 @@ class MultiNodeEcoSystem extends EcoSystem {
         while (counter < maxAttempts) {
             def setupStatus = "init"
             try {
-                setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=ecosystem $dogu -o jsonpath='{.status.health}'\"")
+                setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=${currentConfig.namespace} $dogu -o jsonpath='{.status.health}'\"")
                 if (setupStatus == "available") {
                     return
                 }
@@ -185,17 +185,17 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'""")
+            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=${currentConfig.namespace} -o jsonpath='{.items[0].metadata.name}'""")
 
             def gosspath = '/tmp/gossbin'
 
             script.sh "rm -rf ./tmp_goss && mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
-            script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
-            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
+            script.sh "kubectl -n ${currentConfig.namespace} cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
+            script.sh "kubectl -n ${currentConfig.namespace} exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
-            script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
+            script.sh "kubectl -n ${currentConfig.namespace} cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
-            def cmd = "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
+            def cmd = "kubectl -n ${currentConfig.namespace} exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
             def status = script.sh(
                     returnStatus: true,
                     script: """
@@ -256,7 +256,7 @@ apiVersion: k8s.cloudogu.com/v2
 kind: Dogu
 metadata:
   name: ${name}
-  namespace: ecosystem
+  namespace: ${currentConfig.namespace}
   labels:
     app: ces
 spec:
@@ -270,7 +270,7 @@ EOF
      * Deletes the dogu's CR, causing the dogu-operator to tear down the dogu via its finalizer.
      */
     void purgeDogu(String doguName, parameters = "") {
-        script.sh "kubectl delete dogu ${doguName} --namespace=ecosystem --ignore-not-found ${parameters}"
+        script.sh "kubectl delete dogu ${doguName} --namespace=${currentConfig.namespace} --ignore-not-found ${parameters}"
     }
 
     /**
@@ -352,9 +352,9 @@ EOF
         script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
 
         script.sh """
-          kubectl get configmap global-config -n ecosystem -o yaml \
+          kubectl get configmap global-config -n ${currentConfig.namespace} -o yaml \
           | sed "s/^\\([[:space:]]*admin_group:\\).*/\\1 $newGlobalAdminGroup/" \
-          | kubectl apply -n ecosystem -f -
+          | kubectl apply -n ${currentConfig.namespace} -f -
         """
     }
 
@@ -364,8 +364,8 @@ EOF
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
-        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
-        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ${currentConfig.namespace} -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ${currentConfig.namespace} -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
         script.withEnv([
                 "NEW_URL=${newUrl}",
                 "ADMIN_UN=${adminUN}",
