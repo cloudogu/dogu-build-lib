@@ -307,7 +307,7 @@ EOF
             }
             script.sleep 1
         }
-        script.echo "Dogu ${doguName} did not become available at https://${ip}/${doguName} within ${timeout} seconds"
+        script.echo "Dogu ${doguName} did not become available at https://${ip}/${doguName} within ${timeout} attempts"
     }
 
     /**

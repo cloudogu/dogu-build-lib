@@ -124,7 +124,7 @@ class EcoSystem {
             }
             script.sleep 1
         }
-        script.echo "Dogu ${doguName} did not become available at https://${externalIP}/${doguName} within ${timeout} seconds"
+        script.echo "Dogu ${doguName} did not become available at https://${externalIP}/${doguName} within ${timeout} attempts"
     }
 
     void build(String doguPath) {
