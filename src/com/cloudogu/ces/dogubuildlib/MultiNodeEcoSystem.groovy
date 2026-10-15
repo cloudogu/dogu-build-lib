@@ -298,8 +298,11 @@ EOF
     void waitUntilAvailable(String doguName, int timeout = 30) {
         String ip = getExternalIP()
         for (int i = 0; i < timeout; i++) {
-            def response = script.sh(script: "curl --insecure --silent --head https://${ip}/${doguName} | head -n 1", returnStdout: true)
-            if (response.contains("302")) {
+            String response = script.sh(
+                    script: "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName}",
+                    returnStdout: true
+            ).trim()
+            if (response == "200" || response == "302") {
                 break
             }
             script.sleep 1

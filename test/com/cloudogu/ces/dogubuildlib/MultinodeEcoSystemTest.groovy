@@ -325,14 +325,14 @@ class MultiNodeEcoSystemTest {
                 "1.2.3.4"
         )
         scriptMock.expectedShRetValueForScript.put(
-                "curl --insecure --silent --head https://1.2.3.4/cockpit | head -n 1",
-                "HTTP/1.1 302 Found"
+                "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit",
+                "302"
         )
 
         // Act
         eco.waitUntilAvailable("cockpit")
 
         // Assert
-        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --head https://1.2.3.4/cockpit | head -n 1"))
+        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit"))
     }
 }
