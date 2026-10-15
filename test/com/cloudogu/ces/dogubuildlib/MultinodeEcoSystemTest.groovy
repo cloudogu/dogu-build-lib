@@ -218,6 +218,71 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void installDoguFromNonOfficialNamespaceShouldSplitNameAndNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("swaggerui/plantuml", "2025.4-1")
+
+        // Assert
+        assertEquals(1, scriptMock.actualShStringArgs.size())
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: plantuml\n"))
+        assertTrue(applied.contains("  name: swaggerui/plantuml\n"))
+        assertTrue(applied.contains('version: "2025.4-1"'))
+        assertTrue(applied.contains("namespace: ecosystem"))
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldQueryRegistryOfNonOfficialNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/swaggerui/plantuml/tags/list -u user:pass",
+                '{"tags":["2024.9-1","2025.4-1","2025.2-3"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("swaggerui/plantuml")
+
+        // Assert
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: swaggerui/plantuml\n"))
+        assertTrue(applied.contains('version: "2025.4-1"'))
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldPickLatestRedmineNumerically() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        // "5.1.10-1" sorts before "5.1.9-3" as plain strings, "latest" matches no version pattern
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/redmine/tags/list -u user:pass",
+                '{"tags":["5.1.9-3","latest","5.1.10-1","5.0.12-4"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("official/redmine")
+
+        // Assert
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: redmine\n"))
+        assertTrue(applied.contains("  name: official/redmine\n"))
+        assertTrue(applied.contains('version: "5.1.10-1"'))
+    }
+
+    @Test
     void waitForDoguShouldReturnOnceAvailable() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
