@@ -120,10 +120,11 @@ class EcoSystem {
         for (int i = 0; i < timeout; i++) {
             def response = script.sh(script: "curl --insecure --silent --head https://${externalIP}/${doguName} | head -n 1", returnStdout: true)
             if (response.contains("302")) {
-                break
+                return
             }
             script.sleep 1
         }
+        script.echo "Dogu ${doguName} did not become available at https://${externalIP}/${doguName} within ${timeout} seconds"
     }
 
     void build(String doguPath) {

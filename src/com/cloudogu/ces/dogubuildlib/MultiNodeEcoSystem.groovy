@@ -303,10 +303,11 @@ EOF
                     returnStdout: true
             ).trim()
             if (response == "200" || response == "302") {
-                break
+                return
             }
             script.sleep 1
         }
+        script.echo "Dogu ${doguName} did not become available at https://${ip}/${doguName} within ${timeout} seconds"
     }
 
     /**
