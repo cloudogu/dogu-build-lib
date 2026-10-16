@@ -166,7 +166,13 @@ class MultiNodeEcoSystem extends EcoSystem {
                     return
                 }
             } catch (Exception err) {
-                // this is okay
+                // A failed sh call (dogu not found yet, coder ssh hiccup) is okay, keep polling.
+                // A Jenkins build abort must not be swallowed, though - re-throw it.
+                // Can't catch hudson.AbortException/FlowInterruptedException by type: this library
+                // doesn't compile against Jenkins core, only against it at runtime.
+                if (err.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException') {
+                    throw err
+                }
             }
             script.sleep(time: 10, unit: 'SECONDS')
             counter++
@@ -289,6 +295,10 @@ EOF
     void upgradeDogu(String newDoguVersion) {
         this.setVersion(newDoguVersion)
         this.build("/dogu")
+        // build() only applies the updated Dogu CR (kubectl apply) and returns immediately;
+        // give the dogu-operator a moment to pick up the version change before callers poll health,
+        // otherwise waitForDogu can see the still-healthy pre-upgrade status and return early.
+        script.sleep(time: 20, unit: 'SECONDS')
     }
 
     /**
@@ -298,12 +308,17 @@ EOF
     void waitUntilAvailable(String doguName, int timeout = 30) {
         String ip = getExternalIP()
         for (int i = 0; i < timeout; i++) {
+            // "|| echo 000" keeps a connection failure (e.g. ingress not up yet) from failing the sh step
+            // outright, which would otherwise abort the whole wait instead of retrying.
             String response = script.sh(
-                    script: "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName}",
+                    script: "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName} || echo 000",
                     returnStdout: true
             ).trim()
             if (response == "200" || response == "302") {
                 return
+            }
+            if (response == "000") {
+                script.echo "Dogu ${doguName} not reachable yet at https://${ip}/${doguName} (connection failed), retrying..."
             }
             script.sleep 1
         }
@@ -320,7 +335,9 @@ EOF
             tags = script.sh(returnStdout: true, script: "curl -s https://registry.cloudogu.com/v2/${namespace}/${name}/tags/list -u ${script.env.REGISTRY_USER}:${script.env.REGISTRY_PASSWORD}").trim()
         }
         def obj = new JsonSlurper().parseText(tags)
-        String version = obj.tags?.max { t -> sortableDoguVersion("${t}") }
+        // Drop tags that aren't a dogu version (e.g. "latest") before picking the max,
+        // otherwise a registry with no real version tags would resolve to one of them.
+        String version = obj.tags?.findAll { it ==~ /^\d+(\.\d+){0,2}(-\d+)?$/ }?.max { t -> sortableDoguVersion("${t}") }
         if (!version) {
             script.error "Could not resolve latest released version for ${namespace}/${name}"
         }

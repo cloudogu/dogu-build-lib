@@ -283,6 +283,26 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void installDoguWithoutVersionShouldFailWhenRegistryHasNoRealVersionTags() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/redmine/tags/list -u user:pass",
+                '{"tags":["latest"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act + Assert
+        RuntimeException ex = assertThrows(RuntimeException) {
+            eco.installDogu("official/redmine")
+        }
+        assertTrue(ex.message.contains("Could not resolve latest released version"))
+    }
+
+    @Test
     void waitForDoguShouldReturnOnceAvailable() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
@@ -390,7 +410,7 @@ class MultiNodeEcoSystemTest {
                 "1.2.3.4"
         )
         scriptMock.expectedShRetValueForScript.put(
-                "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit",
+                "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || echo 000",
                 "302"
         )
 
@@ -398,6 +418,6 @@ class MultiNodeEcoSystemTest {
         eco.waitUntilAvailable("cockpit")
 
         // Assert
-        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit"))
+        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || echo 000"))
     }
 }
