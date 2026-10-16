@@ -174,6 +174,13 @@ class ScriptMock {
         milliSecondsSleeped += seconds
     }
 
+    void sleep(Map<String, Object> args) {
+        if (args.get('unit') != 'SECONDS') {
+            throw new InputMismatchException("ScriptMock.sleep(Map) only supports unit: 'SECONDS', got: ${args.get('unit')}")
+        }
+        milliSecondsSleeped += (args.get('time') as Number)
+    }
+
     Object readJSON(Map<String, Object> args) {
         String text = args.get('text')
         if (text != null) {
@@ -191,7 +198,7 @@ class ScriptMock {
 
     void writeJSON(Map<String, Object> args) {
         String path = args.get("file")
-        String json = args.get('json')
+        def json = args.get('json')
         if (json != null && path != null) {
             jsonFiles.put(path, json)
             return
