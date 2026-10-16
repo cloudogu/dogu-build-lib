@@ -322,6 +322,24 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void waitForDoguShouldRethrowOnBuildAbort() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShCommandToThrow.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=ecosystem cockpit -o jsonpath=\'{.status.health}\'"',
+                new InterruptedException("build aborted")
+        )
+
+        // Act + Assert
+        assertThrows(InterruptedException) {
+            eco.waitForDogu("cockpit")
+        }
+    }
+
+    @Test
     void waitForDoguShouldFailAfterTwentyMinutes() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
@@ -395,6 +413,7 @@ class MultiNodeEcoSystemTest {
         // Assert
         assertEquals("2.5.0-2", scriptMock.jsonFiles.get("dogu.json").Version)
         assertTrue(scriptMock.actualShStringArgs.contains("make build"))
+        assertEquals(20, scriptMock.milliSecondsSleeped, 0)
     }
 
     @Test
@@ -410,7 +429,7 @@ class MultiNodeEcoSystemTest {
                 "1.2.3.4"
         )
         scriptMock.expectedShRetValueForScript.put(
-                "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || echo 000",
+                "curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || true",
                 "302"
         )
 
@@ -418,6 +437,6 @@ class MultiNodeEcoSystemTest {
         eco.waitUntilAvailable("cockpit")
 
         // Assert
-        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || echo 000"))
+        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || true"))
     }
 }

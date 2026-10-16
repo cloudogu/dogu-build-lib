@@ -165,14 +165,13 @@ class MultiNodeEcoSystem extends EcoSystem {
                 if (setupStatus == "available") {
                     return
                 }
+            } catch (InterruptedException interrupted) {
+                // A Jenkins build abort throws FlowInterruptedException, which extends
+                // InterruptedException - must not be swallowed by the catch-all below, or the loop
+                // keeps polling for up to 20 minutes after the user hit "Abort".
+                throw interrupted
             } catch (Exception err) {
                 // A failed sh call (dogu not found yet, coder ssh hiccup) is okay, keep polling.
-                // A Jenkins build abort must not be swallowed, though - re-throw it.
-                // Can't catch hudson.AbortException/FlowInterruptedException by type: this library
-                // doesn't compile against Jenkins core, only against it at runtime.
-                if (err.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException') {
-                    throw err
-                }
             }
             script.sleep(time: 10, unit: 'SECONDS')
             counter++
@@ -308,10 +307,12 @@ EOF
     void waitUntilAvailable(String doguName, int timeout = 30) {
         String ip = getExternalIP()
         for (int i = 0; i < timeout; i++) {
-            // "|| echo 000" keeps a connection failure (e.g. ingress not up yet) from failing the sh step
-            // outright, which would otherwise abort the whole wait instead of retrying.
+            // curl already writes "000" to --write-out on a connection failure before exiting non-zero;
+            // "|| true" just keeps that non-zero exit from failing the sh step outright, which would
+            // otherwise abort the whole wait instead of retrying. --connect-timeout/--max-time cap how
+            // long one stuck attempt can hang, so a silently-dropping LB doesn't eat the whole timeout loop.
             String response = script.sh(
-                    script: "curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName} || echo 000",
+                    script: "curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName} || true",
                     returnStdout: true
             ).trim()
             if (response == "200" || response == "302") {
