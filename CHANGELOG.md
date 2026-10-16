@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - MultiNodeEcoSystem.waitForDogu silently timed out after 5 minutes instead of failing the build; it now fails after 20 minutes, matching EcoSystem's cesapp --timeout 1200
+- MultiNodeEcoSystem.restartDogu ignored the configured namespace, landing the DoguRestart CR in the kubeconfig's default namespace instead
 
 ## [v4.0.0] - 2026-10-08
 ### Fixed

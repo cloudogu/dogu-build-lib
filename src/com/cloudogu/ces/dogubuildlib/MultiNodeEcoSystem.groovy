@@ -224,6 +224,7 @@ apiVersion: k8s.cloudogu.com/v2
 kind: DoguRestart
 metadata:
   generateName: $doguName-restart-
+  namespace: ${currentConfig.namespace}
 spec:
   doguName: $doguName
 """

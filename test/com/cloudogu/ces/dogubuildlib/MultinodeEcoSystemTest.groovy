@@ -387,6 +387,27 @@ class MultiNodeEcoSystemTest {
     }
 
     @Test
+    void restartDoguShouldUseConfiguredNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "my-ces"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=my-ces cockpit -o jsonpath=\'{.status.health}\'"',
+                "available"
+        )
+
+        // Act
+        eco.restartDogu("cockpit")
+
+        // Assert
+        String applied = scriptMock.writeFileParams[0].text
+        assertTrue(applied.contains("namespace: my-ces"))
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl create -f /tmp/restartDogu.yaml"))
+    }
+
+    @Test
     void startDoguShouldBeNoOp() {
         // Arrange
         ScriptMock scriptMock = new ScriptMock()
