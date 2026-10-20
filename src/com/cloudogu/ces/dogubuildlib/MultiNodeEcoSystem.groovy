@@ -38,7 +38,8 @@ class MultiNodeEcoSystem extends EcoSystem {
             additionalDogus: [],
             additionalComponents: [],
             machineType: "n2-standard-4",
-            nodeCount: "1"
+            nodeCount: "1",
+            namespace: "ecosystem"
     ]
 
     /**
@@ -89,7 +90,7 @@ class MultiNodeEcoSystem extends EcoSystem {
             while(counter < 360) {
                 def setupStatus = "init"
                 try {
-                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=ecosystem -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'\"")
+                    setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get blueprint $ecosystem_blueprint --namespace=${currentConfig.namespace} -o jsonpath='{.status.conditions[?(@.type==\\\"EcosystemHealthy\\\")].status}{\\\" \\\"}{.status.conditions[?(@.type==\\\"Completed\\\")].status}'\"")
                     if (setupStatus == "True True") {
                         break
                     }
@@ -137,33 +138,45 @@ class MultiNodeEcoSystem extends EcoSystem {
 
     public String getExternalIP() {
         script.withCredentials([script.string(credentialsId: "${this.coderCredentials}", variable: 'token')]) {
-            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath='{.status.loadBalancer.ingress[0].ip}'\"")
+            def ip = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get services --namespace=${currentConfig.namespace} ces-loadbalancer -o jsonpath='{.status.loadBalancer.ingress[0].ip}'\"")
             return "$ip"
         }
     }
 
     void build(String doguPath) {
-        script.env.NAMESPACE="ecosystem"
+        script.env.NAMESPACE=currentConfig.namespace
         script.env.RUNTIME_ENV="remote"
 
         script.sh "make build"  // target from k8s-dogu.mk
     }
 
+    /**
+     * Same contract as EcoSystem.waitForDogu():
+     * Waits up to 20 minutes and fails the build
+     * if the dogu never becomes healthy in that time.
+     */
     void waitForDogu(String dogu) {
-        def counter = 0
-        while(counter < 30) {
+        int counter = 0
+        int maxAttempts = 120 // 120 * 10s = 1200s = 20 minutes
+        while (counter < maxAttempts) {
             def setupStatus = "init"
             try {
-                setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=ecosystem $dogu -o jsonpath='{.status.health}'\"")
+                setupStatus = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get dogus --namespace=${currentConfig.namespace} $dogu -o jsonpath='{.status.health}'\"")
                 if (setupStatus == "available") {
-                    break
+                    return
                 }
+            } catch (InterruptedException interrupted) {
+                // A Jenkins build abort throws FlowInterruptedException, which extends
+                // InterruptedException - must not be swallowed by the catch-all below, or the loop
+                // keeps polling for up to 20 minutes after the user hit "Abort".
+                throw interrupted
             } catch (Exception err) {
-                // this is okay
+                // A failed sh call (dogu not found yet, coder ssh hiccup) is okay, keep polling.
             }
             script.sleep(time: 10, unit: 'SECONDS')
             counter++
         }
+        script.error "Dogu ${dogu} did not become healthy within 20 minutes"
     }
 
     void verify(String dogu) {
@@ -177,17 +190,17 @@ class MultiNodeEcoSystem extends EcoSystem {
             script.sh "rm -f $veriFile"
         }
         try {
-            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=ecosystem -o jsonpath='{.items[0].metadata.name}'""")
+            def podname = script.sh(returnStdout: true, script: """kubectl get pod -l dogu.name=$dogu --namespace=${currentConfig.namespace} -o jsonpath='{.items[0].metadata.name}'""")
 
             def gosspath = '/tmp/gossbin'
 
             script.sh "rm -rf ./tmp_goss && mkdir ./tmp_goss && wget -qO ./tmp_goss/gossbin https://github.com/goss-org/goss/releases/download/v0.4.6/goss-linux-amd64"
-            script.sh "kubectl -n ecosystem cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
-            script.sh "kubectl -n ecosystem exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
+            script.sh "kubectl -n ${currentConfig.namespace} cp ./tmp_goss/gossbin $podname:$gosspath -c $dogu"
+            script.sh "kubectl -n ${currentConfig.namespace} exec -i $podname -c $dogu -- sh -c 'chmod +x $gosspath'"
 
-            script.sh "kubectl -n ecosystem cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
+            script.sh "kubectl -n ${currentConfig.namespace} cp ./spec/goss/goss.yaml $podname:/tmp/goss.yaml -c $dogu"
 
-            def cmd = "kubectl -n ecosystem exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
+            def cmd = "kubectl -n ${currentConfig.namespace} exec -i $podname -c $dogu -- $gosspath -g /tmp/goss.yaml validate --format junit"
             def status = script.sh(
                     returnStatus: true,
                     script: """
@@ -211,6 +224,7 @@ apiVersion: k8s.cloudogu.com/v2
 kind: DoguRestart
 metadata:
   generateName: $doguName-restart-
+  namespace: ${currentConfig.namespace}
 spec:
   doguName: $doguName
 """
@@ -226,6 +240,128 @@ spec:
         }
     }
 
+    /**
+     * Installs a dogu by applying its Dogu CR directly.
+     * The dogu-operator pulls the image once the CR is applied.
+     *
+     * @param doguFullName e.g. "official/cockpit".
+     * @param doguVersion explicit version to install, e.g. "2.5.0-1".
+     * If empty (default), the latest version is looked up from the registry.
+     */
+    void installDogu(String doguFullName, String doguVersion = "") {
+        if (!doguFullName.contains("/")) {
+            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+            return
+        }
+        String namespace = doguFullName.split("/")[0]
+        String name = doguFullName.split("/")[1]
+        String version = doguVersion ?: latestReleasedVersion(namespace, name)
+
+        script.sh """kubectl apply -f - << 'EOF'
+apiVersion: k8s.cloudogu.com/v2
+kind: Dogu
+metadata:
+  name: ${name}
+  namespace: ${currentConfig.namespace}
+  labels:
+    app: ces
+spec:
+  name: ${namespace}/${name}
+  version: "${version}"
+EOF
+"""
+    }
+
+    /**
+     * Deletes the dogu's CR, causing the dogu-operator to tear down the dogu via its finalizer.
+     */
+    void purgeDogu(String doguName, parameters = "") {
+        script.sh "kubectl delete dogu ${doguName} --namespace=${currentConfig.namespace} --ignore-not-found ${parameters}"
+    }
+
+    /**
+     * No-op in MultiNode.
+     * Applying the Dogu CR triggers the dogu-operator's full install-and-start reconciliation.
+     * There is no separate "start" phase like in the classic CES.
+     */
+    void startDogu(String doguName) {
+        script.echo "Doing nothing. startDogu is a no-op in MultiNode. installDogu already starts the dogu via the dogu-operator."
+    }
+
+    /**
+     * Upgrades the dogu by rebuilding from local source with a new version.
+     * Same contract as EcoSystem.upgradeDogu(String), but via build() (make build) instead of vagrant/cesapp.
+     */
+    void upgradeDogu(String newDoguVersion) {
+        this.setVersion(newDoguVersion)
+        this.build("/dogu")
+        // build() only applies the updated Dogu CR (kubectl apply) and returns immediately;
+        // give the dogu-operator a moment to pick up the version change before callers poll health,
+        // otherwise waitForDogu can see the still-healthy pre-upgrade status and return early.
+        script.sleep(time: 20, unit: 'SECONDS')
+    }
+
+    /**
+     * Overrides EcoSystem.waitUntilAvailable(), which reads the inherited "externalIP" field.
+     * MultiNodeEcoSystem never sets that field, it resolves the cluster's IP lazily via getExternalIP() instead.
+     */
+    void waitUntilAvailable(String doguName, int timeout = 30) {
+        String ip = getExternalIP()
+        for (int i = 0; i < timeout; i++) {
+            // curl already writes "000" to --write-out on a connection failure before exiting non-zero;
+            // "|| true" just keeps that non-zero exit from failing the sh step outright, which would
+            // otherwise abort the whole wait instead of retrying. --connect-timeout/--max-time cap how
+            // long one stuck attempt can hang, so a silently-dropping LB doesn't eat the whole timeout loop.
+            String response = script.sh(
+                    script: "curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://${ip}/${doguName} || true",
+                    returnStdout: true
+            ).trim()
+            if (response == "200" || response == "302") {
+                return
+            }
+            if (response == "000") {
+                script.echo "Dogu ${doguName} not reachable yet at https://${ip}/${doguName} (connection failed), retrying..."
+            }
+            script.sleep 1
+        }
+        script.echo "Dogu ${doguName} did not become available at https://${ip}/${doguName} within ${timeout} attempts"
+    }
+
+    /**
+     * Resolves the highest released version tag for a dogu image in the CES registry.
+     * Same approach as ces-build-lib K3d.getLatestVersion().
+     */
+    private String latestReleasedVersion(String namespace, String name) {
+        String tags = "{}"
+        script.withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "cesmarvin-setup", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD']]) {
+            tags = script.sh(returnStdout: true, script: "curl -s https://registry.cloudogu.com/v2/${namespace}/${name}/tags/list -u ${script.env.REGISTRY_USER}:${script.env.REGISTRY_PASSWORD}").trim()
+        }
+        def obj = new JsonSlurper().parseText(tags)
+        // Drop tags that aren't a dogu version (e.g. "latest") before picking the max,
+        // otherwise a registry with no real version tags would resolve to one of them.
+        String version = obj.tags?.findAll { it ==~ /^\d+(\.\d+){0,2}(-\d+)?$/ }?.max { t -> sortableDoguVersion("${t}") }
+        if (!version) {
+            script.error "Could not resolve latest released version for ${namespace}/${name}"
+        }
+        return version
+    }
+
+    /**
+     * Zero-pads a dogu version (e.g. "2.222.4-1") into a lexicographically sortable string,
+     * for use with Groovy's max{}. Same approach as ces-build-lib K3d.parseTag().
+     */
+    private static String sortableDoguVersion(String tag) {
+        def m = (tag =~ /^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-(\d+))?$/)
+        if (!m.matches()) {
+            return "00000.00000.00000.00000"
+        }
+        def major = (m[0][1] ?: "0") as int
+        def minor = (m[0][2] ?: "0") as int
+        def patch = (m[0][3] ?: "0") as int
+        def build = (m[0][4] ?: "0") as int
+        return sprintf("%05d.%05d.%05d.%05d", major, minor, patch, build)
+    }
+
     void changeGlobalAdminGroup(String newGlobalAdminGroup) {
         script.echo "Change global admin group to ($newGlobalAdminGroup)."
         def adminUsername = currentConfig.adminUsername
@@ -239,9 +375,9 @@ spec:
         script.echo "Changing /config/_global/admin_group to $newGlobalAdminGroup"
 
         script.sh """
-          kubectl get configmap global-config -n ecosystem -o yaml \
+          kubectl get configmap global-config -n ${currentConfig.namespace} -o yaml \
           | sed "s/^\\([[:space:]]*admin_group:\\).*/\\1 $newGlobalAdminGroup/" \
-          | kubectl apply -n ecosystem -f -
+          | kubectl apply -n ${currentConfig.namespace} -f -
         """
     }
 
@@ -251,8 +387,8 @@ spec:
         def ip = getExternalIP()
         def newUrl = "https://$ip"
 
-        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
-        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ecosystem -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminPW = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get secret ldap-config -n ${currentConfig.namespace} -o jsonpath='{.data.config\\.yaml}' | base64 --decode | sed 's/^admin_password:[[:space:]]*//'\"").trim().replaceAll(/^'+|'+$/, "")
+        def adminUN = script.sh(returnStdout: true, script: "coder ssh $coder_workspace \"kubectl get configmap ldap-config -n ${currentConfig.namespace} -o jsonpath='{.data.config\\.yaml}' | grep '^admin_username:' | cut -d':' -f2 | xargs\"").trim().replaceAll(/^'+|'+$/, "")
         script.withEnv([
                 "NEW_URL=${newUrl}",
                 "ADMIN_UN=${adminUN}",
@@ -285,7 +421,7 @@ spec:
         def defaultMNParams = """
 MN-CES Machine Type: "${config.machineType}"
 MN-CES Node Count: "${config.nodeCount}"
-CES Namespace: "ecosystem"
+CES Namespace: "${config.namespace}"
 Ecosystem-Core Chart Namespace: "k8s"
 Ecosystem Core Chart Version: "${config.versionEcosystemCore ? config.versionEcosystemCore : getDefaultValueByName("Ecosystem Core Chart Version")}"
 Blueprint: ""

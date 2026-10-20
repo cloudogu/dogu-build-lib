@@ -51,7 +51,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - destroy() | remove the generated ces instance
 - collectLogs() | add logs as artifact to jenkins build
 - purgeDogu(String doguName, String parameters = "") | executes cesapp purge command
-- installDogu(String doguFullName) | executes cesapp install command
+- installDogu(String doguFullName, String doguVersion = "") | executes cesapp install command, optionally for a specific version
 - upgradeDogu(newDoguVersion = "") | tests the dogu upgrade
 - runYarnIntegrationTests() | runs yarn integration tests for the dogu
 - runMavenIntegrationTests() | runs maven integration tests for the dogu
@@ -129,7 +129,12 @@ Some parameters can be passed to the System.
 - getExternalIP() | get the k8s ingress IP of the cluster
 - build(String doguPath) | build the dogu and deploy it into the cluster (`make build`)
 - waitForDogu(String dogu) | wait until the dogu state is healthy
+- waitUntilAvailable(String doguName, int timeout = 30) | wait until a dogu is ready for interaction
 - verify(String dogu) | execute the goss tests
+- installDogu(String doguFullName, String doguVersion = "") | applies a Dogu CR directly, optionally for a specific version (looks up the latest released version in the registry otherwise)
+- purgeDogu(String doguName, parameters = "") | deletes the dogu's CR
+- startDogu(String doguName) | no-op - installDogu already starts the dogu via the k8s-dogu-operator
+- upgradeDogu(newDoguVersion = "") | rebuilds and redeploys the dogu with a new version
 - restartDogu(String doguName, boolean waitUntilAvailable=true) | restarts a dogu and by default waits until it is available again
 - changeGlobalAdminGroup(String newAdminGroup) | changes the global admin group to the given value
 - runCypressIntegrationTests(config = [:]) | runs cypress integration tests against the cluster

@@ -120,10 +120,11 @@ class EcoSystem {
         for (int i = 0; i < timeout; i++) {
             def response = script.sh(script: "curl --insecure --silent --head https://${externalIP}/${doguName} | head -n 1", returnStdout: true)
             if (response.contains("302")) {
-                break
+                return
             }
             script.sleep 1
         }
+        script.echo "Dogu ${doguName} did not become available at https://${externalIP}/${doguName} within ${timeout} attempts"
     }
 
     void build(String doguPath) {
@@ -134,11 +135,11 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
     }
 
-    void installDogu(String doguFullName) {
+    void installDogu(String doguFullName, String doguVersion = "") {
         if (doguFullName.contains("/")) {
-            vagrant.ssh "sudo cesapp install ${doguFullName}"
+            vagrant.ssh "sudo cesapp install ${doguFullName} ${doguVersion}"
         } else {
-            script.echo "Could not install ${doguFullName}. Please use full name, e.g. official/jenkins"
+            script.echo "Could not install ${doguFullName} ${doguVersion}. Please use full name, e.g. official/jenkins"
         }
     }
 
@@ -274,7 +275,7 @@ class EcoSystem {
 
         if (oldDoguVersionForUpgradeTest != '' && !oldDoguVersionForUpgradeTest.contains('v')) {
             script.echo "Installing user defined version of dogu: " + oldDoguVersionForUpgradeTest
-            this.installDogu(namespace + "/" + doguName + " " + oldDoguVersionForUpgradeTest)
+            this.installDogu(namespace + "/" + doguName, oldDoguVersionForUpgradeTest)
         } else {
             script.echo "Installing latest released version of dogu..."
             this.installDogu(namespace + "/" + doguName)

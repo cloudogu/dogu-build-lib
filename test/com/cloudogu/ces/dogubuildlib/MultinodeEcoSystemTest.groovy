@@ -1,5 +1,6 @@
 package com.cloudogu.ces.dogubuildlib
 
+import groovy.json.JsonSlurper
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -160,5 +161,303 @@ class MultiNodeEcoSystemTest {
 
         // Optional: check for deleting file
         verify(script).sh("rm -f integrationTests/mn_params_modified.yaml")
+    }
+
+    @Test
+    void installDoguWithExplicitVersionShouldApplyDoguCR() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("official/cockpit", "2.5.0-1")
+
+        // Assert
+        assertEquals(1, scriptMock.actualShStringArgs.size())
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.startsWith("kubectl apply -f - << 'EOF'"))
+        assertTrue(applied.contains("name: official/cockpit"))
+        assertTrue(applied.contains('version: "2.5.0-1"'))
+        assertTrue(applied.contains("namespace: ecosystem"))
+    }
+
+    @Test
+    void installDoguWithoutSlashShouldEchoAndNotApply() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.installDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualEcho.any { it.contains("Could not install cockpit") })
+        assertTrue(scriptMock.actualShStringArgs.isEmpty())
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldResolveLatestFromRegistry() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/cockpit/tags/list -u user:pass",
+                '{"tags":["2.5.0-1","2.5.0-2","2.4.9-3"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("official/cockpit")
+
+        // Assert
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains('version: "2.5.0-2"'))
+    }
+
+    @Test
+    void installDoguFromNonOfficialNamespaceShouldSplitNameAndNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("swaggerui/plantuml", "2025.4-1")
+
+        // Assert
+        assertEquals(1, scriptMock.actualShStringArgs.size())
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: plantuml\n"))
+        assertTrue(applied.contains("  name: swaggerui/plantuml\n"))
+        assertTrue(applied.contains('version: "2025.4-1"'))
+        assertTrue(applied.contains("namespace: ecosystem"))
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldQueryRegistryOfNonOfficialNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/swaggerui/plantuml/tags/list -u user:pass",
+                '{"tags":["2024.9-1","2025.4-1","2025.2-3"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("swaggerui/plantuml")
+
+        // Assert
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: swaggerui/plantuml\n"))
+        assertTrue(applied.contains('version: "2025.4-1"'))
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldPickLatestRedmineNumerically() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        // "5.1.10-1" sorts before "5.1.9-3" as plain strings, "latest" matches no version pattern
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/redmine/tags/list -u user:pass",
+                '{"tags":["5.1.9-3","latest","5.1.10-1","5.0.12-4"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.installDogu("official/redmine")
+
+        // Assert
+        String applied = scriptMock.actualShStringArgs[0]
+        assertTrue(applied.contains("  name: redmine\n"))
+        assertTrue(applied.contains("  name: official/redmine\n"))
+        assertTrue(applied.contains('version: "5.1.10-1"'))
+    }
+
+    @Test
+    void installDoguWithoutVersionShouldFailWhenRegistryHasNoRealVersionTags() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.env.REGISTRY_USER = "user"
+        scriptMock.env.REGISTRY_PASSWORD = "pass"
+        scriptMock.expectedShRetValueForScript.put(
+                "curl -s https://registry.cloudogu.com/v2/official/redmine/tags/list -u user:pass",
+                '{"tags":["latest"]}'
+        )
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act + Assert
+        RuntimeException ex = assertThrows(RuntimeException) {
+            eco.installDogu("official/redmine")
+        }
+        assertTrue(ex.message.contains("Could not resolve latest released version"))
+    }
+
+    @Test
+    void waitForDoguShouldReturnOnceAvailable() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=ecosystem cockpit -o jsonpath=\'{.status.health}\'"',
+                "available"
+        )
+
+        // Act
+        eco.waitForDogu("cockpit")
+
+        // Assert
+        assertEquals(1, scriptMock.actualShMapArgs.size())
+    }
+
+    @Test
+    void waitForDoguShouldRethrowOnBuildAbort() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShCommandToThrow.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=ecosystem cockpit -o jsonpath=\'{.status.health}\'"',
+                new InterruptedException("build aborted")
+        )
+
+        // Act + Assert
+        assertThrows(InterruptedException) {
+            eco.waitForDogu("cockpit")
+        }
+    }
+
+    @Test
+    void waitForDoguShouldFailAfterTwentyMinutes() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedDefaultShRetValue = "unavailable"
+
+        // Act + Assert
+        RuntimeException ex = assertThrows(RuntimeException) {
+            eco.waitForDogu("cockpit")
+        }
+
+        assertTrue(ex.message.contains("did not become healthy within 20 minutes"))
+        // 120 attempts * 10s = 1200s = 20 minutes, matching EcoSystem's cesapp --timeout 1200
+        assertEquals(120, scriptMock.actualShMapArgs.size())
+    }
+
+    @Test
+    void purgeDoguShouldDeleteDoguCR() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.purgeDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found "))
+    }
+
+    @Test
+    void purgeDoguShouldPassThroughParameters() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+
+        // Act
+        eco.purgeDogu("cockpit", "--grace-period=0")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl delete dogu cockpit --namespace=ecosystem --ignore-not-found --grace-period=0"))
+    }
+
+    @Test
+    void restartDoguShouldUseConfiguredNamespace() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "my-ces"]
+        eco.coder_workspace = "test-mn-abc"
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get dogus --namespace=my-ces cockpit -o jsonpath=\'{.status.health}\'"',
+                "available"
+        )
+
+        // Act
+        eco.restartDogu("cockpit")
+
+        // Assert
+        String applied = scriptMock.writeFileParams[0].text
+        assertTrue(applied.contains("namespace: my-ces"))
+        assertTrue(scriptMock.actualShStringArgs.contains("kubectl create -f /tmp/restartDogu.yaml"))
+    }
+
+    @Test
+    void startDoguShouldBeNoOp() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.startDogu("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShStringArgs.isEmpty())
+        assertTrue(scriptMock.actualEcho.any { it.contains("no-op") })
+    }
+
+    @Test
+    void upgradeDoguWithVersionShouldSetVersionAndBuild() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        scriptMock.jsonFiles.put("dogu.json", new JsonSlurper().parseText('{ "Name": "official/cockpit", "Version": "2.5.0-1" }'))
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+
+        // Act
+        eco.upgradeDogu("2.5.0-2")
+
+        // Assert
+        assertEquals("2.5.0-2", scriptMock.jsonFiles.get("dogu.json").Version)
+        assertTrue(scriptMock.actualShStringArgs.contains("make build"))
+        assertEquals(20, scriptMock.milliSecondsSleeped, 0)
+    }
+
+    @Test
+    void waitUntilAvailableShouldPollUntilRedirect() {
+        // Arrange
+        ScriptMock scriptMock = new ScriptMock()
+        MultiNodeEcoSystem eco = new MultiNodeEcoSystem(scriptMock, "gcloudCreds", "coderCreds")
+        eco.currentConfig = [namespace: "ecosystem"]
+        eco.coder_workspace = "test-mn-abc"
+
+        scriptMock.expectedShRetValueForScript.put(
+                'coder ssh test-mn-abc "kubectl get services --namespace=ecosystem ces-loadbalancer -o jsonpath=\'{.status.loadBalancer.ingress[0].ip}\'"',
+                "1.2.3.4"
+        )
+        scriptMock.expectedShRetValueForScript.put(
+                "curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || true",
+                "302"
+        )
+
+        // Act
+        eco.waitUntilAvailable("cockpit")
+
+        // Assert
+        assertTrue(scriptMock.actualShMapArgs.contains("curl --insecure --silent --connect-timeout 5 --max-time 10 --output /dev/null --write-out '%{http_code}' https://1.2.3.4/cockpit || true"))
     }
 }
