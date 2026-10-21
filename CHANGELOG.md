@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MultiNodeEcoSystem's k8s namespace is now configurable (was hardcoded to "ecosystem")
 
 ### Changed
-- **Deprecated**: installDogu(String doguFullName) is now installDogu(String doguFullName, String doguVersion = ""). Pass the version as a separate argument instead of appending it to doguFullName
+- **Deprecated**: installDogu(String doguFullName) is now installDogu(String doguFullName, String doguVersion = "").
 
 ### Fixed
 - MultiNodeEcoSystem.waitForDogu silently timed out after 5 minutes instead of failing the build; it now fails after 20 minutes, matching EcoSystem's cesapp --timeout 1200
