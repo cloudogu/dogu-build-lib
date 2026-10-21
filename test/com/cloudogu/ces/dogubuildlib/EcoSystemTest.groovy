@@ -202,6 +202,78 @@ class EcoSystemTest {
     }
 
     @Test
+    void test_EcoSystem_installDogu_withVersion() {
+        // given
+        def scriptMock = new ScriptMock()
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.installDogu("official/cockpit", "2.5.0-1")
+
+        // then
+        verify(vagrantMock).ssh("sudo cesapp install official/cockpit 2.5.0-1")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_installDogu_withoutVersion() {
+        // given
+        def scriptMock = new ScriptMock()
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.installDogu("official/cockpit")
+
+        // then
+        verify(vagrantMock).ssh("sudo cesapp install official/cockpit ")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_installDogu_nonOfficialNamespaceWithVersion() {
+        // given
+        def scriptMock = new ScriptMock()
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.installDogu("swaggerui/plantuml", "2025.4-1")
+
+        // then
+        verify(vagrantMock).ssh("sudo cesapp install swaggerui/plantuml 2025.4-1")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
+    void test_EcoSystem_installDogu_redmineWithoutVersion() {
+        // given
+        def scriptMock = new ScriptMock()
+        def vagrantMock = mock(Vagrant.class)
+        doNothing().when(vagrantMock).ssh(any())
+
+        EcoSystem sut = new EcoSystem(scriptMock, "gCloudCred", "sshCred")
+        sut.vagrant = vagrantMock
+
+        // when
+        sut.installDogu("official/redmine")
+
+        // then
+        verify(vagrantMock).ssh("sudo cesapp install official/redmine ")
+        verifyNoMoreInteractions(vagrantMock)
+    }
+
+    @Test
     void test_EcoSystem_loginBackend() {
         // given
         def scriptMock = new ScriptMock()
