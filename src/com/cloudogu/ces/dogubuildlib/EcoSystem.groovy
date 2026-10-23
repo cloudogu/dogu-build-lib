@@ -131,6 +131,14 @@ class EcoSystem {
         vagrant.ssh "sudo cesapp build ${doguPath}"
     }
 
+    /**
+     * Returns the content digest (docker image ID) of the dogu image already built on the CES machine.
+     */
+    String getBuiltImageDigest(String doguPath) {
+        String image = getDoguImage(doguPath)
+        return vagrant.sshOut("sudo docker inspect --format='{{.Id}}' ${image}")
+    }
+
     void purgeDogu(String doguName, parameters = "") {
         vagrant.ssh "sudo cesapp purge ${parameters} ${doguName}"
     }
