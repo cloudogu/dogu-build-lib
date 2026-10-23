@@ -59,6 +59,7 @@ EcoSystem ecosystem = new EcoSystem(this, "gcloud-ces-operations-internal-packer
 - restartDogu(String doguName, boolean waitUntilAvailable=true) | Restarts a dogu and by default waits until it is available again.
 - changeGlobalAdminGroup(String newAdminGroup) | Changes the global admin group to the given value.
 - copyDoguImageToJenkinsWorker(String doguPath) | Copies the built Dogu image from the CES machine to the Jenkins worker and imports it into Docker
+- getBuiltImageDigest() | Returns the content digest hash of the dogu image
 
 ##### runCypressIntegrationTests():
 
@@ -137,6 +138,7 @@ Some parameters can be passed to the System.
 - upgradeDogu(newDoguVersion = "") | rebuilds and redeploys the dogu with a new version
 - restartDogu(String doguName, boolean waitUntilAvailable=true) | restarts a dogu and by default waits until it is available again
 - changeGlobalAdminGroup(String newAdminGroup) | changes the global admin group to the given value
+- getBuiltImageDigest() | returns the content digest hash of the dogu image
 - runCypressIntegrationTests(config = [:]) | runs cypress integration tests against the cluster
 - destroy() | deletes the Coder workspace, if one was created
 

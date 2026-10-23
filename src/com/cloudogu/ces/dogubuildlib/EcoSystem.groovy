@@ -132,10 +132,10 @@ class EcoSystem {
     }
 
     /**
-     * Returns the content digest (docker image ID) of the dogu image already built on the CES machine.
+     * Returns the content digest hash of the dogu image.
      */
-    String getBuiltImageDigest(String doguPath) {
-        String image = getDoguImage(doguPath)
+    String getBuiltImageDigest() {
+        String image = getDoguImage("/dogu")
         return vagrant.sshOut("sudo docker inspect --format='{{.Id}}' ${image}")
     }
 

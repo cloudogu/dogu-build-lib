@@ -151,9 +151,9 @@ class MultiNodeEcoSystem extends EcoSystem {
     }
 
     /**
-     * Returns the content digest (docker image ID) of the dogu image already built on the Jenkins worker.
+     * Returns the content digest hash of the dogu image.
      */
-    String getBuiltImageDigest(String doguPath) {
+    String getBuiltImageDigest() {
         String image = script.sh(returnStdout: true, script: "jq -r .Image dogu.json").trim()
         String version = script.sh(returnStdout: true, script: "jq -r .Version dogu.json").trim()
         return script.sh(returnStdout: true, script: "docker inspect --format='{{.Id}}' ${image}:${version}").trim()
