@@ -477,7 +477,38 @@ Initial oidc admin usernames: []
     void destroy() {
         script.withCredentials([script.string(credentialsId: 'automatic_migration_coder_token', variable: 'token')]) {
             if (mnWorkspaceCreated) {
-                script.sh "coder delete --yes --token $script.env.token $coder_workspace"
+                // coder delete has no --async flag (coder.com/docs/reference/cli/delete,
+                // 2026-10-27) - drop this once one ships. It only blocks to stream
+                // Terraform's server-side logs, so background it and detach once the
+                // log shows "Destroying..." (real teardown, not just planned), falling
+                // back to a full wait if that marker never appears.
+                script.sh """
+                    CODER_TOKEN="$script.env.token"
+                    CODER_WS="$coder_workspace"
+                    LOG_FILE="coder-delete.log"
+
+                    coder delete --yes --token "\$CODER_TOKEN" "\$CODER_WS" > "\$LOG_FILE" 2>&1 &
+                    deletePid=\$!
+
+                    found=0
+                    for i in \$(seq 1 150); do
+                        if grep -qF "Destroying..." "\$LOG_FILE" 2>/dev/null; then
+                            found=1
+                            break
+                        fi
+                        sleep 2
+                    done
+
+                    cat "\$LOG_FILE" || true
+
+                    if test "\$found" = "1"; then
+                        echo "coder workspace \$CODER_WS deletion confirmed underway, detaching"
+                        kill \$deletePid 2>/dev/null || true
+                    else
+                        echo "WARNING: coder workspace \$CODER_WS delete never showed a Destroying... line after 300s, waiting for coder delete to finish instead of detaching"
+                        wait \$deletePid
+                    fi
+                """
             }
         }
     }
