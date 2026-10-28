@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `DoguRelease.notifyWebhook()` to announce a dogu release in Google Chat
+- `Webhook.notifyRelease()` to announce a release in Google Chat
 
 ### Changed
 - Build: replace abandoned gmaven-plugin with gmavenplus and build with Maven 3.10.0 in CI, so tests run on current JDKs (no effect on library consumers)

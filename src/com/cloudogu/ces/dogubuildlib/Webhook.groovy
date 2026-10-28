@@ -4,31 +4,35 @@ import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonOutput
 
 /**
- * Announces a dogu release in a Google Chat space via an incoming webhook.
+ * Announces releases in a Google Chat space via an incoming webhook.
  */
-class DoguRelease implements Serializable {
+class Webhook implements Serializable {
     private script
 
-    DoguRelease(script) {
+    Webhook(script) {
         this.script = script
     }
 
     /**
-     * Posts "New Dogu Release" with the dogu name, version and a changelog link.
-     * The name comes from dogu.json, the repository link from the git remote and the version
-     * from the branch name (e.g. "release/v2.5.0-2" -> "v2.5.0-2").
+     * Posts "New Dogu Release" with the project name, version and a changelog link to the git repository.
      * A failed post marks the build unstable; the release itself is not affected.
      *
-     * @param webhookCredentialsId Jenkins secret text credentials holding the webhook URL
+     * @param config
+     *   name: project name shown in the message. Default: dogu.json Name without namespace,
+     *         or the repository name if there is no dogu.json (e.g. base images).
+     *   version: released version, also the tag of the changelog link. Default: last segment of the
+     *            branch name, e.g. "release/v2.5.0-2" -> "v2.5.0-2".
+     *   webhookCredentialsId: Jenkins secret text credentials holding the webhook URL.
+     *                         Default: "sos-sw-release-webhook-url".
      */
-    void notifyWebhook(String webhookCredentialsId = "sos-sw-release-webhook-url") {
+    void notifyRelease(Map config = [:]) {
         try {
-            String doguName = script.sh(script: "jq -r .Name dogu.json", returnStdout: true).trim().tokenize('/').last()
             String repoUrl = toBrowsableUrl(script.sh(script: "git remote get-url origin", returnStdout: true).trim())
-            String branchName = script.env.BRANCH_NAME
-            String version = branchName.substring(branchName.lastIndexOf('/') + 1)
+            String name = config.name ?: defaultName(repoUrl)
+            String version = config.version ?: defaultVersion()
+            String webhookCredentialsId = config.webhookCredentialsId ?: "sos-sw-release-webhook-url"
             String text = "*New Dogu Release*\n" +
-                    "• Project: *<${repoUrl}|${doguName}>*\n" +
+                    "• Project: *<${repoUrl}|${name}>*\n" +
                     "• Version: *${version}*\n" +
                     "• <${repoUrl}/releases/tag/${version}|View Changelog>\n"
 
@@ -44,6 +48,18 @@ class DoguRelease implements Serializable {
         } catch (Exception e) {
             script.unstable("Failed to send release notification to Google Chat: ${e.getMessage()}")
         }
+    }
+
+    private String defaultName(String repoUrl) {
+        if (script.fileExists("dogu.json")) {
+            return script.sh(script: "jq -r .Name dogu.json", returnStdout: true).trim().tokenize('/').last()
+        }
+        return repoUrl.tokenize('/').last()
+    }
+
+    private String defaultVersion() {
+        String branchName = script.env.BRANCH_NAME
+        return branchName.substring(branchName.lastIndexOf('/') + 1)
     }
 
     // git@github.com:cloudogu/cas.git and https://user:token@github.com/cloudogu/cas.git both
