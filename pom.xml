@@ -87,11 +87,11 @@
 
         <plugins>
             <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <!-- 4.x+ needs Maven >= 3.6.3, CI builds with 3.6.0 (see Jenkinsfile) -->
+                <version>3.0.2</version>
                 <configuration>
-                    <providerSelection>1.8</providerSelection>
                     <sources>
                         <source>
                             <directory>${project.basedir}/src</directory>
@@ -108,15 +108,14 @@
                             </includes>
                         </testSource>
                     </testSources>
-                    <source/>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>generateStubs</goal>
+                            <goal>addSources</goal>
+                            <goal>addTestSources</goal>
                             <goal>compile</goal>
-                            <goal>generateTestStubs</goal>
-                            <goal>testCompile</goal>
+                            <goal>compileTests</goal>
                         </goals>
                     </execution>
                 </executions>
