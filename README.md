@@ -25,6 +25,7 @@ import com.cloudogu.ces.dogubuildlib.*
 - [Ecosystem](#Ecosystem)
 - [Vagrant](#Vagrant)
 - [Cypress](#Cypress)
+- [DoguRelease](#DoguRelease)
 
 ### Ecosystem
 
@@ -189,6 +190,18 @@ Cypress cy = new Cypress(script, [artifactPathPrefix: "classic"])
 - archiveVideosAndScreenshots() | Archives the artifacts after the run has finished.
 - preTestWork() | Should be executed before running the tests. Cleans the video, report, and screenshot folders.
 - upgradeCypressConfiguration() | Updates the cypress.json with the currently set admin group.
+
+### DoguRelease
+
+Announces a dogu release in a Google Chat space via an incoming webhook.
+
+```groovy
+new DoguRelease(this).notifyWebhook()                       // posts to the SOS channel
+new DoguRelease(this).notifyWebhook("my-team-webhook-url")  // secret text credentials holding the webhook URL
+```
+
+The dogu name comes from `dogu.json`, the repository link from the git remote and the version from the
+branch name (`release/v2.5.0-2` -> `v2.5.0-2`). A failed post marks the build unstable.
 
 ### Samples
 
