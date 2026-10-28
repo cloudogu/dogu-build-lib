@@ -89,8 +89,7 @@
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
-                <!-- 4.x+ needs Maven >= 3.6.3, CI builds with 3.6.0 (see Jenkinsfile) -->
-                <version>3.0.2</version>
+                <version>5.1.0</version>
                 <configuration>
                     <sources>
                         <source>
