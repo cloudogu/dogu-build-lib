@@ -213,7 +213,7 @@ This example shows the usage of Ecosystem, Webhook, lintDockerfile and shellchec
 
 ```groovy
 #!groovy
-@Library(['github.com/cloudogu/ces-build-lib@c622273', 'github.com/cloudogu/dogu-build-lib@f8cca7c9b101ed0bcdde8df556c13711d4cfd5a5'])
+@Library(['github.com/cloudogu/ces-build-lib@6.1.0', 'github.com/cloudogu/dogu-build-lib@v4.2.0'])
 import com.cloudogu.ces.cesbuildlib.*
 import com.cloudogu.ces.dogubuildlib.*
 
