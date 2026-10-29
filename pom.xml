@@ -7,7 +7,7 @@
     <groupId>com.cloudogu.ces</groupId>
     <artifactId>dogu-build-lib</artifactId>
     <name>dogu-build-lib</name>
-    <version>4.1.1</version>
+    <version>4.2.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -87,11 +87,10 @@
 
         <plugins>
             <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>5.1.0</version>
                 <configuration>
-                    <providerSelection>1.8</providerSelection>
                     <sources>
                         <source>
                             <directory>${project.basedir}/src</directory>
@@ -108,15 +107,14 @@
                             </includes>
                         </testSource>
                     </testSources>
-                    <source/>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>generateStubs</goal>
+                            <goal>addSources</goal>
+                            <goal>addTestSources</goal>
                             <goal>compile</goal>
-                            <goal>generateTestStubs</goal>
-                            <goal>testCompile</goal>
+                            <goal>compileTests</goal>
                         </goals>
                     </execution>
                 </executions>

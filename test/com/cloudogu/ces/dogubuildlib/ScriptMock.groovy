@@ -100,6 +100,22 @@ class ScriptMock {
         unstable = true
     }
 
+    def unstable(String msg) {
+        unstable = true
+        unstableMsg = msg
+    }
+
+    List<Map> actualHttpRequestArgs = []
+    Throwable httpRequestError
+
+    def httpRequest(Map args) {
+        if (httpRequestError != null) {
+            throw httpRequestError
+        }
+        actualHttpRequestArgs.add(args)
+        return [status: 200, content: "ok"]
+    }
+
     void withSonarQubeEnv(String sonarQubeEnv, Closure closure) {
         actualSonarQubeEnv = sonarQubeEnv
         closure.call()
