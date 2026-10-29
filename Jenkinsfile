@@ -84,7 +84,7 @@ node('docker') {
 }
 
 Maven setupMavenBuild() {
-    Maven mvn = new MavenInDocker(this, "3.6.0-jdk-8")
+    Maven mvn = new MavenInDocker(this, "3.10.0-eclipse-temurin-8")
 
 
     // run SQ analysis in specific project for each branch

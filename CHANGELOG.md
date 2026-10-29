@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Build: replace abandoned gmaven-plugin with gmavenplus and build with Maven 3.10.0 in CI, so tests run on current JDKs (no effect on library consumers)
 
 ## [v4.1.1] - 2026-10-27
 ### Fixed
