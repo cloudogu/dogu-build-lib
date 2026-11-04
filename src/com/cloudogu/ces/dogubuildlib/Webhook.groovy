@@ -52,7 +52,7 @@ class Webhook implements Serializable {
 
     private String defaultName(String repoUrl) {
         if (script.fileExists("dogu.json")) {
-            return script.sh(script: "jq -r .Name dogu.json", returnStdout: true).trim().tokenize('/').last()
+            return script.readJSON(file: 'dogu.json').Name.tokenize('/').last()
         }
         return repoUrl.tokenize('/').last()
     }
