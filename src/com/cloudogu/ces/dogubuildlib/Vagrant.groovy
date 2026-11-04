@@ -3,7 +3,7 @@ package com.cloudogu.ces.dogubuildlib
 class Vagrant implements Serializable {
 
     // Built from https://github.com/cloudogu/vagrant-docker, HashiCorp publishes no vagrant image
-    static final String IMAGE = 'europe-docker.pkg.dev/cloudogu-backend/team-sos/vagrant:2.4.1-1'
+    static final String IMAGE = 'europe-docker.pkg.dev/cloudogu-backend/team-sos/vagrant:2.4.1-2'
 
     def script
     String gcloudCredentials
@@ -75,8 +75,8 @@ class Vagrant implements Serializable {
     }
 
     private def withVagrantContainer(Closure body) {
-        // The container runs as the agent's UID; ssh, which vagrant uses for ssh/scp/rsync, aborts without a passwd entry for it
-        return script.docker.image(IMAGE).inside("--entrypoint='' -v /etc/passwd:/etc/passwd:ro") {
+        // Runs as the agent's UID, the image's vagrant shim gives that UID the passwd entry ssh needs
+        return script.docker.image(IMAGE).inside("--entrypoint=''") {
             body()
         }
     }

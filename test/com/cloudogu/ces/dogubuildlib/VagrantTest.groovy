@@ -46,7 +46,7 @@ class VagrantTest {
         vagrant.destroy()
 
         assert images == [Vagrant.IMAGE, Vagrant.IMAGE]
-        assert insideArgs == ["--entrypoint='' -v /etc/passwd:/etc/passwd:ro"] * 2
+        assert insideArgs == ["--entrypoint=''"] * 2
         assert shInside == ["vagrant up", "vagrant destroy -f"]
     }
 
