@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- EcoSystem.upgradeDogu() and Webhook read dogu.json with readJSON instead of jq, so the Jenkins worker no longer needs jq
+- EcoSystem.upgradeDogu() and Webhook read dogu.json with readJSON instead of jq
 
 ## [v4.2.0] - 2026-10-29
 ### Added
