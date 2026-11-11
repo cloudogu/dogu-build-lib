@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- MultiNodeEcoSystem downloads goss with curl instead of wget, so the Jenkins worker no longer needs wget
+- MultiNodeEcoSystem downloads goss with curl instead of wget
 
 ## [v4.2.0] - 2026-10-29
 ### Added
