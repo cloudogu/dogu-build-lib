@@ -4,8 +4,8 @@ class Vagrant implements Serializable {
 
     // Built from https://github.com/cloudogu/vagrant-docker, HashiCorp publishes no vagrant image.
     // Tags are <vagrant version>-<change counter>, docker versioning would treat the counter as a suffix.
-    // renovate: datasource=docker depName=europe-docker.pkg.dev/cloudogu-backend/team-sos/vagrant versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-(?<build>\d+)$
-    static final String IMAGE = 'europe-docker.pkg.dev/cloudogu-backend/team-sos/vagrant:2.4.1-2'
+    // renovate: datasource=docker depName=europe-docker.pkg.dev/cloudogu-backend/team-sos-public/vagrant versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)-(?<build>\d+)$
+    static final String IMAGE = 'europe-docker.pkg.dev/cloudogu-backend/team-sos-public/vagrant:2.4.1-2'
 
     def script
     String gcloudCredentials
