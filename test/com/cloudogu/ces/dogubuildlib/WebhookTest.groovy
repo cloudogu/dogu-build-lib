@@ -11,7 +11,7 @@ class WebhookTest {
         script.expectedShRetValueForScript.put("git remote get-url origin", remoteUrl + "\n")
         if (hasDoguJson) {
             script.existingFiles.add("dogu.json")
-            script.expectedShRetValueForScript.put("jq -r .Name dogu.json", "official/cockpit\n")
+            script.jsonFiles.put("dogu.json", [Name: "official/cockpit"])
         }
         return script
     }

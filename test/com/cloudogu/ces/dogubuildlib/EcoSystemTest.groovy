@@ -350,7 +350,7 @@ class EcoSystemTest {
     void test_EcoSystem_upgrade() {
         // given
         def scriptMock = new ScriptMock()
-        scriptMock.expectedShRetValueForScript.put("jq -r .Version dogu.json", "1.2.3-4")
+        scriptMock.jsonFiles.put("dogu.json", [Version: "1.2.3-4"])
         def jsonSlurper = new JsonSlurper()
         def doguJson = jsonSlurper.parseText('{ "Name": "testing/dogu", "Version": "1.2.3-4" }')
         scriptMock.jsonFiles.put("dogu.json", doguJson)
