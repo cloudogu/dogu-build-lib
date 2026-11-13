@@ -88,7 +88,6 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 
 #### Functions
 
-- installPlugins(String plugin) | install additional vagrant plugins
 - scp(String source, String target) | copy files to remote machine
 - sync() | sync host and remote
 - up() | start vm
