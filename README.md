@@ -209,11 +209,11 @@ A failed post marks the build unstable.
 
 #### Sample Pipeline Script
 
-This example shows the usage of Ecosystem, lintDockerfile and shellcheck (based on cloudogu/ldap jenkinsfile)
+This example shows the usage of Ecosystem, Webhook, lintDockerfile and shellcheck (based on cloudogu/ldap jenkinsfile)
 
 ```groovy
 #!groovy
-@Library(['github.com/cloudogu/ces-build-lib@c622273', 'github.com/cloudogu/dogu-build-lib@f8cca7c9b101ed0bcdde8df556c13711d4cfd5a5'])
+@Library(['github.com/cloudogu/ces-build-lib@6.1.0', 'github.com/cloudogu/dogu-build-lib@v4.2.0'])
 import com.cloudogu.ces.cesbuildlib.*
 import com.cloudogu.ces.dogubuildlib.*
 
@@ -260,6 +260,13 @@ node('vagrant') {
 
             stage('Verify') {
                 ecoSystem.verify("/dogu")
+            }
+
+            if (new GitFlow(this, new Git(this)).isReleaseBranch()) {
+                // ... finish the release and push the dogu first, then:
+                stage('Notify Webhook') {
+                    new Webhook(this).notifyRelease()
+                }
             }
 
         } finally {

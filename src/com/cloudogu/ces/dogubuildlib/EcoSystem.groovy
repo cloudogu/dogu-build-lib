@@ -201,9 +201,7 @@ class EcoSystem {
      */
     void upgradeDogu() {
         // currentDoguVersion, e.g. 2.222.4-1
-        // jq, not grep - dogu.json commonly has other "Version" fields too (e.g. in
-        // Dependencies entries), which a plain grep would also match.
-        String currentDoguVersion = script.sh(returnStdout: true, script: 'jq -r .Version dogu.json').trim()
+        String currentDoguVersion = script.readJSON(file: 'dogu.json').Version
         // newDoguVersion, e.g. 2.222.4-2
         String newDoguVersion = increaseDoguReleaseVersionByOne(currentDoguVersion)
         this.upgradeDogu(newDoguVersion)

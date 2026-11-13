@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v4.3.0] - 2026-11-13
+### Changed
+- Vagrant runs in the `vagrant-docker` container image instead of on the Jenkins worker
+- MultiNodeEcoSystem downloads goss with curl instead of wget
+- EcoSystem.upgradeDogu() and Webhook read dogu.json with readJSON instead of jq
+
 ## [v4.2.0] - 2026-10-29
 ### Added
 - `Webhook.notifyRelease()` to announce a release in Google Chat
