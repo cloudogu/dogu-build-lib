@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v5.0.0] - 2026-11-13
 ### Removed
 - **BREAKING**: `Vagrant.installPlugin()`. Each vagrant call runs in a new container, so a plugin installed at runtime is gone before the next call. Add plugins to the vagrant-docker image instead
 
