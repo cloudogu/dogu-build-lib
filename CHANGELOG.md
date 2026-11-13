@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v5.0.0] - 2026-11-13
+### Removed
+- **BREAKING**: `Vagrant.installPlugin()`. Each vagrant call runs in a new container, so a plugin installed at runtime is gone before the next call. Add plugins to the vagrant-docker image instead
+
 ## [v4.3.0] - 2026-11-13
 ### Changed
 - Vagrant runs in the `vagrant-docker` container image instead of on the Jenkins worker

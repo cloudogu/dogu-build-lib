@@ -88,7 +88,6 @@ Vagrant vm = new Vagrant(script, gcloudCredentials, sshCredentials)
 
 #### Functions
 
-- installPlugins(String plugin) | install additional vagrant plugins
 - scp(String source, String target) | copy files to remote machine
 - sync() | sync host and remote
 - up() | start vm
@@ -213,7 +212,7 @@ This example shows the usage of Ecosystem, Webhook, lintDockerfile and shellchec
 
 ```groovy
 #!groovy
-@Library(['github.com/cloudogu/ces-build-lib@6.1.0', 'github.com/cloudogu/dogu-build-lib@v4.2.0'])
+@Library(['github.com/cloudogu/ces-build-lib@6.1.1', 'github.com/cloudogu/dogu-build-lib@v4.3.0'])
 import com.cloudogu.ces.cesbuildlib.*
 import com.cloudogu.ces.dogubuildlib.*
 
