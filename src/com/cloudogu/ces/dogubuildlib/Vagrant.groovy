@@ -17,10 +17,6 @@ class Vagrant implements Serializable {
         this.sshCredentials = sshCredentials
     }
 
-    void installPlugin(String plugin) {
-        script.sh("vagrant plugin install ${plugin}")
-    }
-
     void scp(String source, String target) {
         withVagrantCredentials {
             withVagrantContainer {
