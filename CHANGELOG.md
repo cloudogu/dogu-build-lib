@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Build: CI uses ces-build-lib 6.1.1 on the cpu2mem4 workers, pom.xml no longer depends on ces-build-lib, Maven plugin and test dependency updates (no effect on library users)
+
+### Security
+- Update groovy-all to 2.4.21 and snakeyaml to 2.0 (build and test dependencies only, no effect on library users)
 
 ## [v5.0.0] - 2026-11-13
 ### Removed
