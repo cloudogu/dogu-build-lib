@@ -6,7 +6,7 @@ import com.cloudogu.ces.cesbuildlib.*
 projectName = 'dogu-build-lib'
 String branch = "${env.BRANCH_NAME}"
 
-node('docker') {
+node('cpu2mem4') {
 
     properties([
             // Keep only the last 10 build to preserve space
