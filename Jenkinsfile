@@ -1,13 +1,12 @@
 #!groovy
 
-// Keep the version in sync with the one used in pom.xml in order to get correct syntax completion.
-@Library('github.com/cloudogu/ces-build-lib@1.67.0')
+@Library('github.com/cloudogu/ces-build-lib@6.1.1')
 import com.cloudogu.ces.cesbuildlib.*
 
 projectName = 'dogu-build-lib'
 String branch = "${env.BRANCH_NAME}"
 
-node('docker') {
+node('cpu2mem4') {
 
     properties([
             // Keep only the last 10 build to preserve space
